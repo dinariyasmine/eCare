@@ -1,6 +1,9 @@
-# ![eCare](eCareLogo.png)  
+<p align="center">
+  <img src="eCareLogo.png" alt="eCare Logo" width="300"/>
+</p>
 
-## **eCare - Book, Track, Heal – Anytime, Anywhere!**  
+<h1 align="center">eCare - Book, Track, Heal – Anytime, Anywhere!</h1>
+
 
 eCare is a mobile application that simplifies doctor appointment booking. Patients can find doctors, schedule appointments, and manage prescriptions, while doctors can list availability and handle appointments efficiently.  
 
