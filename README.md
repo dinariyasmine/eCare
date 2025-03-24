@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="eCareLogo.png" alt="eCare Logo" width="300"/>
+  <img src="Cover.jpg" alt="eCare" width="300"/>
 </p>
 
 <h1 align="center">eCare - Book, Track, Heal – Anytime, Anywhere!</h1>
