@@ -20,7 +20,8 @@ eCare is a mobile application that simplifies doctor appointment booking. Patien
 Check out the Figma design: [Figma Link](https://www.figma.com/design/VQXfI3RbxvGorogFeCJw8O/UI?node-id=7-7222&t=K7sVyZju8s8OBmTx-1)  
 
 ## Database Conception
-Check out the conception: [LucidChart Link]([https://www.figma.com/design/VQXfI3RbxvGorogFeCJw8O/UI?node-id=7-7222&t=K7sVyZju8s8OBmTx-1](https://lucid.app/lucidchart/0b9fab06-13f0-49ed-9a08-8efb62a80eac/edit?viewport_loc=-813%2C-895%2C1700%2C819%2C94_1GOOiqmvM&invitationId=inv_e7d6629c-eb49-4b81-b8f5-670b7384557a))  
+Check out the conception: [Lucidchart Diagram](https://lucid.app/lucidchart/0b9fab06-13f0-49ed-9a08-8efb62a80eac/edit?viewport_loc=-813%2C-895%2C1700%2C819%2C94_1GOOiqmvM&invitationId=inv_e7d6629c-eb49-4b81-b8f5-670b7384557a)
+
 
 ## 🛠️ Tech Stack  
 - **Frontend (Mobile App)**: Kotlin (Jetpack Compose)  
