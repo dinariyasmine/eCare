@@ -21,4 +21,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "eCare-Mobile"
 include(":app")
- 
+
+include(":OnboardingScreens")

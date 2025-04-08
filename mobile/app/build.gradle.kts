@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.ecare_mobile"
-        minSdk = 24
+        minSdk = 23
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -40,6 +40,8 @@ android {
 }
 
 dependencies {
+    implementation("com.adamglin:phosphor-icon:1.0.0")
+    implementation(project(":OnboardingScreens"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.material:material")
     implementation("androidx.compose.ui:ui-tooling-preview")
