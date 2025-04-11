@@ -23,3 +23,4 @@ rootProject.name = "eCare-Mobile"
 include(":app")
 
 include(":OnboardingScreens")
+include(":doctorlisting")

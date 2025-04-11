@@ -1,19 +1,14 @@
 plugins {
-    alias(libs.plugins.android.application)
+    id ("com.android.library")
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 }
 
 android {
-    namespace = "com.example.ecare_mobile"
+    namespace = "com.example.doctorlisting"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.ecare_mobile"
-        minSdk = 26
-        targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -40,22 +35,37 @@ android {
 }
 
 dependencies {
-    implementation("com.adamglin:phosphor-icon:1.0.0")
-    implementation(project(":OnboardingScreens"))
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.material:material")
-    implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.5")
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
+    implementation("androidx.compose.ui:ui:1.6.0")
+    implementation("androidx.compose.material:material:1.6.0")
+    implementation("androidx.compose.ui:ui-tooling-preview:1.6.0")
+    implementation(libs.androidx.navigation.runtime.android)
+    implementation("com.adamglin:phosphor-icon:1.0.0")
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.foundation.layout.android)
+    implementation(libs.androidx.foundation.layout.android)
+    implementation(libs.androidx.foundation.layout.android)
+    implementation(libs.androidx.foundation.layout.android)
+    debugImplementation("androidx.compose.ui:ui-tooling:1.7.8")
+    implementation("androidx.activity:activity-compose:1.8.2")
+    implementation("androidx.compose.material:material:1.4.3")
+    implementation("androidx.compose.ui:ui-tooling-preview:1.4.3")
+    implementation("androidx.compose.foundation:foundation:1.4.3")
+    implementation("androidx.navigation:navigation-compose:2.6.0")
+    implementation("io.coil-kt:coil-compose:2.2.2") // For loading images
+    implementation("com.google.accompanist:accompanist-pager:0.28.0") // or latest
+    implementation("com.google.accompanist:accompanist-pager-indicators:0.28.0")
+
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
-    implementation(project(":doctorlisting"))
     implementation(libs.androidx.material3.android)
+    implementation(libs.androidx.material.android)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
