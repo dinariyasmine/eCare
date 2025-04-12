@@ -13,23 +13,37 @@ import androidx.compose.ui.Modifier
 import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Bold
 import com.adamglin.phosphoricons.bold.AirTrafficControl
+import com.example.core.theme.ECareMobileTheme
+import com.example.data.repository.UserRepository
 import com.example.ecare_mobile.ui.screen.UserScreen
-import com.example.ecare_mobile.ui.theme.ECareMobileTheme
 import com.example.onboardingscreens.getWelcomeMessage
 
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val message = getWelcomeMessage()
+
+        // Create UserRepository instance to pass to UserScreen
+        val userRepository = UserRepository()
+
+        // Get welcome message with null safety
+        val message = getWelcomeMessage() ?: "Welcome to eCare Mobile"
         Log.d("MainActivity", message)
+
         setContent {
             ECareMobileTheme {
                 Box(modifier = Modifier.fillMaxSize()) {
-                    UserScreen()
-                    Text(text = message)
+                    // Pass the repository to UserScreen
+                    UserScreen(userRepository = userRepository)
+
+                    Text(
+                        text = message,
+                        modifier = Modifier.align(Alignment.TopCenter)
+                    )
+
                     Icon(
                         imageVector = PhosphorIcons.Bold.AirTrafficControl,
-                        contentDescription = null,
+                        contentDescription = "App Icon",
                         modifier = Modifier.align(Alignment.BottomCenter)
                     )
                 }
