@@ -3,7 +3,10 @@ package com.example.ecare_mobile
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import com.example.appointment.ui.screen.ListAppointmentsScreen
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.Modifier
+import com.example.appointment.Greeting
+import com.example.ecare_mobile.ui.screen.UserScreen
 import com.example.ecare_mobile.ui.theme.ECareMobileTheme
 
 class MainActivity : ComponentActivity() {
@@ -11,7 +14,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             ECareMobileTheme {
-                ListAppointmentsScreen()
+                Greeting(
+                    name = "Android"
+                )
             }
         }
     }

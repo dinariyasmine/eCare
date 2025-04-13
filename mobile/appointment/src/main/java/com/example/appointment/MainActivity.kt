@@ -1,18 +1,17 @@
-package com.example.ecare_mobile
+package com.example.appointment
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import com.example.appointment.ui.screen.ListAppointmentsScreen
-import com.example.ecare_mobile.ui.theme.ECareMobileTheme
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.Modifier
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            ECareMobileTheme {
-                ListAppointmentsScreen()
-            }
+
         }
     }
 }
