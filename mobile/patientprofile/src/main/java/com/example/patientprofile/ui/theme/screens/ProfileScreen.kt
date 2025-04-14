@@ -32,6 +32,7 @@ fun ProfileScreen(
     navController: NavController,
     userRepository: UserRepository // Make sure you're passing UserRepository here
 ) {
+    //
     // Get the ViewModel instance
     val viewModel: UserViewModel = viewModel(
         factory = UserViewModel.Factory(userRepository) // Pass the UserRepository
