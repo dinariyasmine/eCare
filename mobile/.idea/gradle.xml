@@ -13,6 +13,7 @@
             <option value="$PROJECT_DIR$/OnboardingScreens" />
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/doctorlisting" />
+            <option value="$PROJECT_DIR$/patientprofile" />
           </set>
         </option>
         <option name="resolveExternalAnnotations" value="false" />

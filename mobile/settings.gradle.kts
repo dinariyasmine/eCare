@@ -24,3 +24,5 @@ include(":app")
 
 include(":OnboardingScreens")
 include(":doctorlisting")
+include(":patientprofile")
+include(":data")
