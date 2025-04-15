@@ -2,7 +2,7 @@ package com.example.doctorlisting.ui.component
 
 import androidx.compose.material.icons.filled.Notifications
 import coil.compose.rememberAsyncImagePainter
-import com.example.ecare_mobile.data.model.User
+import com.example.data.model.User
 
 import com.adamglin.PhosphorIcons
 import androidx.compose.foundation.Image
@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberImagePainter
-import com.example.doctorlisting.data.repository.DoctorsRepositoryImpl
+
 
 import com.adamglin.phosphoricons.regular.InstagramLogo
 import com.adamglin.phosphoricons.regular.LinkedinLogo
@@ -35,6 +35,7 @@ import com.adamglin.phosphoricons.regular.Envelope
 
 import com.adamglin.phosphoricons.Regular
 import com.adamglin.phosphoricons.regular.Star
+
 import com.example.doctorlisting.R
 
 @Composable

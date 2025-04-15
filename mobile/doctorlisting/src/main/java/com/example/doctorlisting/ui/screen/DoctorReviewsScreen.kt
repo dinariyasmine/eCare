@@ -1,66 +1,88 @@
 package com.example.doctorlisting.ui.screen
 
-import androidx.compose.material.icons.filled.ArrowBack
-
-
-import com.adamglin.PhosphorIcons
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
-import androidx.compose.material.SnackbarDefaults.backgroundColor
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import coil.compose.rememberImagePainter
-import com.example.doctorlisting.data.repository.DoctorsRepositoryImpl
-
-import com.adamglin.phosphoricons.regular.InstagramLogo
-import com.adamglin.phosphoricons.regular.LinkedinLogo
-import com.adamglin.phosphoricons.regular.Phone
-import com.adamglin.phosphoricons.regular.Envelope
-
-import com.adamglin.phosphoricons.Regular
-import com.adamglin.phosphoricons.regular.Star
+import com.example.data.model.Doctor
+import com.example.data.model.User
+import com.example.data.repository.DoctorRepository
+import com.example.data.repository.UserRepository
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @Composable
 fun DoctorReviewsScreen(doctorId: Int?, navController: NavController) {
-    val doctorRepository = remember { DoctorsRepositoryImpl() }
-    val doctor = remember(doctorId) { doctorRepository.getDoctorById(doctorId ?: -1) }
+    val doctorRepository = remember { DoctorRepository() }
+    val userRepository = remember { UserRepository() }
+    val doctorState = remember { mutableStateOf<Doctor?>(null) }
+    val userState = remember { mutableStateOf<User?>(null) }
 
-    if (doctor == null) {
-        Text("Doctor not found", modifier = Modifier.padding(16.dp))
+    // Since reviews aren't part of the Doctor model in your provided code,
+    // I'll create a simple mock review data class
+    data class Review(
+        val author: String,
+        val text: String,
+        val rating: Float
+    )
+
+    // Mock reviews - in a real app, you'd fetch these from a repository
+    val mockReviews = remember {
+        listOf(
+            Review("Sarah Johnson", "Dr. Smith was very professional and helpful.", 4.5f),
+            Review("Michael Brown", "Excellent consultation, would recommend.", 5f),
+            Review("Emily Davis", "Very knowledgeable and patient.", 4f)
+        )
+    }
+
+    LaunchedEffect(doctorId) {
+        withContext(Dispatchers.IO) {
+            val doctor = doctorId?.let { doctorRepository.getDoctorById(it) }
+            doctorState.value = doctor
+
+            doctor?.let {
+                userState.value = userRepository.getUserById(it.user_id)
+            }
+        }
+    }
+
+    val doctor = doctorState.value
+    val user = userState.value
+
+    if (doctor == null || user == null) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
         return
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("${doctor.name}'s Reviews") },
+                title = { Text("${user.name}'s Reviews") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             imageVector = Icons.Filled.ArrowBack,
                             contentDescription = "Back",
                             tint = Color.White
-
                         )
                     }
-                }
+                },
+                backgroundColor = MaterialTheme.colors.primary
             )
-
         }
     ) { padding ->
         Column(
@@ -69,40 +91,57 @@ fun DoctorReviewsScreen(doctorId: Int?, navController: NavController) {
                 .padding(padding)
                 .padding(16.dp)
         ) {
-            Text(
-                text = "Average Rating: ${doctor.rating}",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold
-            )
+            // Average rating section
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Filled.Star,
+                    contentDescription = "Rating",
+                    tint = Color(0xFFFFC107),
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Average Rating: ${doctor.grade}",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Show all reviews
-            doctor.reviews.forEach { review ->
-                Card(
-                    shape = RoundedCornerShape(8.dp),
-                    backgroundColor = Color(0xFFF5F5F5),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp)
-                ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = review.author,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.weight(1f)
-                            )
-                            Icon(
-                                imageVector = PhosphorIcons.Regular.Star,
-                                contentDescription = "Rating",
-                                tint = Color(0xFFFFC107),
-                                modifier = Modifier.size(16.dp)
-                            )
-                           // Text(text = review.rating.toString())
+            // Reviews list
+            LazyColumn(modifier = Modifier.weight(1f)) {
+                items(mockReviews) { review ->
+                    Card(
+                        shape = RoundedCornerShape(8.dp),
+                        backgroundColor = Color(0xFFF5F5F5),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = review.author,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                // Display star rating
+                                Row {
+                                    repeat(5) { index ->
+                                        Icon(
+                                            imageVector = Icons.Filled.Star,
+                                            contentDescription = "Rating",
+                                            tint = if (index < review.rating.toInt())
+                                                Color(0xFFFFC107) else Color.LightGray,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(text = review.text, fontSize = 13.sp)
                         }
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(text = review.text, fontSize = 13.sp)
                     }
                 }
             }

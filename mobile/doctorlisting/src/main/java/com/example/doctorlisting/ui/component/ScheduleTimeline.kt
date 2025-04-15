@@ -1,5 +1,8 @@
 package com.example.doctorlisting.ui.component
 
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.Canvas
 import com.adamglin.PhosphorIcons
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -16,42 +19,98 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.doctorlisting.data.model.Appointment
+import com.example.data.model.Appointment
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.ZonedDateTime
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun ScheduleTimeline(appointments: List<Appointment>) {
-    Column {
-        appointments.forEach {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(vertical = 8.dp)
-            ) {
-                Text(it.time, modifier = Modifier.width(60.dp), color = Color.Gray)
-                Divider(color = Color.Blue, modifier = Modifier.width(10.dp).height(1.dp))
-                Spacer(modifier = Modifier.width(8.dp))
-                Card(
-                    shape = RoundedCornerShape(10.dp),
-                    backgroundColor = Color(0xFFE6F0FB),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(modifier = Modifier.padding(12.dp)) {
-                        Column {
-                            Text(it.doctorName, fontWeight = FontWeight.Bold)
-                            Text(
-                                it.status,
-                                color = Color.Blue,
-                                fontSize = 12.sp,
+fun ScheduleCard(appointments: List<Appointment>) {
+    val today = LocalDate.now()
+    val zoneId = ZoneId.of("Africa/Algiers")
+    val now = ZonedDateTime.now(zoneId).withSecond(0).withNano(0)
+
+    val todayAppointments = appointments
+        .filter { it.date.equals(today) }
+        .sortedBy { it.start_time}
+
+    val appointmentHours = todayAppointments.map { it.start_time.hours }.distinct()
+
+    Column(modifier = Modifier.padding(16.dp)) {
+        Text("Schedule Today", style = MaterialTheme.typography.body1)
+        Spacer(modifier = Modifier.height(16.dp))
+
+        for (hour in 0..23) {
+            val hourFormatted = "%02d:00".format(hour)
+
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
+                // Hour label on the left
+                Column(modifier = Modifier.width(60.dp)) {
+                    Text(text = hourFormatted, color = Color.Gray, fontSize = 12.sp)
+                }
+
+                // Timeline and appointment area
+                Column(modifier = Modifier.weight(1f)) {
+                    // Draw current time indicator if it's this hour
+                    if (hour == now.hour) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Canvas(modifier = Modifier.size(10.dp)) {
+                                drawCircle(color = Color(0xFF4A90E2))
+                            }
+                            Divider(
+                                color = Color(0xFF4A90E2),
+                                thickness = 2.dp,
                                 modifier = Modifier
-                                    .background(Color(0xFFD0E7FF), RoundedCornerShape(8.dp))
-                                    .padding(horizontal = 8.dp, vertical = 2.dp)
+                                    .padding(start = 4.dp)
+                                    .fillMaxWidth()
                             )
                         }
+                        Spacer(modifier = Modifier.height(4.dp))
                     }
+
+                    todayAppointments
+                        .filter { it.date.equals(today.atTime(hour, 0)) }
+                        .forEach { appointment ->
+                            Box(
+                                modifier = Modifier
+                                    .background(Color(0xFFEFF6FF), shape = RoundedCornerShape(12.dp))
+                                    .padding(16.dp)
+                                    .fillMaxWidth()
+                            ) {
+                                Row(
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Column {
+                                        Text(appointment.doctor_id.toString(), style = MaterialTheme.typography.body1)
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Box(
+                                            modifier = Modifier
+                                                .background(Color(0xFF4A90E2), shape = RoundedCornerShape(8.dp))
+                                                .padding(horizontal = 12.dp, vertical = 4.dp)
+                                        ) {
+                                            Text(appointment.patient_id.toString(), color = Color.White, fontSize = 12.sp)
+                                        }
+                                    }
+
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
+
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
             }
+        }
+
+        if (todayAppointments.isEmpty()) {
+            Text("No appointments today.", color = Color.Gray)
         }
     }
 }

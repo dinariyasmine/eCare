@@ -48,11 +48,19 @@ dependencies {
     implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
     implementation ("androidx.compose.runtime:runtime-livedata:1.7.8")
     implementation("com.adamglin:phosphor-icon:1.0.0")
+    implementation("androidx.compose.material3:material3:1.3.2")
+    // In your build.gradle file
+
+// or
+   // implementation "androidx.compose.material3:material3:1.2.0-alpha12" // if using alpha
+    implementation("io.coil-kt:coil-compose:2.4.0") // Use the latest version
     implementation(libs.firebase.firestore.ktx)
     implementation(libs.foundation.layout.android)
     implementation(libs.androidx.storage)
     implementation(project(":data"))
     implementation(libs.navigation.runtime.android)
+    implementation(libs.volley)
+    implementation(libs.androidx.foundation.android)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

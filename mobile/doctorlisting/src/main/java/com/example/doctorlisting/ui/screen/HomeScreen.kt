@@ -1,46 +1,84 @@
 package com.example.doctorlisting.ui.screen
 
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.Text
+import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
-import com.example.doctorlisting.data.AppointmentRepository
-import com.example.doctorlisting.data.repository.DoctorsRepositoryImpl
-import com.example.ecare_mobile.data.repository.UserRepository
-
+import com.example.data.model.Appointment
+import com.example.data.model.Doctor
+import com.example.data.model.User
+import com.example.data.repository.AppointmentRepository
+import com.example.data.repository.DoctorRepository
+import com.example.data.repository.UserRepository
 import com.example.doctorlisting.ui.component.HomePage
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.withContext
+import java.lang.reflect.Modifier
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun HomeScreen(navController: NavController) {
-    val doctorRepository = remember { DoctorsRepositoryImpl() }
-    val doctors = remember { doctorRepository.getDoctors() }
-    var searchQuery by remember { mutableStateOf("") }
-    var showFilterDialog by remember { mutableStateOf(false) }
+    val doctorRepository = remember { DoctorRepository() }
+    val userRepository = remember { UserRepository() }
+    val appointmentRepository = remember { AppointmentRepository() }
 
-    val userRepo = UserRepository()
-    val appointmentRepo = AppointmentRepository()
+    var doctors by remember { mutableStateOf<List<Doctor>>(emptyList()) }
+    var users by remember { mutableStateOf<List<User>>(emptyList()) }
+    var currentUser by remember { mutableStateOf<User?>(null) }
+    var appointments by remember { mutableStateOf<List<Appointment>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(true) }
 
-    val users = userRepo.getUsers()
-    if (users.isEmpty()) {
-        // You can show a fallback UI or redirect somewhere else
-        Text("No user found.")
-        return
+    LaunchedEffect(Unit) {
+        withContext(Dispatchers.IO) {
+            // Fetch all data in parallel
+            val doctorsDeferred = async { doctorRepository.getAllDoctors() }
+            val usersDeferred = async { userRepository.getAllUsers() }
+
+            doctors = doctorsDeferred.await()
+            users = usersDeferred.await()
+
+            // Get current user (using index 1 as in your original code)
+            currentUser = users.getOrNull(1)
+
+            // Fetch appointments if we have a current user
+            currentUser?.let { user ->
+                appointments = appointmentRepository.getAppointmentsByPatientId(user.id)
+            }
+
+            isLoading = false
+        }
     }
-//
-    val currentUser = users[1]
-    val appointments = appointmentRepo.getAppointmentsForUser(currentUser.id)
+
+//    if (isLoading) {
+//        // Show loading indicator
+//        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+//            CircularProgressIndicator()
+//        }
+//        return
+//    }
+
+//    if (currentUser == null) {
+//        // Show error state
+//        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+//            Text("No user found.")
+//        }
+//        return
+//    }
 
     HomePage(
-        user = currentUser,
+        user = currentUser!!,
         appointments = appointments,
-        unreadNotifications = 3,
+        unreadNotifications = 3, // You might want to fetch this from a repository
         doctors = doctors,
-        navController = navController
+        navController = navController,
+        users = users
     )
-
-
 }
-

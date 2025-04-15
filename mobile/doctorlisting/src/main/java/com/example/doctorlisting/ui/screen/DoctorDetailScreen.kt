@@ -1,5 +1,5 @@
 package com.example.doctorlisting.ui.screen
-import com.adamglin.PhosphorIcons
+
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -9,6 +9,8 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,28 +22,39 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberImagePainter
-import com.example.doctorlisting.data.repository.DoctorsRepositoryImpl
-
-import com.adamglin.phosphoricons.regular.InstagramLogo
-import com.adamglin.phosphoricons.regular.LinkedinLogo
-import com.adamglin.phosphoricons.regular.Phone
-import com.adamglin.phosphoricons.regular.Envelope
-
-import com.adamglin.phosphoricons.Regular
-import com.adamglin.phosphoricons.regular.Star
+import com.example.data.model.Doctor
+import com.example.data.repository.DoctorRepository
+import com.example.data.repository.UserRepository
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @Composable
 fun DoctorDetailScreen(doctorId: Int?, navController: NavController) {
-    val doctorRepository = remember { DoctorsRepositoryImpl() }
-    val doctor = remember(doctorId) { doctorRepository.getDoctorById(doctorId ?: -1) }
+    val doctorRepository = remember { DoctorRepository() }
+    val userRepository = remember { UserRepository() }
+    val doctorState = remember { mutableStateOf<Doctor?>(null) }
+    val userState = remember { mutableStateOf<com.example.data.model.User?>(null) }
 
-    if (doctor == null) {
-        Text("Doctor not found", modifier = Modifier.padding(16.dp))
+    LaunchedEffect(doctorId) {
+        withContext(Dispatchers.IO) {
+            val doctor = doctorId?.let { doctorRepository.getDoctorById(it) }
+            doctorState.value = doctor
+
+            doctor?.let {
+                userState.value = userRepository.getUserById(it.user_id)
+            }
+        }
+    }
+
+    val doctor = doctorState.value
+    val user = userState.value
+
+    if (doctor == null || user == null) {
+        Text("Loading...", modifier = Modifier.padding(16.dp))
         return
     }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-
         // Profile Section
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -50,7 +63,7 @@ fun DoctorDetailScreen(doctorId: Int?, navController: NavController) {
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Image(
-                    painter = rememberImagePainter(doctor.image),
+                    painter = rememberImagePainter(doctor.photo),
                     contentDescription = null,
                     modifier = Modifier
                         .size(80.dp)
@@ -62,18 +75,19 @@ fun DoctorDetailScreen(doctorId: Int?, navController: NavController) {
                 Spacer(modifier = Modifier.width(16.dp))
 
                 Column {
-                    Text(text = doctor.name, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text(text = user.name, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                     Text(text = doctor.specialty, fontSize = 14.sp, color = Color.Gray)
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            imageVector = PhosphorIcons.Regular.Star,
+                            imageVector = Icons.Default.Star,
                             contentDescription = null,
                             tint = Color(0xFFFFC107),
-                            modifier = Modifier.size(16.dp))
+                            modifier = Modifier.size(16.dp)
+                        )
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(text = "${doctor.rating} out of 5", fontSize = 13.sp)
+                        Text(text = "${doctor.grade} out of 5", fontSize = 13.sp)
                     }
                 }
             }
@@ -88,10 +102,10 @@ fun DoctorDetailScreen(doctorId: Int?, navController: NavController) {
                 val circleSize = 22.dp
 
                 listOf(
-                    PhosphorIcons.Regular.InstagramLogo,
-                    PhosphorIcons.Regular.LinkedinLogo,
-                    PhosphorIcons.Regular.Phone,
-                    PhosphorIcons.Regular.Envelope
+                    Icons.Default.Star, // Replace with actual social icons if available
+                    Icons.Default.Star,
+                    Icons.Default.Star,
+                    Icons.Default.Star
                 ).forEach { icon ->
                     Box(
                         modifier = Modifier
@@ -111,66 +125,51 @@ fun DoctorDetailScreen(doctorId: Int?, navController: NavController) {
             }
         }
 
-
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Payment
+        // Stats Section
         Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
             Column {
                 Text(text = "Patients", fontSize = 13.sp, color = Color.Gray)
-                Text(text = doctor.patients.toString(), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Text(text = doctor.nbr_patients.toString(), fontSize = 14.sp, fontWeight = FontWeight.Bold)
             }
             Column {
-                Text(text = "Payment", fontSize = 13.sp, color = Color.Gray)
-                Text(text = "${doctor.payment} DZD", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF3366FF))
+                Text(text = "Specialty", fontSize = 13.sp, color = Color.Gray)
+                Text(text = doctor.specialty, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF3366FF))
             }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Education
-        Text(text = "Education", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-        Text(text = doctor.education, fontSize = 13.sp, color = Color.DarkGray)
+        // Description
+        Text(text = "About", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        Text(text = doctor.description, fontSize = 13.sp, color = Color.DarkGray)
 
         Spacer(modifier = Modifier.height(16.dp))
 
         // Reviews Section
         Text(text = "Rating", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-        Text(text = "★ ${doctor.rating} out of 5", fontSize = 14.sp, color = Color.Gray)
+        Text(text = "★ ${doctor.grade} out of 5", fontSize = 14.sp, color = Color.Gray)
 
         Button(
-            onClick = {navController.navigate("doctor/${doctor.id}/reviews")  },
+            onClick = { navController.navigate("doctor/${doctor.id}/reviews") },
             modifier = Modifier.align(Alignment.End).padding(vertical = 8.dp),
             shape = RoundedCornerShape(10.dp),
             colors = ButtonDefaults.buttonColors(
-                backgroundColor = Color(0xFF3B82F6), // Button background color
-                contentColor = Color.White // Text and icon color
+                backgroundColor = Color(0xFF3B82F6),
+                contentColor = Color.White
             )
-
         ) {
             Text("See all")
         }
 
-        doctor.reviews.take(2).forEach { review ->
-            Card(
-                shape = RoundedCornerShape(8.dp),
-                backgroundColor = Color(0xFFF5F5F5),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp)
-            ) {
-                Column(modifier = Modifier.padding(12.dp)) {
-                    Text(text = review.author, fontWeight = FontWeight.Bold)
-                    Text(text = review.text, fontSize = 13.sp)
-                }
-            }
-        }
+        // Since reviews aren't in the model, we'll skip displaying them
+        // You would need to add reviews to the Doctor model or fetch them separately
 
         Spacer(modifier = Modifier.height(16.dp))
 
         // Location
         Text(text = "Location", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-        // Replace with actual map if available
         Box(
             modifier = Modifier
                 .fillMaxWidth()

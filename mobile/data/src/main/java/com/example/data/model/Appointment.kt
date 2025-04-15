@@ -9,7 +9,8 @@ data class Appointment(
     val start_time: Date,
     val end_time: Date,
     val status: AppointmentStatus,
-    val QR_code: String
+    val QR_code: String,
+    val date : Date
 )
 
 enum class AppointmentStatus {

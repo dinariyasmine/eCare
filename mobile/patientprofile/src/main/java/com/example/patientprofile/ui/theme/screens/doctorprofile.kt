@@ -1,11 +1,13 @@
 package com.example.patientprofile.ui.theme.screens
 
- 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -25,13 +27,15 @@ import com.adamglin.PhosphorIcons
 
 import com.adamglin.phosphoricons.regular.Pill
 import com.adamglin.phosphoricons.Regular
-
+import com.adamglin.phosphoricons.regular.CalendarBlank
+import com.adamglin.phosphoricons.regular.CarProfile
 
 @Composable
-fun ProfileScreen(
+fun DoctorProfileScreen(
     navController: NavController,
     userRepository: UserRepository // Make sure you're passing UserRepository here
 ) {
+
     // Get the ViewModel instance
     val viewModel: UserViewModel = viewModel(
         factory = UserViewModel.Factory(userRepository) // Pass the UserRepository
@@ -62,6 +66,12 @@ fun ProfileScreen(
             text = "Personal Information"
         ) {
             navController.navigate("personal_info/${user?.id}")
+        }
+        ProfileOption(
+            icon = PhosphorIcons.Regular.CalendarBlank,
+            text = "Working hours"
+        ) {
+            navController.navigate("working_hours/${user?.id}")
         }
 
         ProfileOption(

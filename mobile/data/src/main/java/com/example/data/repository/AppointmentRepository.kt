@@ -24,7 +24,8 @@ class AppointmentRepository {
                 start_time = sdf.parse("2025-04-13 10:00:00") as Date,
                 end_time = sdf.parse("2025-04-13 11:00:00") as Date,
                 status = AppointmentStatus.CONFIRMED,
-                QR_code = "QR001"
+                QR_code = "QR001",
+                date = sdf.parse("2025-04-13") as Date
             ),
             Appointment(
                 id = 2,
@@ -33,7 +34,8 @@ class AppointmentRepository {
                 start_time = sdf.parse("2025-04-14 14:30:00") as Date,
                 end_time = sdf.parse("2025-04-14 15:30:00") as Date,
                 status = AppointmentStatus.IN_PROGRESS,
-                QR_code = "QR002"
+                QR_code = "QR002",
+                date = sdf.parse("2025-04-14") as Date
             ),
             Appointment(
                 id = 3,
@@ -42,7 +44,8 @@ class AppointmentRepository {
                 start_time = sdf.parse("2025-04-15 09:15:00") as Date,
                 end_time = sdf.parse("2025-04-15 10:15:00") as Date,
                 status = AppointmentStatus.COMPLETED,
-                QR_code = "QR003"
+                QR_code = "QR003",
+                date = sdf.parse("2025-04-15") as Date
             )
         )
     }

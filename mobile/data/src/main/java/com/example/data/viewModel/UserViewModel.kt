@@ -152,19 +152,21 @@ class UserViewModel(private val userRepository: UserRepository) : ViewModel() {
                 // Generate a new ID (in a real app, this would be handled by the backend)
                 val newId = (_users.value.maxOfOrNull { it.id } ?: 0) + 1
 
-                val newUser = User(
-                    id = newId,
-                    name = name,
-                    email = email,
-                    password = password,
-                    phone = phone,
-                    adress = address,
-                    role = role,
-                    birth_date = birthDate
-                )
+                val newUser = birthDate?.let {
+                    User(
+                        id = newId,
+                        name = name,
+                        email = email,
+                        password = password,
+                        phone = phone,
+                        adress = address,
+                        role = role,
+                        birth_date = it
+                    )
+                }
 
-                val success = userRepository.createUser(newUser)
-                if (success) {
+                val success = newUser?.let { userRepository.createUser(it) }
+                if (success == true) {
                     fetchAllUsers() // Refresh the list
                 } else {
                     _error.value = "Failed to create user: User with the same ID or email already exists"
@@ -224,19 +226,21 @@ class UserViewModel(private val userRepository: UserRepository) : ViewModel() {
                     null
                 }
 
-                val updatedUser = User(
-                    id = id,
-                    name = name,
-                    email = email,
-                    password = password,
-                    phone = phone,
-                    adress = address,
-                    role = role,
-                    birth_date = birthDate
-                )
+                val updatedUser = birthDate?.let {
+                    User(
+                        id = id,
+                        name = name,
+                        email = email,
+                        password = password,
+                        phone = phone,
+                        adress = address,
+                        role = role,
+                        birth_date = it
+                    )
+                }
 
-                val success = userRepository.updateUser(updatedUser)
-                if (success) {
+                val success = updatedUser?.let { userRepository.updateUser(it) }
+                if (success == true) {
                     fetchAllUsers() // Refresh the list
                     if (_selectedUser.value?.id == id) {
                         _selectedUser.value = updatedUser // Update selected user if it was selected

@@ -44,8 +44,92 @@ class DoctorRepository {
         )
     }
 
-    suspend fun getAllDoctors(): List<Doctor> {
-        return simulateDatabaseCall()
+    fun getAllDoctors(): List<Doctor> {
+
+
+        val doctors = listOf(
+            Doctor(
+                id = 1,
+                user_id = 101,
+                photo = "https://example.com/doctors/1.jpg",
+                specialty = "Cardiology",
+                clinic_id = 5,
+                grade = 4.8f,
+                description = "Experienced cardiologist with 15 years of practice",
+                nbr_patients = 1243
+            ),
+            Doctor(
+                id = 2,
+                user_id = 102,
+                photo = "https://example.com/doctors/2.jpg",
+                specialty = "Pediatrics",
+                clinic_id = 3,
+                grade = 4.6f,
+                description = "Pediatric specialist focusing on child wellness",
+                nbr_patients = 876
+            ),
+            Doctor(
+                id = 3,
+                user_id = 103,
+                photo = "https://example.com/doctors/3.jpg",
+                specialty = "Neurology",
+                clinic_id = 7,
+                grade = 4.9f,
+                description = "Neurology expert with research background",
+                nbr_patients = 1542
+            ),
+            Doctor(
+                id = 4,
+                user_id = 104,
+                photo = "https://example.com/doctors/4.jpg",
+                specialty = "Dermatology",
+                clinic_id = 2,
+                grade = 4.7f,
+                description = "Skin care specialist with cosmetic expertise",
+                nbr_patients = 932
+            ),
+            Doctor(
+                id = 5,
+                user_id = 105,
+                photo = "https://example.com/doctors/5.jpg",
+                specialty = "Orthopedics",
+                clinic_id = 8,
+                grade = 4.5f,
+                description = "Bone and joint specialist with surgical focus",
+                nbr_patients = 1120
+            ),
+            Doctor(
+                id = 6,
+                user_id = 106,
+                photo = "https://example.com/doctors/6.jpg",
+                specialty = "General Practice",
+                clinic_id = 1,
+                grade = 4.3f,
+                description = "Family doctor with holistic approach",
+                nbr_patients = 2105
+            ),
+            Doctor(
+                id = 7,
+                user_id = 107,
+                photo = "https://example.com/doctors/7.jpg",
+                specialty = "Ophthalmology",
+                clinic_id = 4,
+                grade = 4.8f,
+                description = "Eye care specialist with laser surgery expertise",
+                nbr_patients = 1432
+            ),
+            Doctor(
+                id = 8,
+                user_id = 108,
+                photo = "https://example.com/doctors/8.jpg",
+                specialty = "Psychiatry",
+                clinic_id = 6,
+                grade = 4.4f,
+                description = "Mental health professional with therapy focus",
+                nbr_patients = 765
+            )
+        )
+        return doctors
     }
 
     suspend fun getDoctorById(id: Int): Doctor? {

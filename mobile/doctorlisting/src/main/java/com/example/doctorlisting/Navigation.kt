@@ -1,5 +1,8 @@
 
 package com.example.doctorlisting
+import DoctorListScreen
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
@@ -22,10 +25,11 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.doctorlisting.ui.screen.DoctorDetailScreen
-import com.example.doctorlisting.ui.screen.DoctorListScreen
+
 import com.example.doctorlisting.ui.screen.DoctorReviewsScreen
 import com.example.doctorlisting.ui.screen.HomeScreen
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
@@ -75,7 +79,7 @@ fun AppNavigation() {
             }
 
             composable("doctors") {
-                DoctorListScreen(navController = navController)
+                DoctorListScreen()
             }
 
             composable(

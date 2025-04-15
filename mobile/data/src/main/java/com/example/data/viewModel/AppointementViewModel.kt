@@ -85,7 +85,8 @@ class AppointmentViewModel(private val appointmentRepository: AppointmentReposit
                     start_time = startTime,
                     end_time = endTime,
                     status = AppointmentStatus.CONFIRMED,
-                    QR_code = qrCode
+                    QR_code = qrCode,
+                    date = Date()
                 )
 
                 val success = appointmentRepository.createAppointment(newAppointment)

@@ -1,9 +1,8 @@
-
 package com.example.doctorlisting.ui.component
 import InfoCardCarousel
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
@@ -13,23 +12,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.doctorlisting.data.model.Appointment
-import com.example.doctorlisting.data.model.Doctor
-import com.example.doctorlisting.ui.component.DoctorList
-import com.example.doctorlisting.ui.component.HeaderSection
-import com.example.doctorlisting.ui.component.ScheduleTimeline
-import com.example.doctorlisting.ui.screen.DoctorCard
-import com.example.ecare_mobile.data.model.User
+import com.example.data.model.Appointment
+import com.example.data.model.Doctor
+import com.example.data.model.User
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun HomePage(
     user: User,
     appointments: List<Appointment>,
     unreadNotifications: Int,
     doctors: List<Doctor>,
-    navController: NavController
+    navController: NavController,
+    users: List<User>
 ) {
     val scrollState = rememberScrollState()
+
+    // Convert List<User> to Map<Int, User> indexed by user ID
+    val usersMap = users.associateBy { it.id }
 
     Column(
         modifier = Modifier
@@ -42,14 +42,13 @@ fun HomePage(
         InfoCardCarousel()
         Spacer(modifier = Modifier.height(24.dp))
         Text("Schedule Today", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-        ScheduleTimeline(appointments)
+        ScheduleCard(appointments)
         Spacer(modifier = Modifier.height(24.dp))
-        DoctorList(
-            doctors = doctors,
-            navController = navController,
-            modifier = Modifier.fillMaxSize()
-        )
-
-
+//        DoctorList(
+//            doctors = doctors,
+//            users = usersMap,
+//            navController = navController,
+//            modifier = Modifier.fillMaxSize()
+//        )
     }
 }

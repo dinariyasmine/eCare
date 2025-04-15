@@ -41,6 +41,8 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
+    implementation(project(":data"))
+
     implementation("androidx.compose.ui:ui:1.6.0")
     implementation("androidx.compose.material:material:1.6.0")
     implementation("androidx.compose.ui:ui-tooling-preview:1.6.0")
@@ -51,6 +53,12 @@ dependencies {
     implementation(libs.androidx.foundation.layout.android)
     implementation(libs.androidx.foundation.layout.android)
     implementation(libs.androidx.foundation.layout.android)
+    implementation(libs.foundation.android)
+    implementation(libs.androidx.runtime.livedata)
+    implementation(libs.androidx.compose.foundation.foundation.layout.android)
+    implementation(libs.androidx.compose.foundation.foundation.layout.android)
+    implementation(libs.androidx.compose.foundation.foundation.layout.android)
+    implementation(libs.androidx.compose.foundation.foundation.layout.android2)
     debugImplementation("androidx.compose.ui:ui-tooling:1.7.8")
     implementation("androidx.activity:activity-compose:1.8.2")
 
