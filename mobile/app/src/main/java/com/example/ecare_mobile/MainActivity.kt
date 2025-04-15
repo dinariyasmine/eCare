@@ -11,6 +11,7 @@ import com.example.data.model.AppointmentStatus
 import com.example.data.repository.DoctorRepository
 import com.example.data.repository.UserRepository
 import com.example.data.viewModel.DoctorViewModel
+import com.example.doctorlisting.AppNavigation
 import com.example.doctorlisting.ui.screen.DoctorListScreen
 import java.lang.reflect.Array.set
 import java.text.SimpleDateFormat
@@ -82,7 +83,9 @@ val app=listOf(
         date = todayDate
     )
 )
-         com.example.doctorlisting.ui.component.ScheduleCard(app)
+         com.example.doctorlisting.ui.screen.HomeScreen(navController)
+//
+           // AppNavigation()
         }
     }
 }

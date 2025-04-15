@@ -2,14 +2,7 @@ package com.example.doctorlisting.ui.screen
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.Text
 import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import com.example.data.model.Appointment
 import com.example.data.model.Doctor
@@ -21,7 +14,6 @@ import com.example.doctorlisting.ui.component.HomePage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
-import java.lang.reflect.Modifier
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -46,7 +38,7 @@ fun HomeScreen(navController: NavController) {
             users = usersDeferred.await()
 
             // Get current user (using index 1 as in your original code)
-            currentUser = users.getOrNull(1)
+            currentUser = users[0]
 
             // Fetch appointments if we have a current user
             currentUser?.let { user ->
@@ -74,11 +66,6 @@ fun HomeScreen(navController: NavController) {
 //    }
 
     HomePage(
-        user = currentUser!!,
-        appointments = appointments,
-        unreadNotifications = 3, // You might want to fetch this from a repository
-        doctors = doctors,
-        navController = navController,
-        users = users
+
     )
 }

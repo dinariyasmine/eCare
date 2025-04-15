@@ -61,8 +61,37 @@ class FeedbackRepository {
     }
 
     suspend fun getFeedbacksByDoctorId(doctorId: Int): List<Feedback> {
-        delay(500) // Simulate delay
-        return simulateDatabaseCall().filter { it.doctor_id == doctorId }
+//        delay(500) // Simulate delay
+//        return simulateDatabaseCall().filter { it.doctor_id == doctorId }
+        val now = Date()
+        return listOf(
+            Feedback(
+                id = 1,
+                title = "Great Experience",
+                description = "The doctor was very helpful and kind.",
+                patient_id = 101,
+                doctor_id = 201,
+                date_creation = now,
+                time_creation = now
+            ),
+            Feedback(
+                id = 2,
+                title = "Quick Diagnosis",
+                description = "Got my diagnosis quickly and efficiently.",
+                patient_id = 102,
+                doctor_id = 202,
+                date_creation = now,
+                time_creation = now
+            ),
+            Feedback(
+                id = 3,
+                title = "Satisfactory Visit",
+                description = "The consultation was good, but the wait time was long.",
+                patient_id = 103,
+                doctor_id = 203,
+                date_creation = now,
+                time_creation = now
+            ))
     }
 
     suspend fun getFeedbacksByDate(date: Date): List<Feedback> {

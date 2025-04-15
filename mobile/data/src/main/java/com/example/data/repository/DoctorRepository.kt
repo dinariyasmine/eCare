@@ -132,9 +132,18 @@ class DoctorRepository {
         return doctors
     }
 
-    suspend fun getDoctorById(id: Int): Doctor? {
-        delay(500) // Simulate delay
-        return simulateDatabaseCall().find { it.id == id }
+    fun getDoctorById(id: Int): Doctor? {
+//
+        return  Doctor(
+            id = 8,
+            user_id = 108,
+            photo = "https://example.com/doctors/8.jpg",
+            specialty = "Psychiatry",
+            clinic_id = 6,
+            grade = 4.4f,
+            description = "Mental health professional with therapy focus",
+            nbr_patients = 765
+        )
     }
 
     suspend fun getDoctorByUserId(userId: Int): Doctor? {

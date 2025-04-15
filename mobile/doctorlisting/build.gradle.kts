@@ -42,7 +42,7 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(project(":data"))
-
+    implementation ("org.osmdroid:osmdroid-android:6.1.16")
     implementation("androidx.compose.ui:ui:1.6.0")
     implementation("androidx.compose.material:material:1.6.0")
     implementation("androidx.compose.ui:ui-tooling-preview:1.6.0")
@@ -59,6 +59,8 @@ dependencies {
     implementation(libs.androidx.compose.foundation.foundation.layout.android)
     implementation(libs.androidx.compose.foundation.foundation.layout.android)
     implementation(libs.androidx.compose.foundation.foundation.layout.android2)
+    implementation(libs.firebase.firestore)
+    implementation(libs.play.services.maps)
     debugImplementation("androidx.compose.ui:ui-tooling:1.7.8")
     implementation("androidx.activity:activity-compose:1.8.2")
 
