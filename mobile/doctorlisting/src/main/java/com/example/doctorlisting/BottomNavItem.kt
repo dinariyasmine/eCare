@@ -1,7 +1,7 @@
 package com.example.doctorlisting
 
 
-import com.example.doctorlisting.ui.screen.DoctorDetailScreen
+import com.example.doctorlisting.ui.screen.DoctorListScreen
 
 
 // androidApp/src/main/java/com/example/androidApp/Navigation.kt

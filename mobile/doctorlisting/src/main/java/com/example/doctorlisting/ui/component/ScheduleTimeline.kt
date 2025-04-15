@@ -36,7 +36,12 @@ fun ScheduleCard(appointments: List<Appointment>) {
     val now = ZonedDateTime.now(zoneId).withSecond(0).withNano(0)
 
     val todayAppointments = appointments
-        .filter { it.date.equals(today) }
+        .filter {
+            it.date.toInstant()
+                .atZone(zoneId)
+                .toLocalDate() == today
+        }
+
         .sortedBy { it.start_time}
 
     val appointmentHours = todayAppointments.map { it.start_time.hours }.distinct()
@@ -45,7 +50,9 @@ fun ScheduleCard(appointments: List<Appointment>) {
         Text("Schedule Today", style = MaterialTheme.typography.body1)
         Spacer(modifier = Modifier.height(16.dp))
 
-        for (hour in 0..23) {
+        val hoursToDisplay = (appointmentHours + now.hour).distinct().sorted()
+
+        for (hour in hoursToDisplay) {
             val hourFormatted = "%02d:00".format(hour)
 
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
@@ -74,7 +81,7 @@ fun ScheduleCard(appointments: List<Appointment>) {
                     }
 
                     todayAppointments
-                        .filter { it.date.equals(today.atTime(hour, 0)) }
+                        .filter { it.start_time.hours == hour }
                         .forEach { appointment ->
                             Box(
                                 modifier = Modifier
@@ -98,7 +105,6 @@ fun ScheduleCard(appointments: List<Appointment>) {
                                             Text(appointment.patient_id.toString(), color = Color.White, fontSize = 12.sp)
                                         }
                                     }
-
                                 }
                             }
                             Spacer(modifier = Modifier.height(16.dp))
@@ -108,6 +114,7 @@ fun ScheduleCard(appointments: List<Appointment>) {
                 }
             }
         }
+
 
         if (todayAppointments.isEmpty()) {
             Text("No appointments today.", color = Color.Gray)

@@ -1,6 +1,6 @@
 
 package com.example.doctorlisting
-import DoctorListScreen
+
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.padding
@@ -16,6 +16,8 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
@@ -24,7 +26,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.data.repository.DoctorRepository
+import com.example.data.repository.UserRepository
+import com.example.data.viewModel.DoctorViewModel
 import com.example.doctorlisting.ui.screen.DoctorDetailScreen
+import com.example.doctorlisting.ui.screen.DoctorListScreen
 
 import com.example.doctorlisting.ui.screen.DoctorReviewsScreen
 import com.example.doctorlisting.ui.screen.HomeScreen
@@ -79,8 +85,18 @@ fun AppNavigation() {
             }
 
             composable("doctors") {
-                DoctorListScreen()
+                val doctorViewModel: DoctorViewModel = viewModel(
+                    factory = DoctorViewModel.Factory(
+                        doctorRepository = DoctorRepository(),
+                        userRepository = UserRepository()
+                    )
+                )
+                DoctorListScreen(
+                    navController = navController,
+                    doctorViewModel = doctorViewModel
+                )
             }
+
 
             composable(
                 "doctor/{doctorId}",
@@ -110,5 +126,5 @@ fun AppNavigation() {
 data class NavigationItem(
     val route: String,
     val title: String,
-    val icon: androidx.compose.ui.graphics.vector.ImageVector
+    val icon: ImageVector
 )
