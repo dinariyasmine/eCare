@@ -1,0 +1,4 @@
+com.example.onboarding_screens
+drawable obs_1
+drawable obs_2
+drawable obs_3

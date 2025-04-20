@@ -1,0 +1,17 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.example.onboarding_screens" >
+4
+5    <uses-sdk android:minSdkVersion="24" />
+6
+7    <application>
+7-->C:\Users\KM-USER\Desktop\TDM_eCare\eCare\mobile\onboarding-screens\src\main\AndroidManifest.xml:3:5-7:19
+8        <activity
+8-->C:\Users\KM-USER\Desktop\TDM_eCare\eCare\mobile\onboarding-screens\src\main\AndroidManifest.xml:4:9-6:40
+9            android:name="com.example.onboarding_screens.OnboardingActivity"
+9-->C:\Users\KM-USER\Desktop\TDM_eCare\eCare\mobile\onboarding-screens\src\main\AndroidManifest.xml:5:13-47
+10            android:exported="false" />
+10-->C:\Users\KM-USER\Desktop\TDM_eCare\eCare\mobile\onboarding-screens\src\main\AndroidManifest.xml:6:13-37
+11    </application>
+12
+13</manifest>
