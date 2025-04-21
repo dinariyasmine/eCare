@@ -83,9 +83,10 @@ val app=listOf(
         date = todayDate
     )
 )
-         com.example.doctorlisting.ui.screen.HomeScreen(navController)
+  //      com.example.doctorlisting.ui.screen.HomeScreen(navController)
 //
-           // AppNavigation()
+
+         AppNavigation()
         }
     }
 }

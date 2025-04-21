@@ -1,5 +1,6 @@
 package com.example.doctorlisting.ui.component
 
+import androidx.compose.foundation.Image
 import androidx.compose.material.icons.filled.Notifications
 import com.example.data.model.User
 
@@ -11,8 +12,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import coil.compose.rememberAsyncImagePainter
 
 @Composable
 fun HeaderSection(user: User?, unreadNotifications: Int) {
@@ -26,13 +29,13 @@ fun HeaderSection(user: User?, unreadNotifications: Int) {
         // Profile Info
         Row(verticalAlignment = Alignment.CenterVertically) {
             // Avatar
-//            Image(
-//                painter = rememberAsyncImagePainter(   model = user.avatarUrl),
-//                contentDescription = "Profile Picture",
-//                modifier = Modifier
-//                    .size(48.dp)
-//                    .clip(CircleShape)
-//            )
+            Image(
+                painter = rememberAsyncImagePainter(   model = "url"),
+                contentDescription = "Profile Picture",
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+            )
 
             Spacer(modifier = Modifier.width(12.dp))
 
@@ -40,7 +43,7 @@ fun HeaderSection(user: User?, unreadNotifications: Int) {
             Column {
                 Text(
                     text = "Hi, Welcome Back,",
-                  //  style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray)
+                 //  style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray)
                 )
                 if (user != null) {
                     Text(

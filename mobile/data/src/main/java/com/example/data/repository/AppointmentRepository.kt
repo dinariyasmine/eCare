@@ -97,21 +97,31 @@ class AppointmentRepository {
                 id = 1,
                 doctor_id = 101,
                 patient_id = 201,
-                start_time = parseDateOrNull("2025-04-16 01:00:00", dateTimeFormat) ?: Date(),
-                end_time = parseDateOrNull("2025-04-16 11:00:00", dateTimeFormat) ?: Date(),
+                start_time = parseDateOrNull("2025-04-21 01:00:00", dateTimeFormat) ?: Date(),
+                end_time = parseDateOrNull("2025-04-21 11:00:00", dateTimeFormat) ?: Date(),
                 status = AppointmentStatus.CONFIRMED,
                 QR_code = "QR001",
-                date = parseDateOrNull("2025-04-16", dateFormat) ?: Date()
+                date = parseDateOrNull("2025-04-21", dateFormat) ?: Date()
+            ),
+            Appointment(
+                id = 1,
+                doctor_id = 101,
+                patient_id = 201,
+                start_time = parseDateOrNull("2025-04-21 03:00:00", dateTimeFormat) ?: Date(),
+                end_time = parseDateOrNull("2025-04-21 04:00:00", dateTimeFormat) ?: Date(),
+                status = AppointmentStatus.CONFIRMED,
+                QR_code = "QR001",
+                date = parseDateOrNull("2025-04-21", dateFormat) ?: Date()
             ),
             Appointment(
                 id = 2,
                 doctor_id = 102,
                 patient_id = 202,
-                start_time = parseDateOrNull("2025-04-14 14:30:00", dateTimeFormat) ?: Date(),
-                end_time = parseDateOrNull("2025-04-14 15:30:00", dateTimeFormat) ?: Date(),
+                start_time = parseDateOrNull("2025-04-21 14:30:00", dateTimeFormat) ?: Date(),
+                end_time = parseDateOrNull("2025-04-21 15:30:00", dateTimeFormat) ?: Date(),
                 status = AppointmentStatus.IN_PROGRESS,
                 QR_code = "QR002",
-                date = parseDateOrNull("2025-04-14", dateFormat) ?: Date()
+                date = parseDateOrNull("2025-04-21", dateFormat) ?: Date()
             ))
     }
 

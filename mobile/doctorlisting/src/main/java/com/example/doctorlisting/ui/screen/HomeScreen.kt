@@ -2,7 +2,9 @@ package com.example.doctorlisting.ui.screen
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import com.example.data.model.Appointment
 import com.example.data.model.Doctor
@@ -65,7 +67,5 @@ fun HomeScreen(navController: NavController) {
 //        return
 //    }
 
-    HomePage(
-
-    )
+   HomePage(modifier = Modifier.fillMaxSize() , navController)
 }

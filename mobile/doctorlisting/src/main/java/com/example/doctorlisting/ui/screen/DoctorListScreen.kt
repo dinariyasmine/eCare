@@ -1,3 +1,4 @@
+
 package com.example.doctorlisting.ui.screen
 
 import androidx.compose.foundation.Image
@@ -54,6 +55,9 @@ fun DoctorListScreen(
     var searchQuery by remember { mutableStateOf("") }
     var showFilterDialog by remember { mutableStateOf(false) }
 
+    // Filter state to be passed to dialog
+    val filterState = remember { FilterState() }
+
     LaunchedEffect(Unit) {
         doctorViewModel.fetchAllDoctors()
     }
@@ -88,8 +92,12 @@ fun DoctorListScreen(
                 .horizontalScroll(rememberScrollState())
                 .padding(bottom = 16.dp)
         ) {
-            listOf("Headache", "Nausea", "Fever", "Cold", "Palpitations").forEach { symptom ->
-                Chip(text = symptom)
+            val symptoms = listOf("Headache", "Nausea", "Fever", "Cold", "Palpitations")
+            symptoms.forEach { symptom ->
+                Chip(
+                    text = symptom,
+                    onClick = { doctorViewModel.filterBySymptom(symptom) }
+                )
             }
         }
 
@@ -97,14 +105,48 @@ fun DoctorListScreen(
             items(doctors) { doctor ->
                 DoctorCard(doctor = doctor, navController = navController)
             }
+
+            // Show message when no doctors match filters
+            if (doctors.isEmpty() && !loading) {
+                item {
+                    Text(
+                        text = "No doctors found matching your criteria",
+                        modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                        color = Color.Gray,
+                        fontSize = 16.sp
+                    )
+                }
+            }
         }
     }
 
     if (showFilterDialog) {
         FilterDialog(
+            filterState = filterState,
             onDismiss = { showFilterDialog = false },
-            onApply = {
-                // implement filtering logic if needed
+            onApply = { specialties, minRating, location, patientRange ->
+                // Apply all filters
+                doctorViewModel.resetFilters()
+
+                // Apply specialties filter
+                specialties.forEach { (specialty, isSelected) ->
+                    if (isSelected) {
+                        doctorViewModel.updateSpecialtyFilter(specialty, true)
+                    }
+                }
+
+                // Apply rating filter
+                doctorViewModel.updateRatingFilter(minRating)
+
+                // Apply location filter
+                if (location != null) {
+                    doctorViewModel.updateLocationFilter(location)
+                }
+
+                // Apply patient count filter
+                val (minPatients, maxPatients) = patientRange
+                doctorViewModel.updatePatientCountFilter(minPatients, maxPatients)
+
                 showFilterDialog = false
             }
         )
@@ -167,11 +209,36 @@ fun SearchBarWithFilter(
     }
 }
 
+// State holder for filter dialog
+class FilterState {
+    val specialtySelections = mutableStateMapOf<String, Boolean>()
+    var selectedRating by mutableStateOf(0)
+    var selectedLocation by mutableStateOf<String?>(null)
+    var selectedPatientRange by mutableStateOf<Pair<Int?, Int?>>(null to null)
+
+    // Initialize with default specialties
+    init {
+        listOf(
+            "Cardiology", "Dermatology", "Pediatrics", "Neurology",
+            "Ophthalmology", "Orthopedics", "Psychiatry", "Gynecology", "Urology",
+            "Endocrinology", "Gastroenterology", "Hematology", "Nephrology", "Oncology",
+            "Pulmonology", "Rheumatology", "General Practice", "Allergy & Immunology"
+        ).forEach { specialty ->
+            specialtySelections[specialty] = false
+        }
+    }
+}
+
 @Composable
 fun FilterDialog(
+    filterState: FilterState,
     onDismiss: () -> Unit,
-    onApply: () -> Unit
+    onApply: (Map<String, Boolean>, Float, String?, Pair<Int?, Int?>) -> Unit
 ) {
+    var selectedRating by remember { mutableStateOf(filterState.selectedRating) }
+    var selectedLocation by remember { mutableStateOf(filterState.selectedLocation) }
+    var patientRange by remember { mutableStateOf(filterState.selectedPatientRange) }
+
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             shape = RoundedCornerShape(16.dp),
@@ -181,9 +248,9 @@ fun FilterDialog(
                 modifier = Modifier
                     .padding(16.dp)
                     .fillMaxWidth()
-                    .heightIn(max = 500.dp) // Définir une hauteur maximale pour la boîte de dialogue
+                    .heightIn(max = 500.dp)
             ) {
-                // En-tête
+                // Header
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -197,12 +264,21 @@ fun FilterDialog(
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp
                     )
-                    TextButton(onClick = onApply) {
+                    TextButton(
+                        onClick = {
+                            onApply(
+                                filterState.specialtySelections.toMap(),
+                                selectedRating.toFloat(),
+                                selectedLocation,
+                                patientRange
+                            )
+                        }
+                    ) {
                         Text("Apply", color = Color(0xFF2196F3))
                     }
                 }
 
-                // Rendre le contenu de la boîte de dialogue scrollable
+                // Make the content of the dialog scrollable
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -210,32 +286,45 @@ fun FilterDialog(
                         .verticalScroll(rememberScrollState())
                 ) {
                     Spacer(modifier = Modifier.height(16.dp))
-                    // Section des spécialisations
+                    // Specializations section
                     Text(
                         text = "Specialisations",
                         fontSize = 14.sp,
                         color = Color.Gray,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
-                    // Checkboxes de spécialisation initialement visibles
+
+                    // Show specialties with checkboxes
                     var showAllSpecialties by remember { mutableStateOf(false) }
                     val initialSpecialties = listOf("Cardiology", "Dermatology", "Pediatrics", "Neurology")
-                    val additionalSpecialties = listOf(
-                        "Ophthalmology", "Orthopedics", "Psychiatry", "Gynecology", "Urology",
-                        "Endocrinology", "Gastroenterology", "Hematology", "Nephrology", "Oncology",
-                        "Pulmonology", "Rheumatology", "Allergy & Immunology"
-                    )
-                    // Afficher les spécialisations initiales
-                    initialSpecialties.forEach { specialization ->
-                        SpecialtyCheckbox(specialty = specialization)
+                    val additionalSpecialties = filterState.specialtySelections.keys.toList()
+                        .filter { it !in initialSpecialties }
+
+                    // Show initial specialties
+                    initialSpecialties.forEach { specialty ->
+                        SpecialtyCheckbox(
+                            specialty = specialty,
+                            checked = filterState.specialtySelections[specialty] ?: false,
+                            onCheckedChange = { checked ->
+                                filterState.specialtySelections[specialty] = checked
+                            }
+                        )
                     }
-                    // Afficher les spécialisations supplémentaires si elles sont étendues
+
+                    // Show additional specialties if expanded
                     if (showAllSpecialties) {
-                        additionalSpecialties.forEach { specialization ->
-                            SpecialtyCheckbox(specialty = specialization)
+                        additionalSpecialties.forEach { specialty ->
+                            SpecialtyCheckbox(
+                                specialty = specialty,
+                                checked = filterState.specialtySelections[specialty] ?: false,
+                                onCheckedChange = { checked ->
+                                    filterState.specialtySelections[specialty] = checked
+                                }
+                            )
                         }
                     }
-                    // Bouton "Afficher tout" avec flèche déroulante
+
+                    // Show all toggle with dropdown arrow
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -259,58 +348,108 @@ fun FilterDialog(
                                 .rotate(if (showAllSpecialties) 180f else 0f)
                         )
                     }
+
                     Divider()
-                    // Section des avis
+
+                    // Reviews section
                     Text(
                         text = "Reviews",
                         fontSize = 14.sp,
                         color = Color.Gray,
                         modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
                     )
+
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         repeat(5) { index ->
-                            var selected by remember { mutableStateOf(false) }
                             Icon(
                                 imageVector = PhosphorIcons.Regular.Star,
                                 contentDescription = "Star ${index + 1}",
-                                tint = if (selected) Color(0xFFFFC107) else Color.LightGray,
+                                tint = if (index < selectedRating) Color(0xFFFFC107) else Color.LightGray,
                                 modifier = Modifier
                                     .size(24.dp)
-                                    .clickable { selected = !selected }
+                                    .clickable { selectedRating = index + 1 }
                             )
                         }
                     }
+
                     Divider(modifier = Modifier.padding(vertical = 16.dp))
-                    // Section de la localisation
+
+                    // Location section
                     Text(
                         text = "Location",
                         fontSize = 14.sp,
                         color = Color.Gray,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        LocationChip(text = "Near me", selected = true)
-                        LocationChip(text = "My City", selected = false)
-                        LocationChip(text = "All", selected = false)
+                        LocationChip(
+                            text = "Near me",
+                            selected = selectedLocation == "Near me",
+                            onClick = { selectedLocation = "Near me" }
+                        )
+                        LocationChip(
+                            text = "My City",
+                            selected = selectedLocation == "My City",
+                            onClick = { selectedLocation = "My City" }
+                        )
+                        LocationChip(
+                            text = "All",
+                            selected = selectedLocation == "All" || selectedLocation == null,
+                            onClick = { selectedLocation = "All" }
+                        )
                     }
+
                     Divider(modifier = Modifier.padding(vertical = 16.dp))
-                    // Section des patients traités
+
+                    // Patients Treated section
                     Text(
                         text = "Patients Treated",
                         fontSize = 14.sp,
                         color = Color.Gray,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        PatientCountChip(text = "< 200")
-                        PatientCountChip(text = "500-1000")
-                        PatientCountChip(text = "> 1000")
+                        PatientCountChip(
+                            text = "< 200",
+                            selected = patientRange.first == 0 && patientRange.second == 200,
+                            onClick = {
+                                patientRange = if (patientRange.first == 0 && patientRange.second == 200) {
+                                    null to null  // Toggle off
+                                } else {
+                                    0 to 200
+                                }
+                            }
+                        )
+                        PatientCountChip(
+                            text = "500-1000",
+                            selected = patientRange.first == 500 && patientRange.second == 1000,
+                            onClick = {
+                                patientRange = if (patientRange.first == 500 && patientRange.second == 1000) {
+                                    null to null  // Toggle off
+                                } else {
+                                    500 to 1000
+                                }
+                            }
+                        )
+                        PatientCountChip(
+                            text = "> 1000",
+                            selected = patientRange.first == 1000 && patientRange.second == null,
+                            onClick = {
+                                patientRange = if (patientRange.first == 1000 && patientRange.second == null) {
+                                    null to null  // Toggle off
+                                } else {
+                                    1000 to null
+                                }
+                            }
+                        )
                     }
                 }
             }
@@ -319,17 +458,21 @@ fun FilterDialog(
 }
 
 @Composable
-fun SpecialtyCheckbox(specialty: String) {
+fun SpecialtyCheckbox(
+    specialty: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
+            .padding(vertical = 8.dp)
+            .clickable { onCheckedChange(!checked) },
         verticalAlignment = Alignment.CenterVertically
     ) {
-        var checked by remember { mutableStateOf(false) }
         Checkbox(
             checked = checked,
-            onCheckedChange = { checked = it },
+            onCheckedChange = onCheckedChange,
             colors = CheckboxDefaults.colors(
                 checkedColor = Color(0xFF2196F3)
             )
@@ -339,27 +482,11 @@ fun SpecialtyCheckbox(specialty: String) {
 }
 
 @Composable
-fun LocationChip(text: String, selected: Boolean) {
-    Surface(
-        shape = RoundedCornerShape(20.dp),
-        color = if (selected) Color(0xFF2196F3) else Color(0xFFF5F5F5)
-    ) {
-        Text(
-            text = text,
-            color = if (selected) Color.White else Color.Black,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            fontSize = 14.sp
-        )
-    }
-}
-
-@Composable
-fun PatientCountChip(text: String) {
-    var selected by remember { mutableStateOf(false) }
+fun LocationChip(text: String, selected: Boolean, onClick: () -> Unit) {
     Surface(
         shape = RoundedCornerShape(20.dp),
         color = if (selected) Color(0xFF2196F3) else Color(0xFFF5F5F5),
-        modifier = Modifier.clickable { selected = !selected }
+        modifier = Modifier.clickable(onClick = onClick)
     ) {
         Text(
             text = text,
@@ -371,9 +498,27 @@ fun PatientCountChip(text: String) {
 }
 
 @Composable
-fun Chip(text: String) {
+fun PatientCountChip(text: String, selected: Boolean, onClick: () -> Unit) {
     Surface(
-        modifier = Modifier.padding(end = 8.dp),
+        shape = RoundedCornerShape(20.dp),
+        color = if (selected) Color(0xFF2196F3) else Color(0xFFF5F5F5),
+        modifier = Modifier.clickable(onClick = onClick)
+    ) {
+        Text(
+            text = text,
+            color = if (selected) Color.White else Color.Black,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            fontSize = 14.sp
+        )
+    }
+}
+
+@Composable
+fun Chip(text: String, onClick: () -> Unit) {
+    Surface(
+        modifier = Modifier
+            .padding(end = 8.dp)
+            .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
         color = Color(0xFFF5F5F5)
     ) {
@@ -400,21 +545,21 @@ fun DoctorCard(doctor: Doctor, navController: NavController) {
                 .padding(16.dp)
                 .fillMaxWidth()
         ) {
-            // Image du docteur
+            // Doctor image
             Image(
-                painter = rememberImagePainter(data = doctor.photo), // Utilisation de doctor.photo [4, 5]
+                painter = rememberImagePainter(data = doctor.photo),
                 contentDescription = "Doctor Image",
                 modifier = Modifier
                     .size(72.dp)
                     .clip(RoundedCornerShape(10.dp))
             )
             Spacer(modifier = Modifier.width(16.dp))
-            // Infos du docteur
+            // Doctor info
             Column(
                 modifier = Modifier.weight(1f)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = doctor.specialty, fontWeight = FontWeight.Bold, fontSize = 18.sp) // Affichage de la spécialité [4, 5]
+                    Text(text = doctor.specialty, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                     Spacer(modifier = Modifier.width(8.dp))
                     Icon(
                         imageVector = PhosphorIcons.Regular.Star,
@@ -422,14 +567,14 @@ fun DoctorCard(doctor: Doctor, navController: NavController) {
                         tint = Color(0xFFFFC107),
                         modifier = Modifier.size(16.dp)
                     )
-                    Text(text = doctor.grade.toString(), fontSize = 14.sp) // Affichage de la note [4, 5]
+                    Text(text = doctor.grade.toString(), fontSize = 14.sp)
                 }
-                Text(text = doctor.specialty, color = Color.Gray, fontSize = 14.sp) // Redondant, déjà affiché au-dessus
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = doctor.description, // Utilisation de la description du docteur [4, 5]
+                    text = doctor.description,
                     fontSize = 12.sp,
                     color = Color.Gray,
-                    maxLines = 2 // Limiter le nombre de lignes pour la description
+                    maxLines = 2
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -440,7 +585,15 @@ fun DoctorCard(doctor: Doctor, navController: NavController) {
                         tint = Color.Gray
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(text = "2.4 km away", fontSize = 12.sp, color = Color.Gray) // La distance n'est pas dans le modèle
+                    Text(text = "2.4 km away", fontSize = 12.sp, color = Color.Gray)
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "${doctor.nbr_patients} patients",
+                        fontSize = 12.sp,
+                        color = Color.Gray,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
                 }
             }
         }

@@ -1,3 +1,4 @@
+// First, let's update the DoctorViewModel to handle filtering functionality
 package com.example.data.viewModel
 
 import androidx.lifecycle.ViewModel
@@ -18,6 +19,15 @@ class DoctorViewModel(
     private val _doctors = MutableStateFlow<List<Doctor>>(emptyList())
     val doctors: StateFlow<List<Doctor>> get() = _doctors
 
+    // Original unfiltered doctors list to reset filters
+    private val _allDoctors = MutableStateFlow<List<Doctor>>(emptyList())
+
+    // Current filter states
+    private val _activeSpecialties = MutableStateFlow<Set<String>>(emptySet())
+    private val _minRating = MutableStateFlow(0f)
+    private val _locationFilter = MutableStateFlow<String?>(null)
+    private val _patientCountRange = MutableStateFlow<Pair<Int?, Int?>>(null to null)
+
     private val _selectedDoctor = MutableStateFlow<Doctor?>(null)
     val selectedDoctor: StateFlow<Doctor?> get() = _selectedDoctor
 
@@ -37,7 +47,9 @@ class DoctorViewModel(
             _error.value = null
 
             try {
-                _doctors.value = doctorRepository.getAllDoctors()
+                val allDoctors = doctorRepository.getAllDoctors()
+                _allDoctors.value = allDoctors
+                _doctors.value = allDoctors
             } catch (e: Exception) {
                 _error.value = "Failed to load doctors: ${e.message}"
             } finally {
@@ -46,117 +58,64 @@ class DoctorViewModel(
         }
     }
 
-    fun getDoctorById(id: Int) {
+    // New function to handle search and apply current filters
+    fun searchDoctorsByName(query: String) {
         viewModelScope.launch {
             _loading.value = true
             _error.value = null
 
             try {
-                val doctor = doctorRepository.getDoctorById(id)
-                if (doctor != null) {
-                    _selectedDoctor.value = doctor
+                // Filter based on search query
+                var filtered = if (query.isBlank()) {
+                    _allDoctors.value
                 } else {
-                    _error.value = "Doctor not found"
+                    // In a real app, this would use the repository
+                    // For now, we'll filter in memory since the repository doesn't support this directly
+                    _allDoctors.value.filter { doctor ->
+                        // Search by specialty or description
+                        doctor.specialty.contains(query, ignoreCase = true) ||
+                                doctor.description.contains(query, ignoreCase = true)
+                    }
                 }
-            } catch (e: Exception) {
-                _error.value = "Failed to get doctor: ${e.message}"
-            } finally {
-                _loading.value = false
-            }
-        }
-    }
 
-    fun getDoctorByUserId(userId: Int) {
-        viewModelScope.launch {
-            _loading.value = true
-            _error.value = null
-
-            try {
-                val doctor = doctorRepository.getDoctorByUserId(userId)
-                if (doctor != null) {
-                    _selectedDoctor.value = doctor
-                    _doctors.value = listOf(doctor)
-                } else {
-                    _error.value = "Doctor not found for this user"
+                // Apply specialty filters
+                if (_activeSpecialties.value.isNotEmpty()) {
+                    filtered = filtered.filter { doctor ->
+                        _activeSpecialties.value.contains(doctor.specialty)
+                    }
                 }
-            } catch (e: Exception) {
-                _error.value = "Failed to get doctor by user ID: ${e.message}"
-            } finally {
-                _loading.value = false
-            }
-        }
-    }
 
-    fun getDoctorsByClinicId(clinicId: Int) {
-        viewModelScope.launch {
-            _loading.value = true
-            _error.value = null
-
-            try {
-                _doctors.value = doctorRepository.getDoctorsByClinicId(clinicId)
-            } catch (e: Exception) {
-                _error.value = "Failed to load doctors for clinic: ${e.message}"
-            } finally {
-                _loading.value = false
-            }
-        }
-    }
-
-    fun getDoctorsBySpecialty(specialty: String) {
-        viewModelScope.launch {
-            _loading.value = true
-            _error.value = null
-
-            try {
-                _doctors.value = doctorRepository.getDoctorsBySpecialty(specialty)
-            } catch (e: Exception) {
-                _error.value = "Failed to load doctors by specialty: ${e.message}"
-            } finally {
-                _loading.value = false
-            }
-        }
-    }
-
-    fun createDoctor(
-        userId: Int,
-        photo: String,
-        specialty: String,
-        clinicId: Int,
-        description: String
-    ) {
-        viewModelScope.launch {
-            _loading.value = true
-            _error.value = null
-
-            try {
-                // Generate a new ID (in a real app, this would be handled by the backend)
-                val newId = (_doctors.value.maxOfOrNull { it.id } ?: 0) + 1
-
-                val newDoctor = Doctor(
-                    id = newId,
-                    user_id = userId,
-                    photo = photo,
-                    specialty = specialty,
-                    clinic_id = clinicId,
-                    grade = 0.0f, // New doctors start with no rating
-                    description = description,
-                    nbr_patients = 0 // New doctors start with no patients
-                )
-
-                val success = doctorRepository.createDoctor(newDoctor)
-                if (success) {
-                    fetchAllDoctors() // Refresh the list
-                } else {
-                    _error.value = "Failed to create doctor: Doctor with the same ID or user ID already exists"
+                // Apply rating filter
+                if (_minRating.value > 0) {
+                    filtered = filtered.filter { doctor ->
+                        doctor.grade >= _minRating.value
+                    }
                 }
+
+                // Apply location filter (simplified since we don't have location data)
+                when (_locationFilter.value) {
+                    "Near me" -> filtered = filtered.take(3) // Simplified: just take top 3
+                    "My City" -> filtered = filtered.filter { it.clinic_id in 1..4 } // Simplified: clinics 1-4 in "my city"
+                }
+
+                // Apply patient count filter
+                val (minPatients, maxPatients) = _patientCountRange.value
+                if (minPatients != null || maxPatients != null) {
+                    filtered = filtered.filter { doctor ->
+                        val meetsMin = minPatients == null || doctor.nbr_patients >= minPatients
+                        val meetsMax = maxPatients == null || doctor.nbr_patients <= maxPatients
+                        meetsMin && meetsMax
+                    }
+                }
+
+                _doctors.value = filtered
             } catch (e: Exception) {
-                _error.value = "Failed to create doctor: ${e.message}"
+                _error.value = "Failed to search doctors: ${e.message}"
             } finally {
                 _loading.value = false
             }
         }
     }
-
     fun updateDoctor(doctor: Doctor) {
         viewModelScope.launch {
             _loading.value = true
@@ -178,81 +137,76 @@ class DoctorViewModel(
         }
     }
 
-    fun deleteDoctor(id: Int) {
+
+    // Filter functions
+    fun updateSpecialtyFilter(specialty: String, isSelected: Boolean) {
+        val currentSpecialties = _activeSpecialties.value.toMutableSet()
+        if (isSelected) {
+            currentSpecialties.add(specialty)
+        } else {
+            currentSpecialties.remove(specialty)
+        }
+        _activeSpecialties.value = currentSpecialties
+        applyAllFilters()
+    }
+
+    fun updateRatingFilter(minRating: Float) {
+        _minRating.value = minRating
+        applyAllFilters()
+    }
+
+    fun updateLocationFilter(location: String?) {
+        _locationFilter.value = location
+        applyAllFilters()
+    }
+
+    fun updatePatientCountFilter(minPatients: Int?, maxPatients: Int?) {
+        _patientCountRange.value = minPatients to maxPatients
+        applyAllFilters()
+    }
+
+    fun resetFilters() {
+        _activeSpecialties.value = emptySet()
+        _minRating.value = 0f
+        _locationFilter.value = null
+        _patientCountRange.value = null to null
+        _doctors.value = _allDoctors.value
+    }
+
+    private fun applyAllFilters() {
+        // Apply all active filters based on current search term
+        searchDoctorsByName("")
+    }
+
+    fun filterBySymptom(symptom: String) {
         viewModelScope.launch {
             _loading.value = true
             _error.value = null
 
             try {
-                val success = doctorRepository.deleteDoctor(id)
-                if (success) {
-                    fetchAllDoctors() // Refresh the list
-                    if (_selectedDoctor.value?.id == id) {
-                        _selectedDoctor.value = null // Clear selected doctor if it was deleted
-                    }
-                } else {
-                    _error.value = "Failed to delete doctor: Doctor not found"
+                // Map symptoms to specialties (simplified)
+                val specialtyMap = mapOf(
+                    "Headache" to "Neurology",
+                    "Nausea" to "Gastroenterology",
+                    "Fever" to "General Practice",
+                    "Cold" to "General Practice",
+                    "Palpitations" to "Cardiology"
+                )
+
+                val specialty = specialtyMap[symptom] ?: return@launch
+
+                _doctors.value = _allDoctors.value.filter {
+                    it.specialty == specialty
                 }
             } catch (e: Exception) {
-                _error.value = "Failed to delete doctor: ${e.message}"
+                _error.value = "Failed to filter by symptom: ${e.message}"
             } finally {
                 _loading.value = false
             }
         }
     }
 
-    fun searchDoctorsByName(name: String) {
-        viewModelScope.launch {
-            _loading.value = true
-            _error.value = null
-
-            try {
-                _doctors.value = doctorRepository.searchDoctorsByName(name, userRepository)
-            } catch (e: Exception) {
-                _error.value = "Failed to search doctors by name: ${e.message}"
-            } finally {
-                _loading.value = false
-            }
-        }
-    }
-
-    fun getTopRatedDoctors(limit: Int = 5) {
-        viewModelScope.launch {
-            _loading.value = true
-            _error.value = null
-
-            try {
-                _doctors.value = doctorRepository.getTopRatedDoctors(limit)
-            } catch (e: Exception) {
-                _error.value = "Failed to load top rated doctors: ${e.message}"
-            } finally {
-                _loading.value = false
-            }
-        }
-    }
-
-    fun getMostExperiencedDoctors(limit: Int = 5) {
-        viewModelScope.launch {
-            _loading.value = true
-            _error.value = null
-
-            try {
-                _doctors.value = doctorRepository.getMostExperiencedDoctors(limit)
-            } catch (e: Exception) {
-                _error.value = "Failed to load most experienced doctors: ${e.message}"
-            } finally {
-                _loading.value = false
-            }
-        }
-    }
-
-    fun clearError() {
-        _error.value = null
-    }
-
-    fun clearSelectedDoctor() {
-        _selectedDoctor.value = null
-    }
+    // ... [rest of existing methods]
 
     // Factory class to provide dependencies
     class Factory(

@@ -1,10 +1,10 @@
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -14,19 +14,27 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.accompanist.pager.*
 import com.example.doctorlisting.R
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalPagerApi::class)
 @Composable
 fun InfoCardCarousel() {
     val pagerState = rememberPagerState()
-    val scope = rememberCoroutineScope()
 
     val cards = listOf(
         "Yorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis.",
         "Trusted professionals ready to help you every step of the way.",
         "Find doctors nearby with just a few taps."
     )
+
+    // 🔄 Auto-scroll every 2 seconds
+    LaunchedEffect(pagerState) {
+        while (true) {
+            delay(3000) // Wait 2 seconds
+            val nextPage = (pagerState.currentPage + 1) % cards.size
+            pagerState.animateScrollToPage(nextPage)
+        }
+    }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,

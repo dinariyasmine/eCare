@@ -43,6 +43,7 @@ import com.adamglin.phosphoricons.regular.InstagramLogo
 import com.adamglin.phosphoricons.regular.LinkedinLogo
 import com.adamglin.phosphoricons.regular.Phone
 import com.adamglin.phosphoricons.regular.Star
+import com.adamglin.phosphoricons.regular.Users
 import com.example.data.model.Clinic
 import com.example.data.model.Doctor
 import com.example.data.model.Feedback
@@ -114,11 +115,49 @@ fun DoctorDetailScreen(doctorId: Int?, navController: NavController) {
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
+                .align(Alignment.TopEnd)
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(bottom = 80.dp)
+
                 .padding(16.dp)
         ) {
+            Spacer(modifier = Modifier.width(30.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+
+
+
+            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
+
+            ) {
+                val iconBackground = Color(0xFFE0F0FF)
+                val iconColor = Color(0xFF3366FF)
+                val iconSize = 12.dp
+                val circleSize = 22.dp
+
+                listOf(
+                    PhosphorIcons.Regular.InstagramLogo,
+                    PhosphorIcons.Regular.LinkedinLogo,
+                    PhosphorIcons.Regular.Phone,
+                    PhosphorIcons.Regular.Envelope
+                ).forEach { icon ->
+                    Box(
+                        modifier = Modifier
+                            .size(circleSize)
+                            .clip(CircleShape)
+                            .background(iconBackground),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            tint = iconColor,
+                            modifier = Modifier.size(iconSize)
+                        )
+                    }
+                }}
             // Profile Section
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -138,7 +177,8 @@ fun DoctorDetailScreen(doctorId: Int?, navController: NavController) {
                     )
                     Spacer(modifier = Modifier.width(16.dp))
 
-                    Column {
+                    Column ( horizontalAlignment = Alignment.Start){
+
                         Text(text = user.name, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                         Text(text = doctor.specialty, fontSize = 14.sp, color = Color.Gray)
                         Spacer(modifier = Modifier.height(4.dp))
@@ -152,55 +192,40 @@ fun DoctorDetailScreen(doctorId: Int?, navController: NavController) {
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(text = "${doctor.grade} out of 5", fontSize = 13.sp)
                         }
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                            Column {
+                                Icon(
+                                    imageVector = PhosphorIcons.Regular.Users,
+                                    contentDescription = "Users Icon",
+                                    modifier = Modifier.size(16.dp),
+                                    tint = Color.Gray
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(text = "Patients", fontSize = 13.sp, color = Color.Gray)
+                                Text(text = doctor.nbr_patients.toString(), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(text = "Payment", fontSize = 13.sp, color = Color.Gray)
+                            }
+                            Column {
+                                Spacer(modifier = Modifier.height(56.dp))
+
+                                Text(text = "${doctor.id} DZD", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF3366FF))
+                            }
+                        }
                     }
+
                 }
 
                 // Social Media Icons
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    val iconBackground = Color(0xFFE0F0FF)
-                    val iconColor = Color(0xFF3366FF)
-                    val iconSize = 12.dp
-                    val circleSize = 22.dp
 
-                    listOf(
-                        PhosphorIcons.Regular.InstagramLogo,
-                        PhosphorIcons.Regular.LinkedinLogo,
-                        PhosphorIcons.Regular.Phone,
-                        PhosphorIcons.Regular.Envelope
-                    ).forEach { icon ->
-                        Box(
-                            modifier = Modifier
-                                .size(circleSize)
-                                .clip(CircleShape)
-                                .background(iconBackground),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = icon,
-                                contentDescription = null,
-                                tint = iconColor,
-                                modifier = Modifier.size(iconSize)
-                            )
-                        }
-                    }
-                }
+
             }
 
             Spacer(modifier = Modifier.height(20.dp))
 
             // Payment
-            Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                Column {
-                    Text(text = "Patients", fontSize = 13.sp, color = Color.Gray)
-                    Text(text = doctor.nbr_patients.toString(), fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                }
-                Column {
-                    Text(text = "Payment", fontSize = 13.sp, color = Color.Gray)
-                    Text(text = "${doctor.id} DZD", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF3366FF))
-                }
-            }
+
 
             Spacer(modifier = Modifier.height(16.dp))
 
