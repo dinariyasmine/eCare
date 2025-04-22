@@ -2,17 +2,25 @@ package com.example.ecare_mobile
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.data.model.Appointment
 import com.example.data.model.AppointmentStatus
 import com.example.data.repository.DoctorRepository
 import com.example.data.repository.UserRepository
 import com.example.data.viewModel.DoctorViewModel
+import com.example.patientprofile.ui.theme.screens.DoctorPersonalInfoScreen
 import com.example.doctorlisting.AppNavigation
 import com.example.doctorlisting.ui.screen.DoctorListScreen
+import com.example.patientprofile.ui.theme.screens.DoctorPersonalInfoScreen
+import com.example.patientprofile.ui.theme.screens.PersonalInfoScreen
 import java.lang.reflect.Array.set
 import java.text.SimpleDateFormat
 import java.time.ZoneId
@@ -83,10 +91,24 @@ val app=listOf(
         date = todayDate
     )
 )
-  //      com.example.doctorlisting.ui.screen.HomeScreen(navController)
+            val userRepository = UserRepository()
+            var doctorRepository = DoctorRepository()
+            DoctorPersonalInfoScreen(
+               navController,
+                doctorRepository = doctorRepository,
+               userRepository = userRepository,
+           )
+  //   )
 //
 
-         AppNavigation()
+
+         //   ProfileScreen(navController = navController, userRepository = userRepository)
+
+         //AppNavigation3()
+
         }
     }
+
+
 }
+

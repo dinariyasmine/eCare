@@ -1,14 +1,22 @@
 package com.example.patientprofile.ui.theme.screens
-import androidx.compose.material3.OutlinedTextField
 
 import android.app.DatePickerDialog
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -17,9 +25,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
@@ -27,6 +39,35 @@ import com.example.data.repository.UserRepository
 import com.example.data.viewModel.UserViewModel
 import java.text.SimpleDateFormat
 import java.util.*
+
+data class CountryCode(
+    val code: String,
+    val name: String,
+    val flag: String
+)
+
+val countryCodes = listOf(
+    CountryCode("+1", "United States", "🇺🇸"),
+    CountryCode("+44", "United Kingdom", "🇬🇧"),
+    CountryCode("+91", "India", "🇮🇳"),
+    CountryCode("+49", "Germany", "🇩🇪"),
+    CountryCode("+33", "France", "🇫🇷"),
+    CountryCode("+81", "Japan", "🇯🇵"),
+    CountryCode("+86", "China", "🇨🇳"),
+    CountryCode("+7", "Russia", "🇷🇺"),
+    CountryCode("+55", "Brazil", "🇧🇷"),
+    CountryCode("+61", "Australia", "🇦🇺"),
+    CountryCode("+39", "Italy", "🇮🇹"),
+    CountryCode("+34", "Spain", "🇪🇸"),
+    CountryCode("+82", "South Korea", "🇰🇷"),
+    CountryCode("+52", "Mexico", "🇲🇽"),
+    CountryCode("+971", "UAE", "🇦🇪"),
+    CountryCode("+966", "Saudi Arabia", "🇸🇦"),
+    CountryCode("+65", "Singapore", "🇸🇬"),
+    CountryCode("+31", "Netherlands", "🇳🇱"),
+    CountryCode("+90", "Turkey", "🇹🇷"),
+    CountryCode("+20", "Egypt", "🇪🇬")
+)
 
 @Composable
 fun PersonalInfoScreen(
@@ -38,8 +79,8 @@ fun PersonalInfoScreen(
     val context = LocalContext.current
     val locale = Locale.getDefault()
     val dateFormat = SimpleDateFormat("yyyy-MM-dd", locale)
+    val scrollState = rememberScrollState()
 
-    // Fetch user when screen is shown
     LaunchedEffect(Unit) {
         viewModel.getUserById(1)
     }
@@ -54,17 +95,25 @@ fun PersonalInfoScreen(
         var email by remember { mutableStateOf(userData.email) }
         var phone by remember { mutableStateOf(userData.phone) }
         var address by remember { mutableStateOf(userData.adress ?: "") }
-
         var birthday by remember {
             mutableStateOf(userData.birth_date?.let { dateFormat.format(it) } ?: "")
         }
 
-        val calendar = Calendar.getInstance()
+        // Country code selection
+        var countryCodeExpanded by remember { mutableStateOf(false) }
+        var selectedCountryCode by remember { mutableStateOf(countryCodes.first()) }
+        var phoneWithoutCode by remember {
+            mutableStateOf(
+                if (phone.startsWith("+")) {
+                    val codeEndIndex = phone.indexOfFirst { it.isDigit().not() && it != '+' }
+                    if (codeEndIndex > 0) phone.substring(codeEndIndex) else phone
+                } else phone
+            )
+        }
 
+        val calendar = Calendar.getInstance()
         try {
-            userData.birth_date?.let {
-                calendar.time = it
-            }
+            userData.birth_date?.let { calendar.time = it }
         } catch (_: Exception) {}
 
         val year = calendar.get(Calendar.YEAR)
@@ -85,12 +134,22 @@ fun PersonalInfoScreen(
         val borderColor = Color(0xFF93C5FD)
         val backgroundColor = Color(0xFFF9FAFB)
         val primaryButtonColor = Color(0xFF3B82F6)
+        val textFieldColorScheme = OutlinedTextFieldDefaults.colors(
+            focusedContainerColor = backgroundColor,
+            unfocusedContainerColor = backgroundColor,
+            focusedBorderColor = borderColor,
+            unfocusedBorderColor = borderColor,
+            focusedTextColor = Color(0xFF4A4A4A),
+            unfocusedTextColor = Color(0xFF4A4A4A),
+            focusedLabelColor = Color(0xFF6E6E6E),
+            unfocusedLabelColor = Color(0xFF6E6E6E)
+        )
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(24.dp)
+                .verticalScroll(scrollState)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = { navController.popBackStack() }) {
@@ -115,59 +174,75 @@ fun PersonalInfoScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // First Name Field
+            Text(
+                text = "First Name",
+                color = Color(0xFF6E6E6E),
+                style = MaterialTheme.typography.bodySmall,
+                textAlign = TextAlign.Start,
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
             OutlinedTextField(
                 value = firstName,
                 onValueChange = { firstName = it },
-                label = { Text("First Name") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = backgroundColor,
-                    unfocusedContainerColor = backgroundColor,
-                    focusedBorderColor = borderColor,
-                    unfocusedBorderColor = borderColor
-                )
+                colors = textFieldColorScheme,
+                shape = RoundedCornerShape(12.dp)
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            // Last Name Field
+            Text(
+                text = "Last Name",
+                color = Color(0xFF6E6E6E),
+                style = MaterialTheme.typography.bodySmall,
+                textAlign = TextAlign.Start,
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
             OutlinedTextField(
                 value = lastName,
                 onValueChange = { lastName = it },
-                label = { Text("Last Name") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = backgroundColor,
-                    unfocusedContainerColor = backgroundColor,
-                    focusedBorderColor = borderColor,
-                    unfocusedBorderColor = borderColor
-                )
+                colors = textFieldColorScheme,
+                shape = RoundedCornerShape(12.dp)
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            // Email Field
+            Text(
+                text = "Email",
+                color = Color(0xFF6E6E6E),
+                style = MaterialTheme.typography.bodySmall,
+                textAlign = TextAlign.Start,
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
-                label = { Text("Email") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = backgroundColor,
-                    unfocusedContainerColor = backgroundColor,
-                    focusedBorderColor = borderColor,
-                    unfocusedBorderColor = borderColor
-                )
+                colors = textFieldColorScheme,
+                shape = RoundedCornerShape(12.dp)
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            // Birth Date Field
+            Text(
+                text = "Birth Date",
+                color = Color(0xFF6E6E6E),
+                style = MaterialTheme.typography.bodySmall,
+                textAlign = TextAlign.Start,
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
             OutlinedTextField(
                 value = birthday,
                 onValueChange = { },
-                label = { Text("Birth Date") },
                 trailingIcon = {
                     IconButton(onClick = { datePickerDialog.show() }) {
                         Icon(
@@ -183,44 +258,119 @@ fun PersonalInfoScreen(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                 keyboardActions = KeyboardActions.Default,
                 visualTransformation = VisualTransformation.None,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = backgroundColor,
-                    unfocusedContainerColor = backgroundColor,
-                    focusedBorderColor = borderColor,
-                    unfocusedBorderColor = borderColor
-                )
+                colors = textFieldColorScheme,
+                shape = RoundedCornerShape(12.dp)
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            OutlinedTextField(
-                value = phone,
-                onValueChange = { phone = it },
-                label = { Text("Phone Number") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+            // Phone Number Field with Country Code
+            Text(
+                text = "Phone Number",
+                color = Color(0xFF6E6E6E),
+                style = MaterialTheme.typography.bodySmall,
+                textAlign = TextAlign.Start,
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
+
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = backgroundColor,
-                    unfocusedContainerColor = backgroundColor,
-                    focusedBorderColor = borderColor,
-                    unfocusedBorderColor = borderColor
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Country code selector
+                Box {
+                    Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(12.dp))
+                            .border(1.dp, borderColor, RoundedCornerShape(12.dp))
+                            .background(backgroundColor)
+                            .clickable { countryCodeExpanded = true }
+                            .padding(horizontal = 12.dp, vertical = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "${selectedCountryCode.flag} ${selectedCountryCode.code}",
+                            color = Color(0xFF4A4A4A)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Icon(
+                            Icons.Default.ArrowDropDown,
+                            contentDescription = "Select Country Code",
+                            tint = Color(0xFF6E6E6E)
+                        )
+                    }
+
+                    // Country code dropdown
+                    if (countryCodeExpanded) {
+                        Dialog(onDismissRequest = { countryCodeExpanded = false }) {
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                shadowElevation = 8.dp
+                            ) {
+                                LazyColumn(
+                                    modifier = Modifier
+                                        .fillMaxWidth(0.8f)
+                                        .heightIn(max = 300.dp)
+                                ) {
+                                    items(countryCodes) { countryCode ->
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable {
+                                                    selectedCountryCode = countryCode
+                                                    countryCodeExpanded = false
+                                                }
+                                                .padding(16.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = "${countryCode.flag} ${countryCode.name}",
+                                                modifier = Modifier.weight(1f)
+                                            )
+                                            Text(text = countryCode.code)
+                                        }
+                                        Divider()
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                // Phone number input field
+                OutlinedTextField(
+                    value = phoneWithoutCode,
+                    onValueChange = {
+                        phoneWithoutCode = it
+                        phone = "${selectedCountryCode.code}$phoneWithoutCode"
+                    },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                    modifier = Modifier.weight(1f),
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = textFieldColorScheme
                 )
-            )
+            }
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            // Address Field
+            Text(
+                text = "Address",
+                color = Color(0xFF6E6E6E),
+                style = MaterialTheme.typography.bodySmall,
+                textAlign = TextAlign.Start,
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
             OutlinedTextField(
                 value = address,
                 onValueChange = { address = it },
-                label = { Text("Address") },
                 modifier = Modifier.fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = backgroundColor,
-                    unfocusedContainerColor = backgroundColor,
-                    focusedBorderColor = borderColor,
-                    unfocusedBorderColor = borderColor
-                )
+                singleLine = true,
+                colors = textFieldColorScheme,
+                shape = RoundedCornerShape(12.dp)
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -236,20 +386,29 @@ fun PersonalInfoScreen(
                     val updatedUser = userData.copy(
                         name = "$firstName $lastName",
                         email = email,
-                        phone = phone,
+                        phone = "${selectedCountryCode.code}$phoneWithoutCode",
                         adress = address,
                         birth_date = parsedBirthDate ?: userData.birth_date
                     )
                     // viewModel.updateUser(updatedUser)
                 },
                 modifier = Modifier.fillMaxWidth(),
+                // Changed from the default button shape to a custom shape with smaller corner radius
+                shape = RoundedCornerShape(6.dp) ,// Reduced corner radius for less rounding
                 colors = ButtonDefaults.buttonColors(
+                    // Changed from the default button shape to a custom shape with smaller corner radius
+                    // Reduced corner radius for less rounding
                     containerColor = primaryButtonColor,
-                    contentColor = Color.White
+                    contentColor = Color.White,
+                    // Changed from the default button shape to a custom shape with smaller corner radius
+                  //  shape = RoundedCornerShape(6.dp) // Reduced corner radius for less rounding
                 )
             ) {
                 Text("Save")
             }
+
+            // Add extra space at bottom for scrolling
+            Spacer(modifier = Modifier.height(40.dp))
         }
     }
 }
