@@ -1,5 +1,7 @@
 package com.example.patientprofile.ui.theme.screens
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -15,6 +17,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -33,7 +36,11 @@ import com.example.data.model.Doctor
 import com.example.data.repository.DoctorRepository
 import com.example.data.repository.UserRepository
 import com.example.data.viewModel.DoctorViewModel
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
+@OptIn(ExperimentalMaterial3Api::class)
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun DoctorPersonalInfoScreen(
     navController: NavController,
@@ -79,7 +86,23 @@ fun DoctorPersonalInfoScreen(
     var lastName by remember { mutableStateOf("Dharri") }
     var email by remember { mutableStateOf("lly_dharri@esi.dz") }
     var phone by remember { mutableStateOf("(+213) 1234567899") }
+
+    // Added date picker state variables
     var birthday by remember { mutableStateOf("18/03/2025") }
+    var showDatePicker by remember { mutableStateOf(false) }
+
+    // Date formatter
+    val dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+
+    // Extract the date components from the existing birthday string
+    val initialDate = try {
+        LocalDate.parse(birthday, dateFormatter)
+    } catch (e: Exception) {
+        LocalDate.now()
+    }
+
+    // Individual date components for the date picker
+    val selectedDateState = remember { mutableStateOf(initialDate) }
 
     // Professional Information
     var specialty by remember { mutableStateOf("Cardiology") }
@@ -131,6 +154,36 @@ fun DoctorPersonalInfoScreen(
             Text(text = error!!, color = Color.Red)
         }
         return
+    }
+
+    // Date Picker Dialog
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    birthday = selectedDateState.value.format(dateFormatter)
+                    showDatePicker = false
+                }) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("Cancel")
+                }
+            }
+        ) {
+            DatePicker(
+                state = rememberDatePickerState(
+                    initialSelectedDateMillis = selectedDateState.value.toEpochDay() * 24 * 60 * 60 * 1000
+                ),
+                title = { Text("Select Date") },
+                headline = { Text("Select your birthday") },
+                showModeToggle = true,
+
+            )
+        }
     }
 
     Column(
@@ -335,7 +388,7 @@ fun DoctorPersonalInfoScreen(
         Spacer(modifier = Modifier.height(8.dp))
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Birthday Field
+        // Birthday Field - Modified to show date picker
         Text(
             text = "Birthday",
             color = Color(0xFF6E6E6E),
@@ -347,11 +400,22 @@ fun DoctorPersonalInfoScreen(
         )
         OutlinedTextField(
             value = birthday,
-            onValueChange = { birthday = it },
-            modifier = Modifier.fillMaxWidth(),
+            onValueChange = { /* Read-only field */ },
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { showDatePicker = true },
             singleLine = true,
             colors = textFieldColorScheme,
-            shape = RoundedCornerShape(12.dp)
+            shape = RoundedCornerShape(12.dp),
+            readOnly = true,  // Make it read-only since we're using the date picker
+            trailingIcon = {
+                IconButton(onClick = { showDatePicker = true }) {
+                    Icon(
+                        imageVector = Icons.Filled.DateRange,
+                        contentDescription = "Select date"
+                    )
+                }
+            }
         )
 
         Spacer(modifier = Modifier.height(24.dp))
