@@ -1,4 +1,4 @@
-package com.example.appointment.ui.screen.components
+package com.example.appointment.ui.screen.components.list
 
 import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Bold

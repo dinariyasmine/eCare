@@ -1,6 +1,6 @@
 package com.example.appointment.ui.screen
 
-import HorizontalCalendar
+import com.example.appointment.ui.screen.components.list.HorizontalCalendar
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Column
@@ -14,8 +14,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.appointment.ui.screen.components.AppointmentsFilteredListBar
-import com.example.appointment.ui.screen.components.DayViewAgenda
+import com.example.appointment.ui.screen.components.list.AppointmentsFilteredListBar
+import com.example.appointment.ui.screen.components.list.DayViewAgenda
 import com.example.appointment.ui.theme.ECareMobileTheme
 import java.text.SimpleDateFormat
 import java.time.LocalDate

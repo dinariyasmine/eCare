@@ -44,7 +44,6 @@ dependencies {
     implementation(project(":appointment"))
     implementation(project(":core"))
     implementation(project(":data"))
-    implementation(project(":OnboardingScreens"))
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
     implementation("com.adamglin:phosphor-icon:1.0.0")
     implementation("androidx.compose.ui:ui")
