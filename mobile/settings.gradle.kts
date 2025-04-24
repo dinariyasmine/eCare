@@ -23,3 +23,4 @@ rootProject.name = "eCare-Mobile"
 include(":app")
 include(":data")
 include(":core")
+include(":authentification")

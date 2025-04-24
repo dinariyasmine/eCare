@@ -1,53 +1,69 @@
 package com.example.ecare_mobile
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import com.adamglin.PhosphorIcons
-import com.adamglin.phosphoricons.Bold
-import com.adamglin.phosphoricons.bold.AirTrafficControl
+import androidx.compose.runtime.*
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.example.authentification.screen.ui.screen.*
 import com.example.core.theme.ECareMobileTheme
-import com.example.data.repository.UserRepository
-import com.example.ecare_mobile.ui.screen.UserScreen
-import com.example.onboardingscreens.getWelcomeMessage
 
 class MainActivity : ComponentActivity() {
+    private lateinit var googleAuthHelper: googleAuthHelper
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Create UserRepository instance to pass to UserScreen
-        val userRepository = UserRepository()
-
-        // Get welcome message with null safety
-        val message = getWelcomeMessage() ?: "Welcome to eCare Mobile"
-        Log.d("MainActivity", message)
+        // Initialize Google Auth Helper
+        googleAuthHelper = googleAuthHelper(this)
 
         setContent {
             ECareMobileTheme {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    // Pass the repository to UserScreen
-                    UserScreen(userRepository = userRepository)
+                var showSplash by remember { mutableStateOf(true) }
 
-                    Text(
-                        text = message,
-                        modifier = Modifier.align(Alignment.TopCenter)
-                    )
-
-                    Icon(
-                        imageVector = PhosphorIcons.Bold.AirTrafficControl,
-                        contentDescription = "App Icon",
-                        modifier = Modifier.align(Alignment.BottomCenter)
-                    )
+                // Show splash screen first, then automatically transition to SignIn
+                if (showSplash) {
+                    SplashScreen(onSplashComplete = { showSplash = false })
+                } else {
+                    MainAppContent(googleAuthHelper)
                 }
             }
         }
     }
 }
+
+@Composable
+fun MainAppContent(googleAuthHelper: googleAuthHelper) {
+    val navController = rememberNavController()
+
+    // NavHost with SignIn as the start destination
+
+    // Add more routes as needed
+    NavHost(
+        navController = navController,
+        startDestination = Routes.SIGN_IN  // or Routes.SIGN_UP, whatever you prefer
+    ) {
+        composable(Routes.SIGN_IN) {
+            LoginScreen(googleAuthHelper = googleAuthHelper, navController = navController)
+        }
+        composable(Routes.SIGN_UP) {
+            SignUpScreen(googleAuthHelper = googleAuthHelper, navController = navController)
+        }
+        composable(Routes.SIGN_UP2) {
+            SignUp2Screen(googleAuthHelper = googleAuthHelper, navController = navController)
+        }
+        composable(Routes.RESET_PASS) {
+            resetPass(navController = navController)
+        }
+        composable(Routes.FORGOT_PASS) {
+            ForgotPass(navController = navController)
+        }
+        composable(Routes.OTP) {
+            OTPScreen(navController = navController)
+        }
+        // Add more routes as needed
+    }
+}
+
