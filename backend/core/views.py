@@ -12,7 +12,7 @@ from supabase import create_client
 supabase = create_client(settings.SUPABASE_URL, settings.SUPABASE_KEY)
 def get_users(request):
     # Query the "user" table
-    response = supabase.table('user').select('*').execute()
+    response = supabase.table('auth_user').select('*').execute()
 
     # Return the response data as JSON
     return JsonResponse(response.data, safe=False)
