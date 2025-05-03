@@ -17,3 +17,12 @@ enum class AppointmentStatus {
     IN_PROGRESS,
     COMPLETED
 }
+
+data class AppointmentRequest(
+    val id: Int,
+    val doctor_id: Int,
+    val patient_id: Int,
+    val start_time: Date,
+    val end_time: Date
+)
+
