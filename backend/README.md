@@ -76,3 +76,24 @@ const getProtectedData = async () => {
 
   return await response.json();
 };
+``` 
+
+## OTP : 
+
+User                   API                     System
+ |                      |                        |
+ |-- Request OTP ------>|                        |
+ |                      |-- Validate Email ----->|
+ |                      |<-- Generate OTP -------|
+ |                      |-- Send Email --------->|
+ |<-- OTP Sent ---------|                        |
+ |                      |                        |
+ |-- Verify OTP ------->|                        |
+ |                      |-- Check OTP valid ---->|
+ |<-- OTP Valid --------|<-- OTP Confirmed -----|
+ |                      |                        |
+ |-- Reset Password --->|                        |
+ |                      |-- Validate OTP ------->|
+ |                      |-- Update Password ---->|
+ |                      |-- Mark OTP as used --->|
+ |<-- Password Reset ---|<-- Confirmation -------|

@@ -188,3 +188,27 @@ SWAGGER_SETTINGS = {
     'USE_SESSION_AUTH': False,
 }
 AUTH_USER_MODEL = 'core.User'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # e.g., smtp.gmail.com
+EMAIL_PORT = 587  # For TLS
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'la_rezzoug@esi.dz'
+EMAIL_HOST_PASSWORD = 'pfnr ggel yelr bvbh'  
+DEFAULT_FROM_EMAIL = 'noreply@eCare.com'
+
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',  # Required for admin sidebar
+                'django.contrib.auth.context_processors.auth',  # Required for admin
+                'django.contrib.messages.context_processors.messages',  # Required for admin
+            ],
+        },
+    },
+]
