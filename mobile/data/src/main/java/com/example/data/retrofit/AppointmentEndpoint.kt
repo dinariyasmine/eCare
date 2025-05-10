@@ -1,4 +1,4 @@
-package com.example.data.service
+package com.example.data.retrofit
 
 import com.example.data.baseUrl
 import com.example.data.model.Appointment

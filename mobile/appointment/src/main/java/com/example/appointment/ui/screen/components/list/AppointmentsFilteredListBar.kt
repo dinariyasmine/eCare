@@ -3,9 +3,11 @@ package com.example.appointment.ui.screen.components.list
 import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Bold
 import com.adamglin.phosphoricons.bold.QrCode
+import com.adamglin.phosphoricons.bold.FilePdf
 import com.adamglin.phosphoricons.light.CalendarCheck
 import com.adamglin.phosphoricons.light.Clock
 import android.os.Build
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -29,91 +31,137 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.adamglin.phosphoricons.Light
 import com.example.appointment.R
-import com.example.appointment.data.model.Appointment
-import com.example.appointment.data.model.Status
-import com.example.appointment.data.repository.AppointmentRepository
+import com.example.data.viewModel.AppointmentViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.data.model.AppointmentStatus
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun AppointmentsFilteredListBar() {
-    val appointmentRepository = AppointmentRepository()
+fun AppointmentsFilteredListBar(patientId: Int) {
+    val viewModel: AppointmentViewModel = viewModel()
+    val context = LocalContext.current
     val selectedTab = remember { mutableStateOf("Current") }
     val interactionSource = remember { MutableInteractionSource() }
 
-    val allAppointments = remember {
-        appointmentRepository.getAppointments().groupBy { appointment ->
+    // State for appointments
+    val allAppointments by viewModel.appointments.observeAsState(emptyList())
+    var isLoading by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
+
+    // Load appointments when component is first composed
+    LaunchedEffect(patientId) {
+        isLoading = true
+        try {
+            viewModel.getAppointmentsByPatient(patientId)
+        } catch (e: Exception) {
+            error = "Failed to load appointments: ${e.message}"
+        } finally {
+            isLoading = false
+        }
+    }
+
+    // Show error if any
+    if (error != null) {
+        LaunchedEffect(error) {
+            Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+            error = null
+        }
+    }
+
+    // Filter appointments by selected tab
+    val filteredAppointments = remember(allAppointments, selectedTab.value) {
+        allAppointments.groupBy { appointment ->
             when {
                 appointment.date.isBefore(LocalDate.now()) -> "Past"
                 appointment.date.isAfter(LocalDate.now()) -> "Upcoming"
                 else -> "Current"
             }
-        }
+        }[selectedTab.value] ?: emptyList()
     }
 
-    val filteredAppointments = allAppointments[selectedTab.value] ?: emptyList()
-
-    Column() {
-        Row(
-            modifier = Modifier
-                .padding(bottom = 10.dp)
-                .background(Color(0xFFF5F6F9), shape = RoundedCornerShape(5.dp)),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
+    // Loading state
+    if (isLoading) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
         ) {
-            listOf("Past", "Current", "Upcoming").forEach { tab ->
-                val isSelected = tab == selectedTab.value
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(
-                             if (isSelected) 5.dp else 0.dp,
-                        )
-                        .background(
-                            if (isSelected) Color.White else Color.Transparent,
-                            shape = RoundedCornerShape(5.dp)
-                        )
-                        .clickable(
-                            interactionSource = interactionSource,
-                            indication = null,
-                            onClick = { selectedTab.value = tab }
-                        )
-                ) {
-                    Text(
-                        text = tab,
-                        color = Color(0xFF232447),
-                        style = MaterialTheme.typography.bodyMedium,
+            CircularProgressIndicator()
+        }
+    } else {
+        Column() {
+            Row(
+                modifier = Modifier
+                    .padding(bottom = 10.dp)
+                    .background(Color(0xFFF5F6F9), shape = RoundedCornerShape(5.dp)),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                listOf("Past", "Current", "Upcoming").forEach { tab ->
+                    val isSelected = tab == selectedTab.value
+                    Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 10.dp),
-                        textAlign = TextAlign.Center
-                    )
+                            .weight(1f)
+                            .padding(if (isSelected) 5.dp else 0.dp)
+                            .background(
+                                if (isSelected) Color.White else Color.Transparent,
+                                shape = RoundedCornerShape(5.dp)
+                            )
+                            .clickable(
+                                interactionSource = interactionSource,
+                                indication = null,
+                                onClick = { selectedTab.value = tab }
+                            )
+                    ) {
+                        Text(
+                            text = tab,
+                            color = Color(0xFF232447),
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 10.dp),
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
-        }
 
-        LazyColumn {
-            items(filteredAppointments) { appointment ->
-                AppointmentCard(appointment = appointment)
+            LazyColumn {
+                items(filteredAppointments) { appointment ->
+                    AppointmentCard(
+                        appointment = appointment,
+                        onCancel = {
+                            viewModel.deleteAppointment(appointment.id, patientId, true)
+                        },
+                        onReschedule = {
+                            // Handle reschedule
+                        }
+                    )
+                }
             }
         }
     }
@@ -121,7 +169,11 @@ fun AppointmentsFilteredListBar() {
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun AppointmentCard(appointment: Appointment) {
+fun AppointmentCard(
+    appointment: com.example.data.model.Appointment,
+    onCancel: () -> Unit,
+    onReschedule: () -> Unit
+) {
     val formatter = DateTimeFormatter.ofPattern("EEEE, MMM d", Locale.getDefault())
     val interactionSource = remember { MutableInteractionSource() }
 
@@ -135,79 +187,81 @@ fun AppointmentCard(appointment: Appointment) {
         )
     ) {
         Column(modifier = Modifier.padding(16.dp)){
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(bottom = 10.dp),
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically
-
-        ) {
-            Column(
-                modifier = Modifier.weight(2f)
-                                .fillMaxHeight(),
-            verticalArrangement = Arrangement.SpaceBetween
-
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = 10.dp),
+                horizontalArrangement = Arrangement.SpaceAround,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "Dr. ${appointment.doctor.name}",
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = appointment.doctor.specialty,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF4B5563)
-                )
+                Column(
+                    modifier = Modifier.weight(2f)
+                        .fillMaxHeight(),
+                    verticalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        //${appointment.doctor_name}
+                        text = "Dr. ${appointment.doctor_id}",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        //appointment.doctor_specialty
+                        text = "${appointment.doctor_id}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFF4B5563)
+                    )
 
-                Box(
-                    modifier = Modifier
-                        .padding(top = 8.dp)
-                        .clickable(
-                            interactionSource = interactionSource,
-                            indication = null,
-                            onClick = {
-                                when (appointment.status) {
-                                    Status.Completed -> {
-
-                                    }
-
-                                    else -> {
+                    Box(
+                        modifier = Modifier
+                            .padding(top = 8.dp)
+                            .clickable(
+                                interactionSource = interactionSource,
+                                indication = null,
+                                onClick = {
+                                    when (appointment.status) {
+                                        AppointmentStatus.COMPLETED -> {
+                                            // Handle prescription view
+                                        }
+                                        else -> {
+                                            // Handle check-in
+                                        }
                                     }
                                 }
-                            }
-                        )
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .padding( vertical = 8.dp)
+                            )
                     ) {
-                        Icon(
-                            imageVector = PhosphorIcons.Bold.QrCode,
-                            contentDescription = null,
-                            Modifier.background(Color(0xFFF3F4F6), RoundedCornerShape(5.dp)),
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = if (appointment.status == Status.Completed)
-                                "Prescription"
-                            else
-                                "Check In",
-                            color = Color(0xFF4B5563),
-                            style = MaterialTheme.typography.bodySmall,
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .padding(vertical = 8.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (appointment.status == AppointmentStatus.COMPLETED)
+                                                    PhosphorIcons.Bold.FilePdf
+                                                else
+                                                    PhosphorIcons.Bold.QrCode,
+                                contentDescription = null,
+                                Modifier.background(Color(0xFFF3F4F6), RoundedCornerShape(5.dp)),
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = if (appointment.status == AppointmentStatus.COMPLETED)
+                                    "Prescription"
+                                else
+                                    "Check In",
+                                color = Color(0xFF4B5563),
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                        }
                     }
                 }
-
+                Image(
+                    modifier = Modifier.weight(1f),
+                    painter = painterResource(R.drawable.doctor),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop
+                )
             }
-            Image(
-                modifier = Modifier.weight(1f),
-                painter = painterResource(R.drawable.doctor),
-                contentDescription = null,
-                contentScale = ContentScale.Crop
-            )
-        }
             Row(
                 modifier = Modifier.fillMaxWidth()
                     .background(Color(0xFFEFF6FF))
@@ -232,20 +286,20 @@ fun AppointmentCard(appointment: Appointment) {
                         contentDescription = null,
                     )
                     Text(
-                        text = "${appointment.startTime} - ${appointment.endTime}",
+                        text = "${appointment.start_time} - ${appointment.end_time}",
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
             }
 
-            if (appointment.status == Status.Confirmed) {
+            if (appointment.status == AppointmentStatus.CONFIRMED) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Button(
-                        onClick = { },
+                        onClick = onCancel,
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(5.dp),
                         colors = ButtonDefaults.buttonColors(
@@ -263,7 +317,7 @@ fun AppointmentCard(appointment: Appointment) {
                     }
 
                     Button(
-                        onClick = { },
+                        onClick = onReschedule,
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(5.dp),
                         colors = ButtonDefaults.buttonColors(

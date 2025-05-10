@@ -16,7 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.appointment.ui.screen.components.list.AppointmentsFilteredListBar
 import com.example.appointment.ui.screen.components.list.DayViewAgenda
-import com.example.appointment.ui.theme.ECareMobileTheme
+import com.example.core.theme.ECareMobileTheme
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.util.Date
@@ -59,7 +59,7 @@ fun ListAppointmentsScreen() {
                 selectedDate = selectedDate
             )
 
-            AppointmentsFilteredListBar()
+            AppointmentsFilteredListBar(0)
 
         }
     }
