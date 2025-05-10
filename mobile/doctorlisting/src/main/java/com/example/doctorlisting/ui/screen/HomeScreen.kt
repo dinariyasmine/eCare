@@ -2,15 +2,18 @@ package com.example.doctorlisting.ui.screen
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import com.example.data.model.Appointment
-import com.example.data.model.Doctor
+import com.example.data.model.Patient
 import com.example.data.model.User
 import com.example.data.repository.AppointmentRepository
-import com.example.data.repository.DoctorRepository
 import com.example.data.repository.UserRepository
 import com.example.doctorlisting.ui.component.HomePage
 import kotlinx.coroutines.Dispatchers
@@ -20,52 +23,60 @@ import kotlinx.coroutines.withContext
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun HomeScreen(navController: NavController) {
-    val doctorRepository = remember { DoctorRepository() }
     val userRepository = remember { UserRepository() }
     val appointmentRepository = remember { AppointmentRepository() }
 
-    var doctors by remember { mutableStateOf<List<Doctor>>(emptyList()) }
-    var users by remember { mutableStateOf<List<User>>(emptyList()) }
+    // States
     var currentUser by remember { mutableStateOf<User?>(null) }
     var appointments by remember { mutableStateOf<List<Appointment>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
+    var error by remember { mutableStateOf<String?>(null) }
 
+    // LaunchedEffect for side-effect to fetch data
     LaunchedEffect(Unit) {
-        withContext(Dispatchers.IO) {
-            // Fetch all data in parallel
-            val doctorsDeferred = async { doctorRepository.getAllDoctors() }
-            val usersDeferred = async { userRepository.getAllUsers() }
+        try {
+            withContext(Dispatchers.IO) {
+                // Fetch users in parallel
+                val usersDeferred = async { userRepository.getAllUsers() }
+                val users = usersDeferred.await()
 
-            doctors = doctorsDeferred.await()
-            users = usersDeferred.await()
+                // Get the first patient (you can adjust this logic as per your app's flow)
+                currentUser = users.firstOrNull { it.role == com.example.data.model.Role.PATIENT }
 
-            // Get current user (using index 1 as in your original code)
-            currentUser = users[0]
-
-            // Fetch appointments if we have a current user
-            currentUser?.let { user ->
-                appointments = appointmentRepository.getAppointmentsByPatientId(user.id)
+                currentUser?.let { user ->
+                    // Fetch appointments for the current patient
+                    appointments = appointmentRepository.getAppointmentsByPatientId(user.id)
+                }
             }
-
+        } catch (e: Exception) {
+            error = "Failed to load data: ${e.localizedMessage}"
+        } finally {
             isLoading = false
         }
     }
 
-//    if (isLoading) {
-//        // Show loading indicator
-//        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-//            CircularProgressIndicator()
-//        }
-//        return
-//    }
+    // UI for loading, error, or main content
+    if (isLoading) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+        return
+    }
 
-//    if (currentUser == null) {
-//        // Show error state
-//        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-//            Text("No user found.")
-//        }
-//        return
-//    }
+    if (error != null) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text(text = error ?: "An error occurred.")
+        }
+        return
+    }
 
-   HomePage(modifier = Modifier.fillMaxSize() , navController)
+    if (currentUser == null) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text(text = "No user found.")
+        }
+        return
+    }
+
+    // Show the HomePage with the current user and appointments
+    HomePage(modifier = Modifier.fillMaxSize(), navController = navController)
 }

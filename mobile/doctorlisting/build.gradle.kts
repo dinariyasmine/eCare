@@ -61,6 +61,7 @@ dependencies {
     implementation(libs.androidx.compose.foundation.foundation.layout.android2)
     implementation(libs.firebase.firestore)
     implementation(libs.play.services.maps)
+    implementation(libs.androidx.ui.android)
     debugImplementation("androidx.compose.ui:ui-tooling:1.7.8")
     implementation("androidx.activity:activity-compose:1.8.2")
 

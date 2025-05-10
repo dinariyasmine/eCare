@@ -20,6 +20,8 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -51,6 +53,7 @@ import com.example.data.repository.ClinicRepository
 import com.example.data.repository.DoctorRepository
 import com.example.data.repository.FeedbackRepository
 import com.example.data.repository.UserRepository
+import com.example.data.viewModel.DoctorViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.osmdroid.config.Configuration
@@ -72,35 +75,31 @@ fun parseGoogleMapsUrl(url: String): Pair<Double, Double>? {
         lat.toDouble() to lng.toDouble()
     }
 }
-
 @Composable
-fun DoctorDetailScreen(doctorId: Int?, navController: NavController) {
-    val doctorRepository = remember { DoctorRepository() }
-    val clinicRepository = remember { ClinicRepository() }
-    val userRepository = remember { UserRepository() }
-    val feedbackRepository = remember { FeedbackRepository() }
-    val doctorState = remember { mutableStateOf<Doctor?>(null) }
-    val userState = remember { mutableStateOf<com.example.data.model.User?>(null) }
-    val feedbacksState = remember { mutableStateOf<List<Feedback>>(emptyList()) }
-    val clinicState = remember { mutableStateOf<Clinic?>(null) }
+fun DoctorDetailScreen(
+    doctorId: Int?,
+    navController: NavController,
+    viewModel: DoctorViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+) {
+    val doctor by viewModel.doctorDetails.collectAsState()
+    val user by viewModel.doctorDetails.collectAsState()
+   val feedbacks by viewModel.doctorDetails.collectAsState()
+    val clinic by viewModel.doctorDetails.collectAsState()
 
     LaunchedEffect(doctorId) {
-        withContext(Dispatchers.IO) {
-            val doctor = doctorId?.let { doctorRepository.getDoctorById(it) }
-            doctorState.value = doctor
-
-            doctor?.let {
-                userState.value = userRepository.getUserById(it.user_id)
-                feedbacksState.value = feedbackRepository.getFeedbacksByDoctorId(it.id)
-                clinicState.value = clinicRepository.getClinic()
-            }
-        }
+        doctorId?.let { viewModel.loadDoctorDetails(it) }
     }
 
-    val doctor = doctorState.value
-    val user = userState.value
-    val feedbacks = feedbacksState.value
-    val clinic = clinicState.value
+    if (doctor == null || user == null) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+
 
     if (doctor == null || user == null) {
         Box(
@@ -166,7 +165,7 @@ fun DoctorDetailScreen(doctorId: Int?, navController: NavController) {
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Image(
-                        painter = rememberImagePainter(doctor.photo),
+                        painter = rememberImagePainter(doctor),
                         contentDescription = null,
                         modifier = Modifier
                             .size(80.dp)
@@ -179,9 +178,9 @@ fun DoctorDetailScreen(doctorId: Int?, navController: NavController) {
 
                     Column ( horizontalAlignment = Alignment.Start){
 
-                        Text(text = user.name, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                        Text(text = doctor.specialty, fontSize = 14.sp, color = Color.Gray)
-                        Spacer(modifier = Modifier.height(4.dp))
+                       Text(text = user!!.user.name, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                       // Text(text = doctor, fontSize = 14.sp, color = Color.Gray)
+                      Spacer(modifier = Modifier.height(4.dp))
 
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
@@ -190,7 +189,7 @@ fun DoctorDetailScreen(doctorId: Int?, navController: NavController) {
                                 tint = Color(0xFFFFC107),
                                 modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text(text = "${doctor.grade} out of 5", fontSize = 13.sp)
+                           Text(text = "${doctor!!.doctor.grade} out of 5", fontSize = 13.sp)
                         }
                         Spacer(modifier = Modifier.height(20.dp))
                         Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
@@ -203,14 +202,14 @@ fun DoctorDetailScreen(doctorId: Int?, navController: NavController) {
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(text = "Patients", fontSize = 13.sp, color = Color.Gray)
-                                Text(text = doctor.nbr_patients.toString(), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                               Text(text = doctor!!.doctor.nbr_patients.toString(), fontSize = 14.sp, fontWeight = FontWeight.Bold)
                                 Spacer(modifier = Modifier.height(16.dp))
                                 Text(text = "Payment", fontSize = 13.sp, color = Color.Gray)
                             }
                             Column {
                                 Spacer(modifier = Modifier.height(56.dp))
 
-                                Text(text = "${doctor.id} DZD", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF3366FF))
+                            Text(text = "${doctor!!.doctor.id} DZD", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF3366FF))
                             }
                         }
                     }
@@ -231,18 +230,18 @@ fun DoctorDetailScreen(doctorId: Int?, navController: NavController) {
 
             // Education
             Text(text = "Education", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-            Text(text = doctor.specialty, fontSize = 13.sp, color = Color.DarkGray)
+             Text(text = doctor!!.doctor.specialty, fontSize = 13.sp, color = Color.DarkGray)
 
             Spacer(modifier = Modifier.height(16.dp))
             Spacer(modifier = Modifier.height(16.dp))
 
             // Reviews Section
             Text(text = "Rating", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-            Text(text = "★ ${doctor.grade} out of 5", fontSize = 14.sp, color = Color.Gray)
+            Text(text = "★ ${doctor!!.doctor.grade} out of 5", fontSize = 14.sp, color = Color.Gray)
 
-            if (feedbacks.isNotEmpty()) {
+            if (feedbacks?.feedbacks?.isNotEmpty() == true) {
                 Button(
-                    onClick = { navController.navigate("doctor/${doctor.id}/reviews") },
+                    onClick = { navController.navigate("doctor/${doctor!!.doctor.id}/reviews") },
                     modifier = Modifier.align(Alignment.End).padding(vertical = 8.dp),
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(
@@ -253,7 +252,7 @@ fun DoctorDetailScreen(doctorId: Int?, navController: NavController) {
                     Text("See all")
                 }
 
-                feedbacks.take(2).forEach { feedback ->
+                feedbacks!!.feedbacks?.take(2)?.forEach { feedback ->
                     FeedbackCard(feedback = feedback)
                 }
             } else {
@@ -270,9 +269,11 @@ fun DoctorDetailScreen(doctorId: Int?, navController: NavController) {
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
+
             clinic?.let { currentClinic ->
                 val context = LocalContext.current
-                val (latitude, longitude) = parseGoogleMapsUrl(currentClinic.map_location) ?: run {
+                val (latitude, longitude) = currentClinic.clinic?.let { parseGoogleMapsUrl(it.map_location) }
+                    ?: run {
                     36.7050299 to 3.1739156 // Default coordinates
                 }
 
@@ -286,18 +287,18 @@ fun DoctorDetailScreen(doctorId: Int?, navController: NavController) {
                         modifier = Modifier.padding(12.dp)
                     ) {
                         Text(
-                            text = currentClinic.name,
+                            text = "currentClinic",
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp
                         )
-//                        Text(
-//                            text = currentClinic.map_location,
-//                            fontSize = 13.sp,
-//                            color = Color.DarkGray
-//                        )
+                        Text(
+                            text =" currentClinic.map_location",
+                            fontSize = 13.sp,
+                            color = Color.DarkGray
+                     )
                     }
 
-                    // Enhanced OpenStreetMap with custom marker
+                   ///  Enhanced OpenStreetMap with custom marker
                     AndroidView(
                         factory = { ctx ->
                             Configuration.getInstance().load(ctx, ctx.getSharedPreferences("osmdroid", 0))
@@ -313,14 +314,14 @@ fun DoctorDetailScreen(doctorId: Int?, navController: NavController) {
                                 maxZoomLevel = 21.0
 
                                 // Set map center and zoom
-                                controller.setCenter(GeoPoint(latitude, longitude))
+                               controller.setCenter(GeoPoint(latitude, longitude))
                                 controller.setZoom(18.0)
 
                                 // Create custom marker
                                 Marker(this).apply {
-                                    position = GeoPoint(latitude, longitude)
+                              position = GeoPoint(latitude, longitude)
                                     setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                                    title = currentClinic.name
+                                 //   title = currentClinic.name
 
                                     // Set custom icon
                                     // Correct way - just use the Drawable directly
@@ -368,7 +369,7 @@ fun DoctorDetailScreen(doctorId: Int?, navController: NavController) {
             Spacer(modifier = Modifier.height(24.dp))
         }
 
-        // Fixed Book Button at bottom
+      //   Fixed Book Button at bottom
         Box(
             modifier = Modifier
                 .fillMaxWidth()

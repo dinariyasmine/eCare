@@ -2,11 +2,8 @@ package com.example.ecare_mobile
 
 import android.annotation.SuppressLint
 import android.os.Bundle
-import android.util.Log
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -16,12 +13,11 @@ import com.example.data.model.AppointmentStatus
 import com.example.data.repository.DoctorRepository
 import com.example.data.repository.UserRepository
 import com.example.data.viewModel.DoctorViewModel
-import com.example.patientprofile.ui.theme.screens.DoctorPersonalInfoScreen
-import com.example.doctorlisting.AppNavigation
+import com.example.doctorlisting.ui.screen.DoctorDetailScreen
 import com.example.doctorlisting.ui.screen.DoctorListScreen
+import com.example.doctorlisting.ui.screen.DoctorReviewsScreen
+import com.example.doctorlisting.ui.screen.HomeScreen
 import com.example.patientprofile.ui.theme.screens.DoctorPersonalInfoScreen
-import com.example.patientprofile.ui.theme.screens.PersonalInfoScreen
-import java.lang.reflect.Array.set
 import java.text.SimpleDateFormat
 import java.time.ZoneId
 import java.util.Calendar
@@ -33,23 +29,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             val navController = rememberNavController()
+            val doctorViewModel: DoctorViewModel = viewModel()
 
-            // ✅ Instantiate the ViewModel with a factory
-            val doctorViewModel: DoctorViewModel = viewModel(
-                factory = DoctorViewModel.Factory(
-                    doctorRepository = DoctorRepository(),
-                    userRepository = UserRepository()
-                )
-            )
-
-            // ✅ Pass ViewModel to your screen
-//            DoctorListScreen(
-//                navController = navController,
-//                doctorViewModel = doctorViewModel
-//            )
+            // Set up date formatting for sample data
             val zoneId = ZoneId.of("Africa/Algiers")
-            val calendar = Calendar.getInstance(TimeZone.getTimeZone(zoneId))
-
             val dateFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm")
             dateFormatter.timeZone = TimeZone.getTimeZone(zoneId)
             val todayDate = Calendar.getInstance(TimeZone.getTimeZone(zoneId)).apply {
@@ -58,57 +41,57 @@ class MainActivity : ComponentActivity() {
                 set(Calendar.SECOND, 0)
                 set(Calendar.MILLISECOND, 0)
             }.time
-           // val dateFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm")
-val app=listOf(
-    Appointment(
-        id = 1,
-        doctor_id = 101,
-        patient_id = 201,
-        start_time = dateFormatter.parse("2025-04-15 09:00")!!,
-        end_time = dateFormatter.parse("2025-04-15 10:00")!!,
-        status = AppointmentStatus.IN_PROGRESS,
-        QR_code = "qr_001",
-        date = todayDate
-    ),
-    Appointment(
-        id = 2,
-        doctor_id = 102,
-        patient_id = 202,
-        start_time = dateFormatter.parse("2025-04-15 11:00")!!,
-        end_time = dateFormatter.parse("2025-04-15 12:00")!!,
-        status = AppointmentStatus.CONFIRMED,
-        QR_code = "qr_002",
-        date = todayDate
-    ),
-    Appointment(
-        id = 3,
-        doctor_id = 103,
-        patient_id = 203,
-        start_time = dateFormatter.parse("2025-04-15 14:00")!!,
-        end_time = dateFormatter.parse("2025-04-15 15:00")!!,
-        status = AppointmentStatus.COMPLETED,
-        QR_code = "qr_003",
-        date = todayDate
-    )
-)
+
+            // Sample appointment data
+            val appointments = listOf(
+                Appointment(
+                    id = 1,
+                    doctor_id = 101,
+                    patient_id = 201,
+                    start_time = dateFormatter.parse("2025-04-15 09:00")!!,
+                    end_time = dateFormatter.parse("2025-04-15 10:00")!!,
+                    status = AppointmentStatus.IN_PROGRESS,
+                    QR_code = "qr_001",
+                    date = todayDate
+                ),
+                // Other appointments...
+            )
+
             val userRepository = UserRepository()
-            var doctorRepository = DoctorRepository()
-            DoctorPersonalInfoScreen(
-               navController,
-                doctorRepository = doctorRepository,
-               userRepository = userRepository,
-           )
+            val doctorRepository = DoctorRepository()
 
-//
+            // Configure NavHost with proper routes
+            NavHost(navController = navController, startDestination = "profile") {
+                // Add the missing doctor_list composable route
+                composable("doctor_list") {
+                    DoctorListScreen(
+                        navController = navController,
 
+                    )
+                }
+                composable("home") {
+                    HomeScreen(navController = navController)
+                }
 
-         //   ProfileScreen(navController = navController, userRepository = userRepository)
+                // Doctor detail screen
+                composable("doctor/{doctorId}") { backStackEntry ->
+                    val doctorId = backStackEntry.arguments?.getString("doctorId")?.toInt()
+                    DoctorDetailScreen(doctorId = doctorId, navController = navController)
+                }
+                composable("doctor/{doctorId}/reviews") { backStackEntry ->
+                    val doctorId = backStackEntry.arguments?.getString("doctorId")?.toIntOrNull()
+                    if (doctorId != null) {
+                        DoctorReviewsScreen(doctorId = doctorId, navController = navController)
+                    }
+                }
 
-         //AppNavigation3()
+                composable("profile") {
+                    DoctorPersonalInfoScreen(navController = navController)
+                }
 
+                }
+
+                // Add any other screens your app needs
+            }
         }
     }
-
-
-}
-
