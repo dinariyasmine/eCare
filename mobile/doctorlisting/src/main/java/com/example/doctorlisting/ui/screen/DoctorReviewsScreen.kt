@@ -16,12 +16,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.data.model.Doctor
 import com.example.data.model.User
 import com.example.data.repository.DoctorRepository
+import com.example.data.repository.FeedbackRepository
 import com.example.data.repository.UserRepository
 import com.example.data.viewModel.DoctorViewModel
+import com.example.data.viewModel.FeedbackViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -30,13 +33,19 @@ import kotlinx.coroutines.withContext
 fun DoctorReviewsScreen(
     doctorId: Int,
     navController: NavController,
-    viewModel: DoctorViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    viewModel: DoctorViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+    feedbackViewModel: FeedbackViewModel = viewModel(
+        factory = FeedbackViewModel.Factory(FeedbackRepository())
+    )
 ) {
-    val doctor by viewModel.doctorDetails.collectAsState()
-    val feedbacks by viewModel.doctorDetails.collectAsState()
+    val doctor by viewModel.selectedDoctor.collectAsState()
+    val feedbacks by feedbackViewModel.feedbacks.collectAsState()
+    val feedbackLoading by feedbackViewModel.loading.collectAsState()
+    val feedbackError by feedbackViewModel.error.collectAsState()
 
     LaunchedEffect(doctorId) {
         viewModel.loadDoctorDetails(doctorId)
+        feedbackViewModel.getFeedbacksByDoctorId(doctorId)
     }
 
     Scaffold(
@@ -50,23 +59,44 @@ fun DoctorReviewsScreen(
                 },
                 backgroundColor = Color(0xFF3B82F6)
             )
-
         }
     ) {
-        if (feedbacks?.feedbacks?.isNotEmpty() == true) {
-            LazyColumn(modifier = Modifier.padding(16.dp)) {
-                items(feedbacks?.feedbacks.orEmpty()) { feedback ->
-                    FeedbackCard(feedback = feedback)
-                    Spacer(modifier = Modifier.height(8.dp))
+        Box(modifier = Modifier.fillMaxSize()) {
+            when {
+                feedbackLoading -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center)
+                    )
                 }
-
-            }
-        } else {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("No reviews available.")
+                feedbackError != null -> {
+                    Text(
+                        text = feedbackError ?: "An error occurred",
+                        color = Color.Red,
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .padding(16.dp)
+                    )
+                }
+                feedbacks.isEmpty() -> {
+                    Text(
+                        text = "No reviews available.",
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .padding(16.dp)
+                    )
+                }
+                else -> {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp)
+                    ) {
+                        items(feedbacks) { feedback ->
+                            FeedbackCard(feedback = feedback)
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                    }
+                }
             }
         }
     }

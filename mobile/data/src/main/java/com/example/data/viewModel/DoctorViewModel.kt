@@ -3,7 +3,6 @@ package com.example.data.viewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.data.model.Doctor
-import com.example.data.model.DoctorDetails
 import com.example.data.repository.DoctorRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,11 +12,9 @@ import kotlinx.coroutines.withContext
 
 class DoctorViewModel : ViewModel() {
 
-    // --- New ---
     private val _selectedDoctor = MutableStateFlow<Doctor?>(null)
     val selectedDoctor: StateFlow<Doctor?> get() = _selectedDoctor
 
-    // Existing StateFlows
     private val _doctors = MutableStateFlow<List<Doctor>>(emptyList())
     val doctors: StateFlow<List<Doctor>> get() = _doctors
 
@@ -27,68 +24,33 @@ class DoctorViewModel : ViewModel() {
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> get() = _error
 
-    private val _specialtyFilters = MutableStateFlow<Set<String>>(emptySet())
-    val specialtyFilters: StateFlow<Set<String>> get() = _specialtyFilters
-
-    private val _ratingFilter = MutableStateFlow<Float?>(null)
-    val ratingFilter: StateFlow<Float?> get() = _ratingFilter
-
-    private val _locationFilter = MutableStateFlow<String?>(null)
-    val locationFilter: StateFlow<String?> get() = _locationFilter
-
-    private val _patientCountFilter = MutableStateFlow<Pair<Int, Int>?>(null)
-    val patientCountFilter: StateFlow<Pair<Int, Int>?> get() = _patientCountFilter
-
-    private val _symptomFilters = MutableStateFlow<Set<String>>(emptySet())
-    val symptomFilters: StateFlow<Set<String>> get() = _symptomFilters
-
-    fun fetchAllDoctors() {
-        viewModelScope.launch {
-            _loading.value = true
-            _error.value = null
-
-            try {
-                val doctorList = getDoctorsFromApi()
-                _doctors.value = doctorList
-
-                // Set first doctor as selected (customize this logic if needed)
-                if (doctorList.isNotEmpty()) {
-                    _selectedDoctor.value = doctorList.first()
-                }
-
-            } catch (e: Exception) {
-                _error.value = "Failed to fetch doctors: ${e.message}"
-            } finally {
-                _loading.value = false
-            }
-        }
-    }
-
-    private suspend fun getDoctorsFromApi(): List<Doctor> {
-        return withContext(Dispatchers.IO) {
-            listOf(
-                Doctor(1, 101, "url_to_photo_1", "Cardiology", 201, 4.5f, "Experienced cardiologist", 120),
-                Doctor(2, 102, "url_to_photo_2", "Dermatology", 202, 4.2f, "Expert in skin care", 98)
-            )
-        }
-    }
-    private val _doctorDetails = MutableStateFlow<DoctorDetails?>(null)
-    val doctorDetails: StateFlow<DoctorDetails?> get() = _doctorDetails
-
     private val repository = DoctorRepository()
 
+    // Filter state
+    private var nameQuery: String? = null
+    private var specialtyFilter: String? = null
+    private var ratingFilter: Double? = null
+    private var patientCountFilter: Int? = null
+
+    // Fetch list of doctors
+    suspend fun getDoctorsFromApi(): List<Doctor> {
+        val allDoctors = repository.getAllDoctors()
+        _doctors.value = allDoctors
+        return allDoctors
+    }
+
+    // Load selected doctor's details
     fun loadDoctorDetails(doctorId: Int) {
         viewModelScope.launch {
             _loading.value = true
             _error.value = null
             try {
-                val details = withContext(Dispatchers.IO) {
+                val doctor = withContext(Dispatchers.IO) {
                     repository.getDoctorDetailsById(doctorId)
                 }
-                if (details != null) {
-                    _doctorDetails.value = details
-                } else {
+                _selectedDoctor.value = doctor ?: run {
                     _error.value = "Doctor not found"
+                    null
                 }
             } catch (e: Exception) {
                 _error.value = "Error loading doctor: ${e.message}"
@@ -98,25 +60,12 @@ class DoctorViewModel : ViewModel() {
         }
     }
 
-
-    private fun getDoctorDetailsFromApi(doctorId: Int): Doctor? {
-return null
-    }
-
-    // --- New ---
-    fun updateDoctor(
-        firstName: String,
-        lastName: String,
-        email: String,
-        phone: String,
-        birthday: String
-    ) {
+    // Update doctor details
+    fun updateDoctor(firstName: String, lastName: String, email: String, phone: String, birthday: String) {
         viewModelScope.launch {
             val current = _selectedDoctor.value
             if (current != null) {
-                val updated = current.copy(
-
-                )
+                val updated = current.copy(name = firstName, email = email, phone = phone, birth_date = birthday)
                 _selectedDoctor.value = updated
             } else {
                 _error.value = "No doctor selected"
@@ -124,60 +73,49 @@ return null
         }
     }
 
-    fun searchDoctorsByName(query: String) {
-        viewModelScope.launch {
-            _loading.value = true
-            _error.value = null
-            try {
-                val filteredDoctors = _doctors.value.filter {
-                    it.specialty.contains(query, ignoreCase = true)
-                }
-                _doctors.value = filteredDoctors
-            } catch (e: Exception) {
-                _error.value = "Search failed: ${e.message}"
-            } finally {
-                _loading.value = false
-            }
-        }
+    // Filter and Search Functions
+
+    fun searchDoctorsByName(name: String) {
+        nameQuery = name
+        applyFilters()
     }
 
-    fun filterBySymptom(symptom: String) {
-        val currentSymptoms = _symptomFilters.value.toMutableSet()
-        if (currentSymptoms.contains(symptom)) {
-            currentSymptoms.remove(symptom)
-        } else {
-            currentSymptoms.add(symptom)
-        }
-        _symptomFilters.value = currentSymptoms
+    fun updateSpecialtyFilter(specialty: String?) {
+        specialtyFilter = specialty
+        applyFilters()
     }
 
-    fun updateSpecialtyFilter(specialty: String, isSelected: Boolean) {
-        val currentSpecialties = _specialtyFilters.value.toMutableSet()
-        if (isSelected) {
-            currentSpecialties.add(specialty)
-        } else {
-            currentSpecialties.remove(specialty)
-        }
-        _specialtyFilters.value = currentSpecialties
+    fun updateRatingFilter(minRating: Double?) {
+        ratingFilter = minRating
+        applyFilters()
     }
 
-    fun updateRatingFilter(minRating: Float) {
-        _ratingFilter.value = minRating
-    }
-
-    fun updateLocationFilter(location: String) {
-        _locationFilter.value = location
-    }
-
-    fun updatePatientCountFilter(minPatients: Int, maxPatients: Int) {
-        _patientCountFilter.value = Pair(minPatients, maxPatients)
+    fun updatePatientCountFilter(minPatients: Int?) {
+        patientCountFilter = minPatients
+        applyFilters()
     }
 
     fun resetFilters() {
-        _specialtyFilters.value = emptySet()
-        _ratingFilter.value = null
-        _locationFilter.value = null
-        _patientCountFilter.value = null
-        _symptomFilters.value = emptySet()
+        nameQuery = null
+        specialtyFilter = null
+        ratingFilter = null
+        patientCountFilter = null
+        viewModelScope.launch {
+            _doctors.value = repository.getAllDoctors()
+        }
+    }
+
+    private fun applyFilters() {
+        viewModelScope.launch {
+            val allDoctors = repository.getAllDoctors()
+            val filtered = allDoctors.filter { doctor ->
+                val matchesName = nameQuery?.let { doctor.name.contains(it, ignoreCase = true) } ?: true
+                val matchesSpecialty = specialtyFilter?.let { doctor.specialty.equals(it, ignoreCase = true) } ?: true
+                val matchesRating = ratingFilter?.let { doctor.grade >= it } ?: true
+                val matchesPatientCount = patientCountFilter?.let { doctor.nbr_patients >= it } ?: true
+                matchesName && matchesSpecialty && matchesRating && matchesPatientCount
+            }
+            _doctors.value = filtered
+        }
     }
 }

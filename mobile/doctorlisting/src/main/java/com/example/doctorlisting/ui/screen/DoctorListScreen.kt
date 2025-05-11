@@ -42,7 +42,7 @@ fun DoctorListScreen(navController: NavController) {
     val filterState = remember { FilterState() }
 
     LaunchedEffect(Unit) {
-        doctorViewModel.fetchAllDoctors()
+        doctorViewModel.getDoctorsFromApi()
     }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
@@ -93,14 +93,14 @@ fun DoctorListScreen(navController: NavController) {
                 doctorViewModel.resetFilters()
                 specialties.forEach { (specialty, isSelected) ->
                     if (isSelected) {
-                        doctorViewModel.updateSpecialtyFilter(specialty, true)
+                       // doctorViewModel.updateSpecialtyFilter(specialty, true)
                     }
                 }
-                doctorViewModel.updateRatingFilter(minRating)
-                location?.let { doctorViewModel.updateLocationFilter(it) }
+              //  doctorViewModel.updateRatingFilter(minRating)
+              //  location?.let { doctorViewModel.updateLocationFilter(it) }
                 val (minPatients, maxPatients) = patientRange
                 if (minPatients != null && maxPatients != null) {
-                    doctorViewModel.updatePatientCountFilter(minPatients, maxPatients)
+                  //  doctorViewModel.updatePatientCountFilter(minPatients, maxPatients)
                 }
                 showFilterDialog = false
             }
@@ -125,7 +125,7 @@ fun DoctorCard(doctor: Doctor, navController: NavController) {
         ) {
             // Doctor image
             Image(
-                painter = rememberImagePainter(data = doctor.photo),
+                painter = rememberImagePainter(data = doctor.id),
                 contentDescription = "Doctor Image",
                 modifier = Modifier
                     .size(72.dp)

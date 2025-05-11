@@ -39,7 +39,7 @@ fun HomePage(
 
     // Fetch doctors when composable is first created
     LaunchedEffect(Unit) {
-        doctorViewModel.fetchAllDoctors()
+        doctorViewModel.getDoctorsFromApi()
     }
 
     // UI

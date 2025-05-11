@@ -14,8 +14,10 @@ import com.example.data.repository.DoctorRepository
 import com.example.data.repository.UserRepository
 import com.example.data.viewModel.DoctorViewModel
 import com.example.doctorlisting.ui.screen.DoctorDetailScreen
+//import com.example.doctorlisting.ui.screen.DoctorDetailScreen
 import com.example.doctorlisting.ui.screen.DoctorListScreen
 import com.example.doctorlisting.ui.screen.DoctorReviewsScreen
+//import com.example.doctorlisting.ui.screen.DoctorReviewsScreen
 import com.example.doctorlisting.ui.screen.HomeScreen
 import com.example.patientprofile.ui.theme.screens.DoctorPersonalInfoScreen
 import java.text.SimpleDateFormat
@@ -67,7 +69,7 @@ class MainActivity : ComponentActivity() {
                     DoctorListScreen(
                         navController = navController,
 
-                    )
+                        )
                 }
                 composable("home") {
                     HomeScreen(navController = navController)
@@ -86,12 +88,15 @@ class MainActivity : ComponentActivity() {
                 }
 
                 composable("profile") {
-                    DoctorPersonalInfoScreen(navController = navController)
-                }
-
+                    DoctorPersonalInfoScreen(
+                        onBackClick = { navController.popBackStack() },
+                        onSaveClick = { /* Handle save action */ }
+                    )
                 }
 
                 // Add any other screens your app needs
             }
         }
     }
+}
+

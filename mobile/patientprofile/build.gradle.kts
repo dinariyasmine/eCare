@@ -49,6 +49,9 @@ dependencies {
     implementation ("androidx.compose.runtime:runtime-livedata:1.7.8")
     implementation("com.adamglin:phosphor-icon:1.0.0")
     implementation("androidx.compose.material3:material3:1.3.2")
+    // For the date picker
+    implementation("com.maxkeppeler.sheets-compose-dialogs:calendar:1.2.0")
+    implementation("com.maxkeppeler.sheets-compose-dialogs:core:1.2.0")
     // In your build.gradle file
 
 // or

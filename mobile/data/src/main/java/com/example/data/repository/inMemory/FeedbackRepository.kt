@@ -20,7 +20,7 @@ class InMemoryFeedbackRepository {
                     id = 1,
                     title = "Great experience",
                     description = "Dr. Smith was very thorough and took the time to explain everything clearly.",
-                    patient_id = 201,
+                    patient_id = "201",
                     doctor_id = 1,
                     date_creation = sdf.parse("2025-04-10") as Date,
                     time_creation = timeSdf.parse("14:30:00") as Date
@@ -29,7 +29,7 @@ class InMemoryFeedbackRepository {
                     id = 2,
                     title = "Excellent care",
                     description = "The doctor was very attentive and the staff was friendly. Highly recommend!",
-                    patient_id = 202,
+                    patient_id = "202",
                     doctor_id = 2,
                     date_creation = sdf.parse("2025-04-11") as Date,
                     time_creation = timeSdf.parse("10:15:00") as Date
@@ -38,7 +38,7 @@ class InMemoryFeedbackRepository {
                     id = 3,
                     title = "Quick and efficient",
                     description = "My appointment was on time and the doctor addressed all my concerns efficiently.",
-                    patient_id = 203,
+                    patient_id = "203",
                     doctor_id = 1,
                     date_creation = sdf.parse("2025-04-12") as Date,
                     time_creation = timeSdf.parse("16:45:00") as Date
@@ -55,9 +55,9 @@ class InMemoryFeedbackRepository {
         return feedbacks.find { it.id == id }
     }
 
-    fun getFeedbacksByPatientId(patientId: Int): List<Feedback> {
-        return feedbacks.filter { it.patient_id == patientId }
-    }
+//    fun getFeedbacksByPatientId(patientId: Int): List<Feedback> {
+//        return feedbacks.filter { it.patient_id == patientId }
+//    }
 
     fun getFeedbacksByDoctorId(doctorId: Int): List<Feedback> {
         return feedbacks.filter { it.doctor_id == doctorId }
@@ -85,11 +85,11 @@ class InMemoryFeedbackRepository {
         return false
     }
 
-    fun deleteFeedback(id: Int): Boolean {
-        val initialSize = feedbacks.size
-        feedbacks.removeIf { it.id == id }
-        return feedbacks.size < initialSize
-    }
+//    fun deleteFeedback(id: Int): Boolean {
+//        val initialSize = feedbacks.size
+//        feedbacks.removeIf { it.id == id }
+//        return feedbacks.size < initialSize
+//    }
 
     fun searchFeedbacksByTitle(query: String): List<Feedback> {
         return feedbacks.filter { it.title.contains(query, ignoreCase = true) }

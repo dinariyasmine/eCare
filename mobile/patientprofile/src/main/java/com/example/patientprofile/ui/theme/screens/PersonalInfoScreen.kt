@@ -1,4 +1,4 @@
-package com.example.patientprofile.ui.theme.screens
+/*package com.example.patientprofile.ui.theme.screens
 
 import android.app.DatePickerDialog
 import androidx.compose.foundation.Image
@@ -7,7 +7,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,11 +24,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -40,34 +37,46 @@ import com.example.data.viewModel.UserViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
-data class CountryCode(
+data class CountryyCode(
     val code: String,
     val name: String,
-    val flag: String
-)
+    val flag: String,
+    val s: String,
+
+) {
+    val flagUrl:String=""
+    val phoneCode: String = ""
+}
 
 val countryCodes = listOf(
-    CountryCode("+1", "United States", "🇺🇸"),
-    CountryCode("+44", "United Kingdom", "🇬🇧"),
-    CountryCode("+91", "India", "🇮🇳"),
-    CountryCode("+49", "Germany", "🇩🇪"),
-    CountryCode("+33", "France", "🇫🇷"),
-    CountryCode("+81", "Japan", "🇯🇵"),
-    CountryCode("+86", "China", "🇨🇳"),
-    CountryCode("+7", "Russia", "🇷🇺"),
-    CountryCode("+55", "Brazil", "🇧🇷"),
-    CountryCode("+61", "Australia", "🇦🇺"),
-    CountryCode("+39", "Italy", "🇮🇹"),
-    CountryCode("+34", "Spain", "🇪🇸"),
-    CountryCode("+82", "South Korea", "🇰🇷"),
-    CountryCode("+52", "Mexico", "🇲🇽"),
-    CountryCode("+971", "UAE", "🇦🇪"),
-    CountryCode("+966", "Saudi Arabia", "🇸🇦"),
-    CountryCode("+65", "Singapore", "🇸🇬"),
-    CountryCode("+31", "Netherlands", "🇳🇱"),
-    CountryCode("+90", "Turkey", "🇹🇷"),
-    CountryCode("+20", "Egypt", "🇪🇬")
+    CountryCode(
+        "+1", "United States", "🇺🇸", "+1",
+
+    ),
+    CountryCode("+44", "United Kingdom", "🇬🇧", "+1"),
+    CountryCode("+91", "India", "🇮🇳", "+1"),
+    CountryCode("+49", "Germany", "🇩🇪", "+1"),
+    CountryCode("+33", "France", "🇫🇷", "+1"),
+    CountryCode("+81", "Japan", "🇯🇵", "+1"),
+    CountryCode("+86", "China", "🇨🇳", "+1"),
+    CountryCode("+7", "Russia", "🇷🇺", "+1"),
+    CountryCode("+55", "Brazil", "🇧🇷", "+1"),
+    CountryCode("+61", "Australia", "🇦🇺", "+1"),
+    CountryCode("+39", "Italy", "🇮🇹", "+1"),
+    CountryCode("+34", "Spain", "🇪🇸", "+1"),
+    CountryCode("+82", "South Korea", "🇰🇷", "+1"),
+    CountryCode("+52", "Mexico", "🇲🇽", "+1"),
+    CountryCode("+971", "UAE", "🇦🇪", "+1"),
+    CountryCode("+966", "Saudi Arabia", "🇸🇦", "+1"),
+    CountryCode("+65", "Singapore", "🇸🇬", "+1"),
+    CountryCode("+31", "Netherlands", "🇳🇱", "+1"),
+    CountryCode("+90", "Turkey", "🇹🇷", "+1"),
+    CountryCode("+20", "Egypt", "🇪🇬", "+1")
 )
+
+class CountryCode(s: String, s1: String, s2: String, s3: String) {
+
+}
 
 @Composable
 fun PersonalInfoScreen(
@@ -289,7 +298,7 @@ fun PersonalInfoScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "${selectedCountryCode.flag} ${selectedCountryCode.code}",
+                            text = "${selectedCountryCode.flagUrl} ${selectedCountryCode.code}",
                             color = Color(0xFF4A4A4A)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
@@ -324,7 +333,7 @@ fun PersonalInfoScreen(
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
                                             Text(
-                                                text = "${countryCode.flag} ${countryCode.name}",
+                                                text = "${countryCode.flagUrl} ${countryCode.name}",
                                                 modifier = Modifier.weight(1f)
                                             )
                                             Text(text = countryCode.code)
@@ -411,4 +420,6 @@ fun PersonalInfoScreen(
             Spacer(modifier = Modifier.height(40.dp))
         }
     }
-}
+}*/
+
+
