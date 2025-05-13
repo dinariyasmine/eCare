@@ -5,6 +5,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from core.models import Doctor
+from doctor.views import get_doctor_by_id
 
 @api_view(['POST'])
 def rate_doctor(request, doctor_id):

@@ -46,12 +46,58 @@ def update_profile(request):
 @permission_classes([AllowAny])
 def create_doctor(request):
     if request.method == 'POST':
-        serializer = DoctorSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            print("seriiiiiiiiiiii",serializer.errors)
-            return Response({"message": "Doctor created successfully.", "doctor": serializer.errors}, status=status.HTTP_201_CREATED)
-        return Response({"error": "Invalid data provided. Please check your input.", "errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            # First validate the user data
+            user_data = request.data.get('user', {})
+            if not user_data:
+                return Response({"error": "User data is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Check if user already exists
+            try:
+                existing_user = User.objects.get(email=user_data.get('email'))
+                return Response({"error": "User with this email already exists"}, status=status.HTTP_400_BAD_REQUEST)
+            except User.DoesNotExist:
+                pass
+
+            # Create the user first
+            user = User.objects.create(
+                username=user_data.get('username'),
+                email=user_data.get('email'),
+                name=user_data.get('name'),
+                phone=user_data.get('phone'),
+                address=user_data.get('address'),
+                role='doctor',
+                birth_date=user_data.get('birth_date')
+            )
+
+            # Now create the doctor with the user reference
+            doctor_data = request.data.copy()
+            doctor_data['user'] = user.id
+
+            serializer = DoctorSerializer(data=doctor_data)
+            if serializer.is_valid():
+                doctor = serializer.save()
+                return Response({
+                    "message": "Doctor created successfully.",
+                    "doctor": {
+                        "id": doctor.id,
+                        "user_id": user.id,
+                        "specialty": doctor.specialty
+                    }
+                }, status=status.HTTP_201_CREATED)
+            else:
+                # If doctor creation fails, delete the user
+                user.delete()
+                return Response({
+                    "error": "Invalid doctor data provided.",
+                    "errors": serializer.errors
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            print(f"Error creating doctor: {str(e)}")
+            return Response({
+                "error": f"Error creating doctor: {str(e)}"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
  
 
@@ -143,4 +189,178 @@ def delete_availability(request, availability_id):
 
 
 
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_doctors(request):
+    """
+    Fetch a list of all doctors along with their user fields.
+    """
+    try:
+        # Get all doctors and prefetch related user data
+        doctors = Doctor.objects.select_related('user', 'clinic').all()
+        print(f"Total doctors found: {doctors.count()}")
+        
+        doctor_data = []
+        invalid_doctors = []
 
+        for doctor in doctors:
+            # Detailed validation of doctor and user data
+            if not doctor.user:
+                print(f"Doctor {doctor.id} has no user record")
+                invalid_doctors.append(doctor.id)
+                continue
+                
+            if not doctor.user.id:
+                print(f"Doctor {doctor.id} has invalid user ID")
+                invalid_doctors.append(doctor.id)
+                continue
+
+            # Verify user data exists
+            try:
+                user = User.objects.get(id=doctor.user.id)
+                if not user:
+                    print(f"User {doctor.user.id} not found in database")
+                    invalid_doctors.append(doctor.id)
+                    continue
+            except User.DoesNotExist:
+                print(f"User {doctor.user.id} does not exist in database")
+                invalid_doctors.append(doctor.id)
+                continue
+                
+            doctor_info = {
+                "id": doctor.id,
+                "name": doctor.user.name,
+                "email": doctor.user.email,
+                "phone": doctor.user.phone,
+                "address": doctor.user.address,
+                "role": doctor.user.role,
+                "birth_date": doctor.user.birth_date,
+                "specialty": doctor.specialty,
+                "clinic": doctor.clinic.name if doctor.clinic else None,
+                "clinic_pos" : doctor.clinic.map_location if doctor.clinic else None,
+                "grade": doctor.grade,
+                "description": doctor.description,
+                "nbr_patients": doctor.nbr_patients,
+            }
+            doctor_data.append(doctor_info)
+
+        if invalid_doctors:
+            print(f"Found {len(invalid_doctors)} invalid doctors with IDs: {invalid_doctors}")
+            
+        return Response({
+            "doctors": doctor_data,
+            "total_doctors": len(doctor_data),
+            "invalid_doctors_count": len(invalid_doctors)
+        }, status=status.HTTP_200_OK)
+    except Exception as e:
+        print(f"Error in get_doctors: {str(e)}")
+        return Response({"error": f"Error fetching doctors: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_doctor_by_id(request, doctor_id):
+    """
+    Get details of a single doctor by their ID.
+    """
+    try:
+        doctor = Doctor.objects.get(id=doctor_id)
+    except Doctor.DoesNotExist:
+        return Response({"error": "Doctor not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    doctor_info = {
+        "id": doctor.id,
+        "name": doctor.user.name,
+        "email": doctor.user.email,
+        "phone": doctor.user.phone,
+        "address": doctor.user.address,
+        "role": doctor.user.role,
+        "birth_date": doctor.user.birth_date,
+        "specialty": doctor.specialty,
+        "clinic": doctor.clinic.name if doctor.clinic else None,
+        "grade": doctor.grade,
+        "description": doctor.description,
+        "nbr_patients": doctor.nbr_patients,
+    }
+    return Response({"doctor": doctor_info}, status=status.HTTP_200_OK)
+
+
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+from core.models import Patient
+
+@api_view(['GET'])
+def get_patient_by_id(request, patient_id):
+    try:
+        patient = Patient.objects.select_related('user').get(id=patient_id)
+        user = patient.user
+        data = {
+            "id": patient.id,
+            "name": user.name,
+            "email": user.email,
+            "phone": user.phone,
+            "address": user.address,
+            "role": user.role,
+            "birth_date": user.birth_date.strftime('%Y-%m-%d') if user.birth_date else None
+        }
+        return Response(data, status=status.HTTP_200_OK)
+    except Patient.DoesNotExist:
+        return Response({"error": "Patient not found"}, status=status.HTTP_404_NOT_FOUND)
+
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework import status
+from core.models import Doctor, User
+
+@api_view(['PUT'])
+@permission_classes([AllowAny])
+def update_doctor_by_id(request, doctor_id):
+    try:
+        doctor = Doctor.objects.select_related('user').get(id=doctor_id)
+    except Doctor.DoesNotExist:
+        return Response({"error": "Doctor not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    user = doctor.user
+    data = request.data
+
+    # Update user fields
+    for field in ['name', 'email', 'phone', 'address', 'role', 'birth_date']:
+        if field in data:
+            setattr(user, field, data[field])
+    user.save()
+
+    # Update doctor-specific fields
+    for field in ['specialty', 'grade', 'description', 'nbr_patients']:
+        if field in data:
+            setattr(doctor, field, data[field])
+    doctor.save()
+
+    return Response({"message": "Doctor updated successfully"}, status=status.HTTP_200_OK)
+
+
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework import status
+from core.models import Patient, User
+
+@api_view(['PUT'])
+@permission_classes([AllowAny])
+def update_patient_by_id(request, patient_id):
+    try:
+        patient = Patient.objects.select_related('user').get(id=patient_id)
+    except Patient.DoesNotExist:
+        return Response({"error": "Patient not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    user = patient.user
+    data = request.data
+
+    # Update user fields
+    for field in ['name', 'email', 'phone', 'address', 'role', 'birth_date']:
+        if field in data:
+            setattr(user, field, data[field])
+    user.save()
+
+    return Response({"message": "Patient updated successfully"}, status=status.HTTP_200_OK)
