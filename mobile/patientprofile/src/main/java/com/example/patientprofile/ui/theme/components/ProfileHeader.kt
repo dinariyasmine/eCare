@@ -13,10 +13,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.example.data.model.User
+import com.example.data.model.UserProfile // interface implemented by both Doctor and Patient
 
 @Composable
-fun ProfileHeader(user: User?) {
+fun ProfileHeader(user: UserProfile?) {
     user?.let {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -64,7 +64,7 @@ fun ProfileHeader(user: User?) {
                     )
                 }
 
-                // Phone Row (now styled like email)
+                // Phone Row
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(top = 2.dp)

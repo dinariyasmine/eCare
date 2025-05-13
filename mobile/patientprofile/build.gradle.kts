@@ -64,6 +64,7 @@ dependencies {
     implementation(libs.navigation.runtime.android)
     implementation(libs.volley)
     implementation(libs.androidx.foundation.android)
+    implementation(libs.androidx.runtime.android)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

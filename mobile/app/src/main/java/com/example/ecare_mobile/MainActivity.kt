@@ -19,7 +19,10 @@ import com.example.doctorlisting.ui.screen.DoctorListScreen
 import com.example.doctorlisting.ui.screen.DoctorReviewsScreen
 //import com.example.doctorlisting.ui.screen.DoctorReviewsScreen
 import com.example.doctorlisting.ui.screen.HomeScreen
-import com.example.patientprofile.ui.theme.screens.DoctorPersonalInfoScreen
+import com.example.patientprofile.ui.theme.screens.Doctorparams
+import com.example.patientprofile.ui.theme.screens.PatientProfileScreen
+import com.example.patientprofile.ui.theme.screens.Patientparams
+
 import java.text.SimpleDateFormat
 import java.time.ZoneId
 import java.util.Calendar
@@ -63,13 +66,12 @@ class MainActivity : ComponentActivity() {
             val doctorRepository = DoctorRepository()
 
             // Configure NavHost with proper routes
-            NavHost(navController = navController, startDestination = "profile") {
+            NavHost(navController = navController, startDestination = "Patientparams") {
                 // Add the missing doctor_list composable route
                 composable("doctor_list") {
                     DoctorListScreen(
                         navController = navController,
-
-                        )
+                    )
                 }
                 composable("home") {
                     HomeScreen(navController = navController)
@@ -87,10 +89,26 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                composable("profile") {
-                    DoctorPersonalInfoScreen(
-                        onBackClick = { navController.popBackStack() },
-                        onSaveClick = { /* Handle save action */ }
+
+
+                composable("Docotrparams") {
+                    Doctorparams(
+                        navController = navController
+
+                    )
+                }
+                composable("patient_profile/{patientId}") { backStackEntry ->
+                    val patientId = backStackEntry.arguments?.getString("patientId")?.toIntOrNull()
+                    if (patientId != null) {
+                        PatientProfileScreen(patientId = patientId)
+                    }
+                }
+
+
+                composable("Patientparams") {
+                    Patientparams(
+                        navController = navController
+
                     )
                 }
 

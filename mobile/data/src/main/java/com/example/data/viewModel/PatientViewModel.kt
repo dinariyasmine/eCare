@@ -1,63 +1,120 @@
-package com.example.doctorlisting.ui.viewmodel
+package com.example.data.viewModel
 
-import android.os.Build
-import androidx.annotation.RequiresApi
-import androidx.compose.runtime.*
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.data.model.Appointment
 import com.example.data.model.Patient
-import com.example.data.model.Role
-import com.example.data.model.User
-import com.example.data.repository.AppointmentRepository
+import com.example.data.network.UpdatePatientRequest
 import com.example.data.repository.PatientRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import java.util.Date
+import kotlinx.coroutines.withContext
 
-@RequiresApi(Build.VERSION_CODES.O)
 class PatientViewModel : ViewModel() {
-    private val patientRepository = PatientRepository()  // Replace with actual data fetching logic
-    private val appointmentRepository = AppointmentRepository()  // Replace with actual data fetching logic
 
-    var currentPatient by mutableStateOf<Patient?>(  Patient(
-        id = 1,
-        user_id = 1,
-    )
-    )
-    var appointments by mutableStateOf<List<Appointment>>(emptyList())
-    var isLoading by mutableStateOf(true)
-    var error by mutableStateOf<String?>(null)
+    private val repository = PatientRepository()
 
-    init {
-        loadPatientData()
-    }
+    private val _patients = MutableStateFlow<List<Patient>>(emptyList())
+    val patients: StateFlow<List<Patient>> = _patients
 
-    private fun loadPatientData() {
+    private val _selectedPatient = MutableStateFlow<Patient?>(null)
+    val selectedPatient: StateFlow<Patient?> = _selectedPatient
+
+    private val _loading = MutableStateFlow(false)
+    val loading: StateFlow<Boolean> = _loading
+
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error
+
+    // Load all patients from the API
+    fun getPatientsFromApi() {
         viewModelScope.launch {
+            _loading.value = true
             try {
-                isLoading = true
-                // Fetch logged-in patient data (Replace with logic to get the actual logged-in user)
-                val loggedInUser = getLoggedInUser()  // Assume you have a way to get the logged-in user
-                val patient = patientRepository.getPatientByUserId(loggedInUser.id)
-                currentPatient = patient
-
-                patient?.let { p ->
-                    // Fetch appointments for the patient
-                    appointments = appointmentRepository.getAppointmentsByPatientId(p.id)
-                }
-
-                isLoading = false
+                val result = repository.getAllPatients()
+                _patients.value = result
+                _error.value = null
             } catch (e: Exception) {
-                error = "Failed to load data: ${e.localizedMessage}"
-                isLoading = false
+                _error.value = "Failed to fetch patients: ${e.message}"
+            } finally {
+                _loading.value = false
             }
         }
     }
 
-    // Mocked method to simulate getting the logged-in user
-    private fun getLoggedInUser(): User {
-        // Replace with actual logic to get the logged-in user
-        return User(id = 1, name = "John Doe", email = "john@example.com", password = "", phone = "", adress = "", role = Role.PATIENT, birth_date = Date())
+    // Load one patient by ID
+    fun loadPatientById(patientId: Int) {
+        viewModelScope.launch {
+            _loading.value = true
+            try {
+                val result = repository.getPatientById(patientId)
+                _selectedPatient.value = result
+                _error.value = null
+            } catch (e: Exception) {
+                _error.value = "Failed to fetch patient details: ${e.message}"
+            } finally {
+                _loading.value = false
+            }
+        }
     }
+    fun loadPatientDetails(patientId: Int) {
+        viewModelScope.launch {
+            _loading.value = true
+            _error.value = null
+            try {
+                val patient = withContext(Dispatchers.IO) {
+                    repository.getPatientById(patientId)
+                }
+                _selectedPatient.value = patient ?: run {
+                    _error.value = "Patient not found"
+                    null
+                }
+            } catch (e: Exception) {
+                _error.value = "Error loading patient: ${e.message}"
+            } finally {
+                _loading.value = false
+            }
+        }
+    }
+
+    // Update selected patient (UI-only change)
+    fun updatePatient(updatedPatient: Patient) {
+        _selectedPatient.value = updatedPatient
+    }
+
+    // Search patients by name
+    fun searchPatientsByName(query: String) {
+        _patients.value = _patients.value.filter {
+            it.name.contains(query, ignoreCase = true)
+        }
+    }
+
+    // Reset patient list
+    fun resetPatients() {
+        getPatientsFromApi()
+    }
+
+    // Update a patient on the backend
+    fun updatePatientOnServer(patientId: Int, updatedFields: UpdatePatientRequest) {
+        viewModelScope.launch {
+            _loading.value = true
+            _error.value = null
+            try {
+                val message = withContext(Dispatchers.IO) {
+                    repository.updatePatient(patientId, updatedFields)
+                }
+                // Optionally reload updated patient
+                loadPatientById(patientId)
+                _error.value = null
+            } catch (e: Exception) {
+                Log.e("PatientViewModel", "Error updating patient: ${e.message}", e)
+                _error.value = "Failed to update patient: ${e.message}"
+            } finally {
+                _loading.value = false
+            }
+        }
+    }
+
 }
