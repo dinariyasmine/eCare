@@ -1,12 +1,19 @@
 package com.example.patientprofile.ui.theme.screens
 
+import android.os.Build
+import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
@@ -20,11 +27,19 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import android.util.Log
 import com.example.data.network.UpdatePatientRequest
 import com.example.data.viewModel.PatientViewModel
 import com.example.patientprofile.R
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
+data class CountryCode(
+    val name: String,
+    val code: String,
+    val flagResId: Int
+)
+
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PatientProfileScreen(
@@ -48,6 +63,28 @@ fun PatientProfileScreen(
     var address by remember { mutableStateOf("") }
     var birthDate by remember { mutableStateOf("") }
 
+    // For date picker
+    var showDatePicker by remember { mutableStateOf(false) }
+
+    // For country code selection
+    var showCountryCodeDialog by remember { mutableStateOf(false) }
+    var selectedCountryCode by remember { mutableStateOf(CountryCode("Algeria", "+213", R.drawable.japan)) }
+
+    // Sample list of country codes
+    val countryCodes = remember {
+        listOf(
+            CountryCode("Algeria", "+213", R.drawable.japan),
+            CountryCode("Algeria", "+213", R.drawable.japan),
+            CountryCode("Algeria", "+213", R.drawable.japan),
+            CountryCode("Algeria", "+213", R.drawable.japan),
+//            CountryCode("Morocco", "+212", R.drawable.flag_morocco),
+//            CountryCode("Tunisia", "+216", R.drawable.flag_tunisia),
+//            CountryCode("France", "+33", R.drawable.flag_france),
+//            CountryCode("United States", "+1", R.drawable.flag_usa),
+//            CountryCode("United Kingdom", "+44", R.drawable.flag_uk)
+        )
+    }
+
     LaunchedEffect(patient) {
         patient?.let {
             firstName = it.name.split(" ").firstOrNull() ?: ""
@@ -57,6 +94,65 @@ fun PatientProfileScreen(
             address = it.address
             birthDate = it.birth_date ?: ""
         }
+    }
+
+    // Date picker dialog
+    if (showDatePicker) {
+        val datePickerState = rememberDatePickerState()
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        val localDate = LocalDate.ofEpochDay(millis / (24 * 60 * 60 * 1000))
+                        birthDate = localDate.format(DateTimeFormatter.ISO_DATE)
+                    }
+                    showDatePicker = false
+                }) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("Cancel")
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
+
+    // Country code selection dialog
+    if (showCountryCodeDialog) {
+        AlertDialog(
+            onDismissRequest = { showCountryCodeDialog = false },
+            title = { Text("Select Country Code") },
+            text = {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    countryCodes.forEach { country ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    selectedCountryCode = country
+                                    showCountryCodeDialog = false
+                                }
+                                .padding(vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Image(
+                                painter = painterResource(id = country.flagResId),
+                                contentDescription = country.name,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Text(text = "${country.name} (${country.code})")
+                        }
+                    }
+                }
+            },
+            confirmButton = {}
+        )
     }
 
     Scaffold(
@@ -81,13 +177,15 @@ fun PatientProfileScreen(
                     titleContentColor = Color.Black
                 )
             )
-        }
+        },
+        containerColor = Color.White // Set the background to white
     ) { paddingValues ->
         if (loading) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues),
+                    .padding(paddingValues)
+                    .background(Color.White),
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator()
@@ -96,8 +194,10 @@ fun PatientProfileScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
                     .padding(paddingValues)
-                    .padding(horizontal = 16.dp),
+                    .padding(horizontal = 16.dp)
+                    .background(Color.White),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Spacer(modifier = Modifier.height(16.dp))
@@ -158,7 +258,7 @@ fun PatientProfileScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Birthday field with calendar icon
+                // Birthday field with calendar icon and date picker
                 FormField(
                     label = "Birthday",
                     value = birthDate,
@@ -167,7 +267,8 @@ fun PatientProfileScreen(
                         Icon(
                             imageVector = Icons.Default.DateRange,
                             contentDescription = "Select date",
-                            tint = Color.Gray
+                            tint = Color.Gray,
+                            modifier = Modifier.clickable { showDatePicker = true }
                         )
                     }
                 )
@@ -194,13 +295,28 @@ fun PatientProfileScreen(
                         leadingIcon = {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.padding(end = 8.dp)
+                                modifier = Modifier
+                                    .clickable { showCountryCodeDialog = true }
+                                    .padding(start = 8.dp, end = 8.dp)
                             ) {
-                                // Algeria flag icon would go here
+                                // Country flag
+                                Image(
+                                    painter = painterResource(id = selectedCountryCode.flagResId),
+                                    contentDescription = "Country flag",
+                                    modifier = Modifier.size(20.dp)
+                                )
+
+                                Spacer(modifier = Modifier.width(4.dp))
+
+                                // Country code
                                 Text(
-                                    "(+213)",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    modifier = Modifier.padding(start = 4.dp)
+                                    "(${selectedCountryCode.code})",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+
+                                Icon(
+                                    imageVector = Icons.Default.ArrowDropDown,
+                                    contentDescription = "Select country code"
                                 )
                             }
                         },

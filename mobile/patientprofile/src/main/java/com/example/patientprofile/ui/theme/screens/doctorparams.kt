@@ -54,7 +54,7 @@ fun Doctorparams(
     navController: NavController,
     // Pass the doctor id as a parameter
 ) {
-    val doctorId = 11 // Replace with the actual doctor ID
+    val doctorId = 11
     val viewModel: DoctorViewModel = viewModel()
     val doctor by viewModel.selectedDoctor.collectAsState()
     val scrollState = rememberScrollState()
