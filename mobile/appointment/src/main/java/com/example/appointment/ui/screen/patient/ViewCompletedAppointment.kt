@@ -1,9 +1,8 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
 
-package com.example.appointment.ui.screen
+package com.example.appointment.ui.screen.patient
 
 import PatientForm
-import PatientFormState
 import android.os.Build
 import android.widget.Toast
 import androidx.annotation.RequiresApi
@@ -52,7 +51,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Bold
 import com.adamglin.phosphoricons.bold.FilePdf
-import com.adamglin.phosphoricons.bold.QrCode
 import com.example.appointment.ui.screen.components.appoint.DatePicker
 import com.example.appointment.ui.screen.components.appoint.TimeSlotPicker
 import com.example.core.theme.ECareMobileTheme

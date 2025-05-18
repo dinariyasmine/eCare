@@ -3,9 +3,7 @@ package com.example.ecare_mobile
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import com.example.appointment.ui.screen.ListAppointmentsScreen
-import com.example.appointment.ui.screen.NewAppointmentScreen
-import com.example.appointment.ui.screen.ViewConfirmedAppointmentScreen
+import com.example.appointment.ui.screen.patient.ViewConfirmedAppointmentScreen
 import com.example.core.theme.ECareMobileTheme
 
 

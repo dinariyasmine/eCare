@@ -20,13 +20,13 @@ interface AppointmentEndpoint {
     @GET("appointments/patient/{id}")
     suspend fun getAppointsByPatient(@Path("id") id: Int): List<Appointment>
 
-    @POST("appointments")
+    @POST("appointments/")
     suspend fun addAppointment(@Body data: AppointmentRequest)
 
-    @PATCH("appointments/{id}")
+    @PATCH("appointments/{id}/")
     suspend fun updateAppointment(@Path("id") id: Int, @Body data: Appointment)
 
-    @DELETE("appointments/{id}")
+    @DELETE("appointments/{id}/")
     suspend fun deleteAppointment(@Path("id") id: Int)
 
 

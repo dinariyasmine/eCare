@@ -1,4 +1,4 @@
-package com.example.appointment.ui.screen
+package com.example.appointment.ui.screen.patient
 
 import com.example.appointment.ui.screen.components.list.HorizontalCalendar
 import android.os.Build
