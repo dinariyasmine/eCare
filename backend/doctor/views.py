@@ -101,90 +101,90 @@ def create_doctor(request):
 
  
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def get_availability(request):
-    """
-    Get all availability slots for a specific doctor.
-    """
-    doctor_id = request.query_params.get('doctor_id')
-    if not doctor_id:
-        return Response({"error": "Doctor ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+# @api_view(['GET'])
+# @permission_classes([IsAuthenticated])
+# def get_availability(request):
+#     """
+#     Get all availability slots for a specific doctor.
+#     """
+#     doctor_id = request.query_params.get('doctor_id')
+#     if not doctor_id:
+#         return Response({"error": "Doctor ID is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-    try:
-        doctor = Doctor.objects.get(id=doctor_id)
-    except Doctor.DoesNotExist:
-        return Response({"error": "Doctor not found"}, status=status.HTTP_404_NOT_FOUND)
+#     try:
+#         doctor = Doctor.objects.get(id=doctor_id)
+#     except Doctor.DoesNotExist:
+#         return Response({"error": "Doctor not found"}, status=status.HTTP_404_NOT_FOUND)
 
-    availabilities = Availability.objects.filter(doctor_id=doctor)
-    serializer = AvailabilitySerializer(availabilities, many=True)
-    return Response(serializer.data)
+#     availabilities = Availability.objects.filter(doctor_id=doctor)
+#     serializer = AvailabilitySerializer(availabilities, many=True)
+#     return Response(serializer.data)
 
 
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def create_availability(request):
-    """
-    Create a new availability slot for a doctor.
-    """
-    doctor_id = request.data.get('doctor_id')
-    start_time = request.data.get('start_time')
-    end_time = request.data.get('end_time')
+# @api_view(['POST'])
+# @permission_classes([IsAuthenticated])
+# def create_availability(request):
+#     """
+#     Create a new availability slot for a doctor.
+#     """
+#     doctor_id = request.data.get('doctor_id')
+#     start_time = request.data.get('start_time')
+#     end_time = request.data.get('end_time')
     
-    if not doctor_id or not start_time or not end_time:
-        return Response({"error": "Doctor ID, start time, and end time are required"}, status=status.HTTP_400_BAD_REQUEST)
+#     if not doctor_id or not start_time or not end_time:
+#         return Response({"error": "Doctor ID, start time, and end time are required"}, status=status.HTTP_400_BAD_REQUEST)
 
-    try:
-        doctor = Doctor.objects.get(id=doctor_id)
-    except Doctor.DoesNotExist:
-        return Response({"error": "Doctor not found"}, status=status.HTTP_404_NOT_FOUND)
+#     try:
+#         doctor = Doctor.objects.get(id=doctor_id)
+#     except Doctor.DoesNotExist:
+#         return Response({"error": "Doctor not found"}, status=status.HTTP_404_NOT_FOUND)
 
-    # Create the availability slot
-    availability = Availability.objects.create(
-        doctor_id=doctor,
-        start_time=start_time,
-        end_time=end_time,
-        booked=False  # Default value, assuming the slot is not booked initially
-    )
+#     # Create the availability slot
+#     availability = Availability.objects.create(
+#         doctor_id=doctor,
+#         start_time=start_time,
+#         end_time=end_time,
+#         booked=False  # Default value, assuming the slot is not booked initially
+#     )
 
-    serializer = AvailabilitySerializer(availability)
-    return Response({"message": "Availability created successfully", "availability": serializer.data}, status=status.HTTP_201_CREATED)
-
-
-@api_view(['PUT'])
-@permission_classes([IsAuthenticated])
-def update_availability(request, availability_id):
-    """
-    Update an availability slot (e.g., change time or booking status).
-    """
-    try:
-        availability = Availability.objects.get(id=availability_id)
-    except Availability.DoesNotExist:
-        return Response({"error": "Availability slot not found"}, status=status.HTTP_404_NOT_FOUND)
-
-    # Update fields
-    availability.start_time = request.data.get('start_time', availability.start_time)
-    availability.end_time = request.data.get('end_time', availability.end_time)
-    availability.booked = request.data.get('booked', availability.booked)
-    availability.save()
-
-    serializer = AvailabilitySerializer(availability)
-    return Response({"message": "Availability updated successfully", "availability": serializer.data}, status=status.HTTP_200_OK)
+#     serializer = AvailabilitySerializer(availability)
+#     return Response({"message": "Availability created successfully", "availability": serializer.data}, status=status.HTTP_201_CREATED)
 
 
-@api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
-def delete_availability(request, availability_id):
-    """
-    Delete an availability slot.
-    """
-    try:
-        availability = Availability.objects.get(id=availability_id)
-    except Availability.DoesNotExist:
-        return Response({"error": "Availability slot not found"}, status=status.HTTP_404_NOT_FOUND)
+# @api_view(['PUT'])
+# @permission_classes([IsAuthenticated])
+# def update_availability(request, availability_id):
+#     """
+#     Update an availability slot (e.g., change time or booking status).
+#     """
+#     try:
+#         availability = Availability.objects.get(id=availability_id)
+#     except Availability.DoesNotExist:
+#         return Response({"error": "Availability slot not found"}, status=status.HTTP_404_NOT_FOUND)
 
-    availability.delete()
-    return Response({"message": "Availability deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+#     # Update fields
+#     availability.start_time = request.data.get('start_time', availability.start_time)
+#     availability.end_time = request.data.get('end_time', availability.end_time)
+#     availability.booked = request.data.get('booked', availability.booked)
+#     availability.save()
+
+#     serializer = AvailabilitySerializer(availability)
+#     return Response({"message": "Availability updated successfully", "availability": serializer.data}, status=status.HTTP_200_OK)
+
+
+# @api_view(['DELETE'])
+# @permission_classes([IsAuthenticated])
+# def delete_availability(request, availability_id):
+#     """
+#     Delete an availability slot.
+#     """
+#     try:
+#         availability = Availability.objects.get(id=availability_id)
+#     except Availability.DoesNotExist:
+#         return Response({"error": "Availability slot not found"}, status=status.HTTP_404_NOT_FOUND)
+
+#     availability.delete()
+#     return Response({"message": "Availability deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
  
 
 
