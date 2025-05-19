@@ -14,6 +14,7 @@ import com.example.data.repository.DoctorRepository
 import com.example.data.repository.UserRepository
 import com.example.data.viewModel.DoctorViewModel
 import com.example.doctorlisting.ui.screen.DoctorDetailScreen
+import com.example.doctorlisting.ui.screen.DoctorFeedbackScreen
 //import com.example.doctorlisting.ui.screen.DoctorDetailScreen
 import com.example.doctorlisting.ui.screen.DoctorListScreen
 import com.example.doctorlisting.ui.screen.DoctorReviewsScreen
@@ -65,7 +66,7 @@ class MainActivity : ComponentActivity() {
 
 
             // Configure NavHost with proper routes
-            NavHost(navController = navController, startDestination = "home") {
+            NavHost(navController = navController, startDestination = "feedback") {
                 // Add the missing doctor_list composable route
                 composable("doctor_list") {
                     DoctorListScreen(
@@ -104,7 +105,12 @@ class MainActivity : ComponentActivity() {
                 }
 
 
+                composable("feedback") {
+                    DoctorFeedbackScreen(  doctorId = 11,navController = navController,
 
+
+                    )
+                }
                 composable("Patientparams") {
                     Patientparams(
                         navController = navController

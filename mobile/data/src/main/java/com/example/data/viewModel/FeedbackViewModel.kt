@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.data.model.Feedback
+import com.example.data.network.SubmitFeedbackRequest
 import com.example.data.repository.FeedbackRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -79,6 +80,26 @@ class FeedbackViewModel(
             } catch (e: Exception) {
                 Log.e("FeedbackViewModel", "Error fetching feedbacks: ${e.message}", e)
                 _error.value = "Failed to load doctor feedbacks: ${e.message}"
+            } finally {
+                _loading.value = false
+            }
+        }
+    }
+    fun submitFeedback(doctorId: Int, feedbackRequest: SubmitFeedbackRequest, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            _loading.value = true
+            _error.value = null
+
+            try {
+                val success = repository.submitFeedback(doctorId, feedbackRequest)
+                if (!success) {
+                    _error.value = "Failed to submit feedback"
+                }
+                onResult(success)
+            } catch (e: Exception) {
+                Log.e("FeedbackViewModel", "Error submitting feedback: ${e.message}", e)
+                _error.value = "Error submitting feedback: ${e.message}"
+                onResult(false)
             } finally {
                 _loading.value = false
             }

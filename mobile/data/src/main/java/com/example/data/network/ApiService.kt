@@ -5,6 +5,7 @@ import com.example.data.model.Patient
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
 
@@ -38,5 +39,12 @@ interface ApiService {
         @Path("id") doctorId: Int,
         @Body updatedData: UpdateDoctorRequest
     ): Response<Doctor>
+
+    @POST("/api/submit-feedback/{doctor_id}/")
+    suspend fun submitFeedback(
+        @Path("doctor_id") doctorId: Int,
+        @Body feedback: SubmitFeedbackRequest
+    ): Response<ResponseMessage>
+
 }
 

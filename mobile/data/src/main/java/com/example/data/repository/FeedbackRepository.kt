@@ -9,12 +9,28 @@ import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.*
 import android.util.Log
+import com.example.data.network.SubmitFeedbackRequest
 
 class FeedbackRepository {
     private val sdf = SimpleDateFormat("yyyy-MM-dd")
     private val timeSdf = SimpleDateFormat("HH:mm:ss")
 
     // Simulating a database call with a delay
+    suspend fun submitFeedback(doctorId: Int, feedbackRequest: SubmitFeedbackRequest): Boolean {
+        return try {
+            val response = apiService.submitFeedback(doctorId, feedbackRequest)
+            if (response.isSuccessful) {
+                Log.d("FeedbackRepository", "Feedback submitted successfully: ${response.body()?.message}")
+                true
+            } else {
+                Log.e("FeedbackRepository", "Failed to submit feedback: ${response.errorBody()?.string()}")
+                false
+            }
+        } catch (e: Exception) {
+            Log.e("FeedbackRepository", "Exception during feedback submission: ${e.message}", e)
+            false
+        }
+    }
 
 
 //    suspend fun getAllFeedbacks(): List<Feedback> {
