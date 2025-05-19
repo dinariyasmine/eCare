@@ -119,7 +119,9 @@ class Prescription(models.Model):
     id = models.AutoField(primary_key=True)
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='prescriptions')
     doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE, related_name='prescriptions')
-    date = models.DateField()
+    date = models.DateField(default=timezone.now)  # Use current date by default
+    notes = models.TextField(blank=True, null=True)  # For additional prescription notes
+    pdf_file = models.FileField(upload_to='prescriptions/', null=True, blank=True)  # For storing generated PDFs
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -130,27 +132,38 @@ class Medication(models.Model):
     """Medical drugs that can be prescribed"""
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255)
-    dosage = models.CharField(max_length=100)
-    prescription = models.ForeignKey(
-        Prescription,
-        on_delete=models.CASCADE,
-        related_name='medications',
-        null=True,
-        blank=True
-    )
+    description = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
 
     def __str__(self):
-        return f"{self.name} ({self.dosage})"
+        return self.name
 
 class PrescriptionItem(models.Model):
     """Individual medication items within a prescription"""
+    FREQUENCY_CHOICES = [
+        ('once_daily', 'Once Daily'),
+        ('twice_daily', 'Twice Daily'),
+        ('three_daily', 'Three Times Daily'),
+        ('four_daily', 'Four Times Daily'),
+        ('as_needed', 'As Needed'),
+    ]
+    
     prescription = models.ForeignKey(Prescription, on_delete=models.CASCADE, related_name='items')
     medication = models.ForeignKey(Medication, on_delete=models.CASCADE)
-    frequency = models.CharField(max_length=100)
+    dosage = models.CharField(max_length=100)  # e.g., "1 capsule (250mg)"
+    duration = models.CharField(max_length=100)  # e.g., "14 days" or "30 days"
+    frequency = models.CharField(max_length=50, choices=FREQUENCY_CHOICES)
+    prescribed_by = models.ForeignKey(Doctor, on_delete=models.CASCADE, related_name='prescribed_items')
+    prescribed_to = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='medication_items')
     instructions = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.medication.name} for {self.prescription}"
+
 
 class Availability(models.Model):
     """Doctor availability slots for appointments"""
