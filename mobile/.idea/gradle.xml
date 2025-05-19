@@ -14,6 +14,7 @@
             <option value="$PROJECT_DIR$/appointment" />
             <option value="$PROJECT_DIR$/core" />
             <option value="$PROJECT_DIR$/data" />
+            <option value="$PROJECT_DIR$/pop-ups-confirmations-template" />
           </set>
         </option>
         <option name="resolveExternalAnnotations" value="false" />

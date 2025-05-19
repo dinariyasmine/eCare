@@ -1,4 +1,8 @@
+<<<<<<<< HEAD:mobile/appointment/src/test/java/com/example/appointment/ExampleUnitTest.kt
 package com.example.appointment
+========
+package com.example.pop_ups_confirmations_template
+>>>>>>>> backend/appointments:mobile/pop-ups-confirmations-template/src/test/java/com/example/pop_ups_confirmations_template/ExampleUnitTest.kt
 
 import org.junit.Test
 
