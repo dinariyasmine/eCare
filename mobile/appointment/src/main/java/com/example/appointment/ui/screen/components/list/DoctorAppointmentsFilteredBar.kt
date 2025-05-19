@@ -59,8 +59,7 @@ import java.util.Locale
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun DoctorAppointmentsFilteredBar(doctorId: Int) {
-    val viewModel: AppointmentViewModel = viewModel()
+fun DoctorAppointmentsFilteredBar(doctorId: Int, viewModel: AppointmentViewModel) {
     val context = LocalContext.current
     val selectedTab = remember { mutableStateOf("Current") }
     val interactionSource = remember { MutableInteractionSource() }

@@ -43,7 +43,9 @@ import com.example.appointment.ui.screen.components.appoint.TimeSlotPicker
 import com.example.core.theme.ECareMobileTheme
 import com.example.data.model.Appointment
 import com.example.data.repository.AvailabilityRepository
+import com.example.data.retrofit.AvailabilityEndpoint
 import com.example.data.viewModel.AppointmentViewModel
+import com.example.data.viewModel.AvailabilityViewModel
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
@@ -55,7 +57,8 @@ import java.util.Date
 fun RescheduleAppointmentScreen(
     appointment: Appointment,
     onBack: () -> Unit,
-    viewModel: AppointmentViewModel = viewModel()
+    viewModel: AppointmentViewModel,
+    availabilityViewModel: AvailabilityViewModel
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
@@ -69,7 +72,6 @@ fun RescheduleAppointmentScreen(
         mutableStateOf(appointment.start_time ?: LocalTime.now())
     }
 
-    val availabilityRepository = remember { AvailabilityRepository() }
     val formData = remember {
         mutableStateOf(
             PatientFormState(
@@ -137,7 +139,7 @@ fun RescheduleAppointmentScreen(
                     onSlotSelected = { slot ->
                         selectedSlot.value = LocalTime.parse(slot)
                     },
-                    availabilityRepository = availabilityRepository
+                    availabilityViewModel= availabilityViewModel
                 )
             }
 

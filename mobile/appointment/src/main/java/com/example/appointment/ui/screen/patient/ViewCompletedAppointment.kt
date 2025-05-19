@@ -55,21 +55,21 @@ import com.example.appointment.ui.screen.components.appoint.DatePicker
 import com.example.appointment.ui.screen.components.appoint.TimeSlotPicker
 import com.example.core.theme.ECareMobileTheme
 import com.example.data.repository.AvailabilityRepository
+import com.example.data.retrofit.AvailabilityEndpoint
 import com.example.data.viewModel.AppointmentViewModel
+import com.example.data.viewModel.AvailabilityViewModel
 import java.time.LocalDate
 import java.time.ZoneId
 import java.util.Date
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun ViewCompletedAppointmentScreen() {
-    val viewModel: AppointmentViewModel = viewModel()
+fun ViewCompletedAppointmentScreen(viewModel: AppointmentViewModel, availabilityViewModel: AvailabilityViewModel) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
 
     val selectedDate = remember { mutableStateOf(LocalDate.now()) }
     val selectedSlot = remember { mutableStateOf<String?>(null) }
-    val availabilityRepository = remember { AvailabilityRepository() }
 
     // Error handling
     val error by viewModel.error.observeAsState()
@@ -150,7 +150,7 @@ fun ViewCompletedAppointmentScreen() {
                                 selectedSlot = selectedSlot.value,
                                 doctorId = 101,
                                 onSlotSelected = { /* Disabled */ },
-                                availabilityRepository = availabilityRepository
+                                availabilityViewModel = availabilityViewModel
                             )
                         }
                     }

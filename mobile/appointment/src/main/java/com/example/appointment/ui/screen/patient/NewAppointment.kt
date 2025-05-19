@@ -38,13 +38,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.appointment.ui.screen.components.appoint.DatePicker
 import com.example.appointment.ui.screen.components.appoint.TimeSlotPicker
 import com.example.core.theme.ECareMobileTheme
 import com.example.data.model.AppointmentRequest
-import com.example.data.repository.AvailabilityRepository
 import com.example.data.viewModel.AppointmentViewModel
+import com.example.data.viewModel.AvailabilityViewModel
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
@@ -52,14 +51,12 @@ import java.util.Date
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun NewAppointmentScreen() {
-    val viewModel: AppointmentViewModel = viewModel()
+fun NewAppointmentScreen(viewModel: AppointmentViewModel, availabilityViewModel: AvailabilityViewModel) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
 
     val selectedDate = remember { mutableStateOf(LocalDate.now()) }
     val selectedSlot = remember { mutableStateOf<String?>(null) }
-    val availabilityRepository = remember { AvailabilityRepository() }
     var formData = remember { mutableStateOf<PatientFormState?>(null) }
 
     // Error handling
@@ -103,7 +100,7 @@ fun NewAppointmentScreen() {
                     selectedSlot = selectedSlot.value,
                     doctorId = 101,
                     onSlotSelected = { slot -> selectedSlot.value = slot },
-                    availabilityRepository = availabilityRepository
+                    availabilityViewModel = availabilityViewModel,
                 )
             }
 

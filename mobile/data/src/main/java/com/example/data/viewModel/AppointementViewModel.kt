@@ -9,6 +9,7 @@ import com.example.data.model.AppointmentRequest
 import com.example.data.model.AppointmentStatus
 import com.example.data.repository.AppointmentRepository
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 
 class AppointmentViewModel(
     private val repository: AppointmentRepository
@@ -40,6 +41,11 @@ class AppointmentViewModel(
                 _isLoading.value = false
             }
         }
+    }
+
+    fun getAppointmentsForDate(date: LocalDate): List<Appointment> {
+        return appointments.value!!.filter { it.date == date }
+            .sortedBy { it.start_time }
     }
 
     fun getAppointmentsByPatient(patientId: Int) {

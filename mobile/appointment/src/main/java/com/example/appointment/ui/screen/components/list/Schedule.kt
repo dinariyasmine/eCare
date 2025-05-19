@@ -28,6 +28,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,9 +40,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
-import com.example.appointment.data.model.Appointment
-import com.example.appointment.data.model.Status
-import com.example.appointment.data.repository.AppointmentRepository
+import com.example.data.model.Appointment
+import com.example.data.model.AppointmentStatus
+import com.example.data.viewModel.AppointmentViewModel
 import kotlinx.coroutines.delay
 import java.time.LocalDate
 import java.time.LocalTime
@@ -51,11 +52,11 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun DayViewAgenda(
     selectedDate: LocalDate,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: AppointmentViewModel
 ) {
-    val appointmentRepository = AppointmentRepository()
     val appointments = remember(selectedDate) {
-        appointmentRepository.getAppointmentsForDate(selectedDate).sortedBy { it.startTime }
+       viewModel.getAppointmentsForDate(selectedDate).sortedBy { it.start_time }
     }
 
     // For updating current time indicator
@@ -161,17 +162,17 @@ private fun AppointmentsList(
 
                     // Appointments column
                     Column(modifier = Modifier.weight(1f)) {
-                        val hourAppointments = appointments.filter { it.startTime.hour == hour }
-                            .sortedBy { it.startTime }
+                        val hourAppointments = appointments.filter { it.start_time.hour == hour }
+                            .sortedBy { it.start_time }
 
                         hourAppointments.forEach { appointment ->
-                            val startOffset = appointment.startTime.minute * pixelsPerMinute.value
-                            val duration = appointment.startTime.until(
-                                appointment.endTime,
+                            val startOffset = appointment.start_time.minute * pixelsPerMinute.value
+                            val duration = appointment.start_time.until(
+                                appointment.end_time,
                                 java.time.temporal.ChronoUnit.MINUTES
                             ) * pixelsPerMinute.value
 
-                            if (appointment.startTime.minute > 0) {
+                            if (appointment.start_time.minute > 0) {
                                 Spacer(modifier = Modifier.height(startOffset.dp))
                             }
 
@@ -197,17 +198,17 @@ private fun AppointmentsList(
         // Current time indicator - fixed glitching version
         if (isToday) {
             val currentMinutes = currentTime.hour * 60 + currentTime.minute
-            val firstVisibleItem = listState.firstVisibleItemIndex
-            val scrollOffset = listState.firstVisibleItemScrollOffset
+            val firstVisibleItem = remember { derivedStateOf { listState.firstVisibleItemIndex } }
+            val scrollOffset = remember { derivedStateOf { listState.firstVisibleItemScrollOffset } }
 
             // Calculate the absolute position of the current time
             val currentTimePosition = (currentMinutes * pixelsPerMinute.value).toInt()
 
             // Calculate the visible position relative to the scroll
-            val visiblePosition = currentTimePosition - (firstVisibleItem * 60 * pixelsPerMinute.value).toInt() - scrollOffset
+            val visiblePosition = currentTimePosition - (firstVisibleItem.value * 60 * pixelsPerMinute.value).toInt() - scrollOffset.value
 
             // Only show if the current time is in the visible range
-            if (visiblePosition >= 0 && visiblePosition <= listState.layoutInfo.viewportEndOffset) {
+            if (visiblePosition >= 0 && visiblePosition <= remember { derivedStateOf { listState.layoutInfo.viewportEndOffset } }.value) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -262,7 +263,7 @@ private fun AppointmentCard(
             verticalArrangement = Arrangement.SpaceAround
         ) {
             Text(
-                text = "Dr. ${appointment.doctor.name}",
+                text = "Dr. ${appointment.doctor_id}",
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,
@@ -274,9 +275,9 @@ private fun AppointmentCard(
                 modifier = Modifier
                     .background(
                         color = when (appointment.status) {
-                            Status.Confirmed -> Color(0xFF9CA3AF)
-                            Status.Completed -> Color(0xFF3B82F6)
-                            Status.InProgress ->  Color(0xFF22C55E)
+                            AppointmentStatus.CONFIRMED -> Color(0xFF9CA3AF)
+                            AppointmentStatus.COMPLETED -> Color(0xFF3B82F6)
+                            AppointmentStatus.IN_PROGRESS ->  Color(0xFF22C55E)
                         },
                         shape = RoundedCornerShape(4.dp)
                     )

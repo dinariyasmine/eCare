@@ -14,9 +14,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.appointment.ui.screen.components.list.AppointmentsFilteredListBar
 import com.example.appointment.ui.screen.components.list.DayViewAgenda
 import com.example.core.theme.ECareMobileTheme
+import com.example.data.viewModel.AppointmentViewModel
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.util.Date
@@ -24,7 +26,7 @@ import java.util.Locale
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun ListAppointmentsScreen() {
+fun ListAppointmentsScreen(viewModel: AppointmentViewModel) {
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     ECareMobileTheme {
         Column(
@@ -56,10 +58,11 @@ fun ListAppointmentsScreen() {
             )
 
             DayViewAgenda(
-                selectedDate = selectedDate
+                selectedDate = selectedDate,
+                viewModel = viewModel
             )
 
-            AppointmentsFilteredListBar(0)
+            AppointmentsFilteredListBar(0, viewModel)
 
         }
     }
