@@ -257,6 +257,39 @@ def get_doctors(request):
         return Response({"error": f"Error fetching doctors: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+# @api_view(['GET'])
+# @permission_classes([AllowAny])
+# def get_doctor_by_id(request, doctor_id):
+#     """
+#     Get details of a single doctor by their ID.
+#     """
+#     try:
+#         doctor = Doctor.objects.get(id=doctor_id)
+#     except Doctor.DoesNotExist:
+#         return Response({"error": "Doctor not found"}, status=status.HTTP_404_NOT_FOUND)
+
+#     doctor_info = {
+#         "id": doctor.id,
+#         "name": doctor.user.name,
+#         "email": doctor.user.email,
+#         "phone": doctor.user.phone,
+#         "address": doctor.user.address,
+#         "role": doctor.user.role,
+#         "birth_date": doctor.user.birth_date,
+#         "specialty": doctor.specialty,
+#         "clinic": doctor.clinic.name if doctor.clinic else None,
+#         "grade": doctor.grade,
+#         "description": doctor.description,
+#         "nbr_patients": doctor.nbr_patients,
+#     }
+#     return Response({"doctor": doctor_info}, status=status.HTTP_200_OK)
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework import status
+
+ 
+
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def get_doctor_by_id(request, doctor_id):
@@ -267,6 +300,22 @@ def get_doctor_by_id(request, doctor_id):
         doctor = Doctor.objects.get(id=doctor_id)
     except Doctor.DoesNotExist:
         return Response({"error": "Doctor not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    # Retrieve social media links for this doctor
+    social_links = {
+        "instagram": None,
+        "facebook": None,
+        "linkedin": None
+    }
+
+    for sm in doctor.social_media.all():
+        platform = sm.name.lower()
+        if "instagram" in platform:
+            social_links["instagram"] = sm.link
+        elif "facebook" in platform:
+            social_links["facebook"] = sm.link
+        elif "linkedin" in platform:
+            social_links["linkedin"] = sm.link
 
     doctor_info = {
         "id": doctor.id,
@@ -281,6 +330,7 @@ def get_doctor_by_id(request, doctor_id):
         "grade": doctor.grade,
         "description": doctor.description,
         "nbr_patients": doctor.nbr_patients,
+        "social_links": social_links  # 👈 added section
     }
     return Response({"doctor": doctor_info}, status=status.HTTP_200_OK)
 
