@@ -2,7 +2,6 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
 
-
 class User(AbstractUser):
     """Extended user model for the medical system"""
     name = models.CharField(max_length=255, blank=True, null=True)
@@ -10,19 +9,23 @@ class User(AbstractUser):
     password = models.CharField(max_length=255, blank=True, null=True)
     phone = models.CharField(max_length=20, blank=True, null=True)
     address = models.CharField(max_length=255, blank=True, null=True)
-    role = models.CharField(max_length=20, choices=[
-        ('patient', 'Patient'),
-        ('doctor', 'Doctor'),
-        ('admin', 'Administrator'),
-    ])
+    role = models.CharField(
+        max_length=20,
+        choices=[
+            ('patient', 'Patient'),
+            ('doctor', 'Doctor'),
+            ('admin', 'Administrator'),
+        ]
+    )
     birth_date = models.DateField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     groups = models.ManyToManyField(
-        'auth.Group', related_name='custom_user_set', blank=True)
+        'auth.Group', related_name='custom_user_set', blank=True
+    )
     user_permissions = models.ManyToManyField(
-        'auth.Permission', related_name='custom_user_set', blank=True)
-
+        'auth.Permission', related_name='custom_user_set', blank=True
+    )
 
 class Clinic(models.Model):
     """Medical clinics where doctors practice"""
@@ -35,7 +38,6 @@ class Clinic(models.Model):
 
     def __str__(self):
         return self.name
-
 
 class Doctor(models.Model):
     """Doctor profile linked to a user account"""
@@ -53,7 +55,6 @@ class Doctor(models.Model):
     def __str__(self):
         return f"Dr. {self.user.get_full_name()}"
 
-
 class Patient(models.Model):
     """Patient profile linked to a user account"""
     id = models.AutoField(primary_key=True)
@@ -64,11 +65,11 @@ class Patient(models.Model):
     def __str__(self):
         return self.user.get_full_name()
 
-
 class Appointment(models.Model):
     """Medical appointments between doctors and patients"""
     id = models.AutoField(primary_key=True)
     doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE, related_name='appointments')
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='appointments')
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     created_at = models.DateTimeField(auto_now_add=True)
@@ -79,10 +80,9 @@ class Appointment(models.Model):
         ('in_progress', 'In Progress'),
     ], default='scheduled')
     qr_Code = models.CharField(max_length=255, blank=True, null=True)
-    
+
     def __str__(self):
         return f"Appointment with {self.doctor} on {self.start_time.strftime('%Y-%m-%d %H:%M')}"
-
 
 class Notification(models.Model):
     """System notifications for users"""
@@ -95,10 +95,9 @@ class Notification(models.Model):
     type = models.CharField(max_length=50)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
     def __str__(self):
         return self.title
-
 
 class Feedback(models.Model):
     """Patient feedback for doctors or appointments"""
@@ -111,13 +110,9 @@ class Feedback(models.Model):
     time_creation = models.TimeField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
     def __str__(self):
         return f"Feedback from {self.patient} for {self.doctor}"
-
-
-
-
 
 class Prescription(models.Model):
     """Medical prescriptions given to patients"""
@@ -127,7 +122,7 @@ class Prescription(models.Model):
     date = models.DateField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
     def __str__(self):
         return f"Prescription for {self.patient} by {self.doctor} on {self.date}"
 
@@ -136,22 +131,27 @@ class Medication(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255)
     dosage = models.CharField(max_length=100)
-    frequency = models.CharField(max_length=100)
-    prescription = models.ForeignKey(Prescription, on_delete=models.CASCADE, related_name='medications')  
+    prescription = models.ForeignKey(
+        Prescription,
+        on_delete=models.CASCADE,
+        related_name='medications',
+        null=True,
+        blank=True
+    )
 
     def __str__(self):
         return f"{self.name} ({self.dosage})"
-
 
 class PrescriptionItem(models.Model):
     """Individual medication items within a prescription"""
     prescription = models.ForeignKey(Prescription, on_delete=models.CASCADE, related_name='items')
     medication = models.ForeignKey(Medication, on_delete=models.CASCADE)
-    
+    frequency = models.CharField(max_length=100)
+    instructions = models.TextField(blank=True, null=True)
+
     def __str__(self):
         return f"{self.medication.name} for {self.prescription}"
-    
-    
+
 class Availability(models.Model):
     """Doctor availability slots for appointments"""
     id = models.AutoField(primary_key=True)
@@ -159,10 +159,9 @@ class Availability(models.Model):
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     booked = models.BooleanField(default=False)
-    
+
     def __str__(self):
         return f"Dr. {self.doctor_id} available from {self.start_time} to {self.end_time}"
-
 
 class SocialMedia(models.Model):
     """Social media profiles for doctors"""
@@ -170,6 +169,6 @@ class SocialMedia(models.Model):
     doctor_id = models.ForeignKey('Doctor', on_delete=models.CASCADE, related_name='social_media')
     name = models.CharField(max_length=100)  # Platform name (e.g., Facebook, Twitter)
     link = models.CharField(max_length=255)  # Profile URL
-    
+
     def __str__(self):
         return f"{self.name} profile for Dr. {self.doctor_id}"

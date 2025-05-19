@@ -35,7 +35,7 @@ class AppointmentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Appointment
-        fields = ['id', 'doctor', 'start_time', 'end_time', 'created_at', 'updated_at', 'status', 'qr_Code']
+        fields = ['id', 'doctor', 'patient', 'start_time', 'end_time', 'created_at', 'updated_at', 'status', 'qr_Code']
 
 
 class NotificationSerializer(serializers.ModelSerializer):
@@ -55,31 +55,32 @@ class FeedbackSerializer(serializers.ModelSerializer):
         fields = ['id', 'title', 'description', 'patient', 'doctor', 'date_creation', 'time_creation', 'created_at', 'updated_at']
 
 
-class PrescriptionSerializer(serializers.ModelSerializer):
-    patient = PatientSerializer()
-    doctor = DoctorSerializer()
-
-    class Meta:
-        model = Prescription
-        fields = ['id', 'patient', 'doctor', 'date', 'created_at', 'updated_at']
 
 
 class MedicationSerializer(serializers.ModelSerializer):
-    prescription = PrescriptionSerializer()
+    prescription = serializers.PrimaryKeyRelatedField(queryset=Prescription.objects.all(), required=False, allow_null=True)
 
     class Meta:
         model = Medication
-        fields = ['id', 'name', 'dosage', 'frequency', 'prescription']
+        fields = ['id', 'name', 'dosage', 'prescription']
 
 
 class PrescriptionItemSerializer(serializers.ModelSerializer):
-    prescription = PrescriptionSerializer()
+    prescription = serializers.PrimaryKeyRelatedField(queryset=Prescription.objects.all())
     medication = MedicationSerializer()
 
     class Meta:
         model = PrescriptionItem
-        fields = ['prescription', 'medication']
+        fields = ['prescription', 'medication', 'frequency', 'instructions']
 
+class PrescriptionSerializer(serializers.ModelSerializer):
+    patient = serializers.PrimaryKeyRelatedField(queryset=Patient.objects.all())
+    doctor = serializers.PrimaryKeyRelatedField(queryset=Doctor.objects.all())
+    items = PrescriptionItemSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Prescription
+        fields = ['id', 'patient', 'doctor', 'date', 'created_at', 'updated_at', 'items']
 
 class AvailabilitySerializer(serializers.ModelSerializer):
     doctor_id = DoctorSerializer()
