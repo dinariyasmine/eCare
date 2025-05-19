@@ -39,6 +39,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.firebase.firestore.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.android)
+    implementation(project(":core"))
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
