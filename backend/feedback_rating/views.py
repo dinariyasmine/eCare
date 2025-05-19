@@ -4,8 +4,32 @@ from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-from core.models import Doctor
+from core.models import Doctor, DoctorRating
 from doctor.views import get_doctor_by_id
+
+# @api_view(['POST'])
+# def rate_doctor(request, doctor_id):
+#     try:
+#         doctor = Doctor.objects.get(id=doctor_id)
+#     except Doctor.DoesNotExist:
+#         return Response({"error": "Doctor not found."}, status=status.HTTP_404_NOT_FOUND)
+
+#     grade = request.data.get('grade')
+#     if grade is None:
+#         return Response({"error": "Grade is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+#     try:
+#         grade = float(grade)
+#         if grade < 0 or grade > 5:
+#             return Response({"error": "Grade must be between 0 and 5."}, status=status.HTTP_400_BAD_REQUEST)
+#     except ValueError:
+#         return Response({"error": "Invalid grade value."}, status=status.HTTP_400_BAD_REQUEST)
+
+#     doctor.grade = grade
+#     doctor.save()
+
+#     return Response({"message": "Doctor rated successfully.", "grade": doctor.grade}, status=status.HTTP_200_OK)
+
 
 @api_view(['POST'])
 def rate_doctor(request, doctor_id):
@@ -25,12 +49,20 @@ def rate_doctor(request, doctor_id):
     except ValueError:
         return Response({"error": "Invalid grade value."}, status=status.HTTP_400_BAD_REQUEST)
 
-    doctor.grade = grade
+    # Optional: Get patient if authenticated user is one
+    patient = None
+    if hasattr(request.user, 'patient_profile'):
+        patient = request.user.patient_profile.first()
+
+    # Create new rating
+    DoctorRating.objects.create(doctor=doctor, patient=patient, grade=grade)
+
+    # Update average rating
+    all_grades = doctor.ratings.all().values_list('grade', flat=True)
+    doctor.grade = sum(all_grades) / len(all_grades)
     doctor.save()
 
-    return Response({"message": "Doctor rated successfully.", "grade": doctor.grade}, status=status.HTTP_200_OK)
-
-
+    return Response({"message": "Doctor rated successfully.", "average_grade": doctor.grade}, status=status.HTTP_200_OK)
 
 
 

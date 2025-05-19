@@ -176,4 +176,13 @@ class SocialMedia(models.Model):
     
 
 
+class DoctorRating(models.Model):
+    """Rating given to a doctor by a user"""
+    doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE, related_name='ratings')
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='ratings')
+    grade = models.FloatField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Rating {self.grade} for Dr. {self.doctor} by {self.patient}"
 
