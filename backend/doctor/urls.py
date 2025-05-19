@@ -1,15 +1,12 @@
 from django.urls import path
 from .views import (
   
-    create_availability,
-    delete_availability,
-     
-    get_availability,
+   
     get_doctor_by_id,
     get_doctors,
     get_patient_by_id,
     get_profile,
-    update_availability,
+     
     update_doctor_by_id,
     update_patient_by_id,
     update_profile,
