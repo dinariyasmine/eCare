@@ -19,6 +19,7 @@ import com.example.doctorlisting.ui.screen.DoctorListScreen
 import com.example.doctorlisting.ui.screen.DoctorReviewsScreen
 //import com.example.doctorlisting.ui.screen.DoctorReviewsScreen
 import com.example.doctorlisting.ui.screen.HomeScreen
+import com.example.patientprofile.ui.theme.screens.DoctorProfileScreen
 import com.example.patientprofile.ui.theme.screens.Doctorparams
 import com.example.patientprofile.ui.theme.screens.PatientProfileScreen
 import com.example.patientprofile.ui.theme.screens.Patientparams
@@ -62,11 +63,9 @@ class MainActivity : ComponentActivity() {
                 // Other appointments...
             )
 
-            val userRepository = UserRepository()
-            val doctorRepository = DoctorRepository()
 
             // Configure NavHost with proper routes
-            NavHost(navController = navController, startDestination = "Patientparams") {
+            NavHost(navController = navController, startDestination = "home") {
                 // Add the missing doctor_list composable route
                 composable("doctor_list") {
                     DoctorListScreen(
@@ -105,13 +104,22 @@ class MainActivity : ComponentActivity() {
                 }
 
 
+
                 composable("Patientparams") {
                     Patientparams(
                         navController = navController
 
                     )
                 }
-
+                composable("doctor_profile/{doctorId}") { backStackEntry ->
+                    val doctorId = backStackEntry.arguments?.getString("doctorId")?.toIntOrNull()
+                    if (doctorId != null) {
+                        DoctorProfileScreen(
+                            doctorId = doctorId,
+                            onBackClick = { navController.navigateUp() }
+                        )
+                    }
+                }
                 // Add any other screens your app needs
             }
         }

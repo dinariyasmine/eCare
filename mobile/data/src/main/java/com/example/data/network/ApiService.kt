@@ -1,13 +1,10 @@
 package com.example.data.network
 
-import android.telecom.Call
 import com.example.data.model.Doctor
-import com.example.data.model.DoctorDetails
 import com.example.data.model.Patient
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
-import retrofit2.http.PATCH
 import retrofit2.http.PUT
 import retrofit2.http.Path
 
@@ -35,5 +32,11 @@ interface ApiService {
         @Path("id") id: Int,
         @Body updatedFields: UpdatePatientRequest
     ): Response<Patient>
+
+    @PUT("/api/doctors/{id}/update/")
+    suspend fun updateDoctorById(
+        @Path("id") doctorId: Int,
+        @Body updatedData: UpdateDoctorRequest
+    ): Response<Doctor>
 }
 

@@ -1,13 +1,9 @@
 package com.example.data.repository
 
+import android.util.Log
 import com.example.data.model.Doctor
-import com.example.data.model.DoctorDetails
-import com.example.data.model.Feedback
-import com.example.data.model.Role
-import com.example.data.model.User
-import java.util.Date
 import com.example.data.network.ApiClient
-import com.example.data.network.DoctorResponse
+import com.example.data.network.UpdateDoctorRequest
 
 //class DoctorRepository {
 //
@@ -78,7 +74,17 @@ import com.example.data.network.DoctorResponse
             val doctors = response.doctors
             return doctors // Calls the API to fetch all doctors
         }
+        suspend fun updateDoctor(doctorId: Int, updatedFields: UpdateDoctorRequest): String {
+            Log.d("DoctorRepository", "Updating doctor with ID: $doctorId, updatedFields: $updatedFields")
 
+            val response = ApiClient.apiService.updateDoctorById(doctorId, updatedFields)
+            if (response.isSuccessful) {
+                return "Update successful"
+            } else {
+                Log.e("DoctorRepository", "Update failed: ${response.message()}")
+                throw Exception("Update failed: ${response.message()}")
+            }
+        }
         suspend fun getDoctorDetailsById(doctorId: Int): Doctor {
             // Make an API call to get the doctor details by ID
             val response = ApiClient.apiService.getDoctorDetailsById(doctorId)

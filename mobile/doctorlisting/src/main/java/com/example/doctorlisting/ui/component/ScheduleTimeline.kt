@@ -47,7 +47,7 @@ fun ScheduleCard(appointments: List<Appointment>) {
     val appointmentHours = todayAppointments.map { it.start_time.hours }.distinct()
 
     Column(modifier = Modifier.padding(16.dp)) {
-        Text("Schedule Today", style = MaterialTheme.typography.body1)
+        Text("Schedule Today", fontWeight = FontWeight.Bold, fontSize = 18.sp)
         Spacer(modifier = Modifier.height(16.dp))
 
         val hoursToDisplay = (appointmentHours + now.hour).distinct().sorted()

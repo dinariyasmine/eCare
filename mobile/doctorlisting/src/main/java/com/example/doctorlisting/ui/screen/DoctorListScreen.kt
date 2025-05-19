@@ -1,3 +1,4 @@
+
 package com.example.doctorlisting.ui.screen
 
 import androidx.compose.foundation.*
@@ -6,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+//noinspection UsingMaterialAndMaterial3Libraries
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
@@ -89,19 +91,25 @@ fun DoctorListScreen(navController: NavController) {
         FilterDialog(
             filterState = filterState,
             onDismiss = { showFilterDialog = false },
-            onApply = { specialties, minRating, location, patientRange ->
+            onApply = { specialties, minRating, patientRange ->
                 doctorViewModel.resetFilters()
+
+                // Apply specialty filters
                 specialties.forEach { (specialty, isSelected) ->
                     if (isSelected) {
-                       // doctorViewModel.updateSpecialtyFilter(specialty, true)
+                        doctorViewModel.updateSpecialtyFilter(specialty, true)
                     }
                 }
-              //  doctorViewModel.updateRatingFilter(minRating)
-              //  location?.let { doctorViewModel.updateLocationFilter(it) }
+
+                // Apply rating filter
+                doctorViewModel.updateRatingFilter(minRating)
+
+                // Apply patient count filter
                 val (minPatients, maxPatients) = patientRange
                 if (minPatients != null && maxPatients != null) {
-                  //  doctorViewModel.updatePatientCountFilter(minPatients, maxPatients)
+                    doctorViewModel.updatePatientCountFilter(minPatients, maxPatients)
                 }
+
                 showFilterDialog = false
             }
         )
@@ -110,11 +118,17 @@ fun DoctorListScreen(navController: NavController) {
 
 @Composable
 fun DoctorCard(doctor: Doctor, navController: NavController) {
+    val doctorId = doctor.id ?: "unknown"
+    val specialty = doctor.specialty ?: "Unknown Specialty"
+    val grade = doctor.grade ?: 0f
+    val description = doctor.description ?: "No description available"
+    val nbrPatients = doctor.nbr_patients ?: 0
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
-            .clickable { navController.navigate("doctor/${doctor.id}") },
+            .clickable { navController.navigate("doctor/$doctorId") },
         elevation = 4.dp,
         shape = RoundedCornerShape(12.dp)
     ) {
@@ -123,9 +137,9 @@ fun DoctorCard(doctor: Doctor, navController: NavController) {
                 .padding(16.dp)
                 .fillMaxWidth()
         ) {
-            // Doctor image
+            // Doctor image (using doctorId or fallback)
             Image(
-                painter = rememberImagePainter(data = doctor.id),
+                painter = rememberImagePainter(data = doctorId),
                 contentDescription = "Doctor Image",
                 modifier = Modifier
                     .size(72.dp)
@@ -137,7 +151,7 @@ fun DoctorCard(doctor: Doctor, navController: NavController) {
                 modifier = Modifier.weight(1f)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = doctor.specialty, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Text(text = specialty, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                     Spacer(modifier = Modifier.width(8.dp))
                     Icon(
                         imageVector = PhosphorIcons.Regular.Star,
@@ -145,11 +159,11 @@ fun DoctorCard(doctor: Doctor, navController: NavController) {
                         tint = Color(0xFFFFC107),
                         modifier = Modifier.size(16.dp)
                     )
-                    Text(text = doctor.grade.toString(), fontSize = 14.sp)
+                    Text(text = grade.toString(), fontSize = 14.sp)
                 }
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = doctor.description,
+                    text = description,
                     fontSize = 12.sp,
                     color = Color.Gray,
                     maxLines = 2
@@ -167,7 +181,7 @@ fun DoctorCard(doctor: Doctor, navController: NavController) {
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = "${doctor.nbr_patients} patients",
+                        text = "$nbrPatients patients",
                         fontSize = 12.sp,
                         color = Color.Gray,
                         modifier = Modifier.padding(top = 4.dp)
@@ -177,6 +191,7 @@ fun DoctorCard(doctor: Doctor, navController: NavController) {
         }
     }
 }
+
 
 @Composable
 fun SearchBarWithFilter(
@@ -231,8 +246,7 @@ fun SearchBarWithFilter(
 
 class FilterState {
     val specialtySelections = mutableStateMapOf<String, Boolean>()
-    var selectedRating by mutableStateOf(0)
-    var selectedLocation by mutableStateOf<String?>(null)
+    var selectedRating by mutableStateOf(0f)
     var selectedPatientRange by mutableStateOf<Pair<Int?, Int?>>(null to null)
 
     init {
@@ -251,23 +265,27 @@ class FilterState {
 fun FilterDialog(
     filterState: FilterState,
     onDismiss: () -> Unit,
-    onApply: (Map<String, Boolean>, Float, String?, Pair<Int?, Int?>) -> Unit
+    onApply: (Map<String, Boolean>, Float, Pair<Int?, Int?>) -> Unit
 ) {
-    var selectedRating by remember { mutableStateOf(filterState.selectedRating) }
-    var selectedLocation by remember { mutableStateOf(filterState.selectedLocation) }
-    var patientRange by remember { mutableStateOf(filterState.selectedPatientRange) }
+    val selectedRating = remember { mutableStateOf(filterState.selectedRating) }
+    val patientRange = remember { mutableStateOf(filterState.selectedPatientRange) }
+    val minPatients = remember { mutableStateOf(patientRange.value.first ?: 0) }
+    val maxPatients = remember { mutableStateOf(patientRange.value.second ?: 1000) }
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             shape = RoundedCornerShape(16.dp),
-            color = Color.White
+            color = Color.White,
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = 600.dp)
         ) {
             Column(
                 modifier = Modifier
                     .padding(16.dp)
                     .fillMaxWidth()
-                    .heightIn(max = 500.dp)
             ) {
+                // Header with Cancel and Apply buttons
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -279,11 +297,13 @@ fun FilterDialog(
                     Text("Filter", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                     TextButton(
                         onClick = {
+                            patientRange.value = minPatients.value to maxPatients.value
+                            filterState.selectedRating = selectedRating.value
+                            filterState.selectedPatientRange = patientRange.value
                             onApply(
                                 filterState.specialtySelections.toMap(),
-                                selectedRating.toFloat(),
-                                selectedLocation,
-                                patientRange
+                                selectedRating.value,
+                                patientRange.value
                             )
                         }
                     ) {
@@ -291,14 +311,22 @@ fun FilterDialog(
                     }
                 }
 
+                Divider(modifier = Modifier.padding(vertical = 8.dp))
+
+                // Content with scrolling
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
                         .verticalScroll(rememberScrollState())
                 ) {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text("Specialisations", fontSize = 14.sp, color = Color.Gray)
+                    // Specialisations section
+                    Text(
+                        "Specialisations",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
 
                     var showAllSpecialties by remember { mutableStateOf(false) }
                     val initialSpecialties = listOf("Cardiology", "Dermatology", "Pediatrics", "Neurology")
@@ -323,28 +351,42 @@ fun FilterDialog(
                         }
                     }
 
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { showAllSpecialties = !showAllSpecialties }
-                            .padding(vertical = 8.dp),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = if (showAllSpecialties) "Show less" else "Show all",
-                            color = Color(0xFF2196F3),
-                            fontSize = 14.sp
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Icon(
-                            imageVector = PhosphorIcons.Regular.CaretDown,
-                            contentDescription = null,
-                            modifier = Modifier
-                                .size(16.dp)
-                                .rotate(if (showAllSpecialties) 180f else 0f),
-                            tint = Color(0xFF2196F3)
-                        )
-                    }
+                    ShowMoreButton(
+                        expanded = showAllSpecialties,
+                        onClick = { showAllSpecialties = !showAllSpecialties }
+                    )
+
+                    Divider(modifier = Modifier.padding(vertical = 8.dp))
+
+                    // Rating section
+                    Text(
+                        "Reviews",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+
+                    RatingSelector(
+                        currentRating = selectedRating.value,
+                        onRatingChanged = { selectedRating.value = it }
+                    )
+
+                    Divider(modifier = Modifier.padding(vertical = 8.dp))
+
+                    // Patient range section
+                    Text(
+                        "Number of Patients",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+
+                    PatientRangeSelector(
+                        minPatients = minPatients.value,
+                        maxPatients = maxPatients.value,
+                        onMinPatientsChange = { minPatients.value = it },
+                        onMaxPatientsChange = { maxPatients.value = it }
+                    )
                 }
             }
         }
@@ -360,8 +402,134 @@ fun SpecialtyCheckbox(specialty: String, checked: Boolean, onCheckedChange: (Boo
             .clickable { onCheckedChange(!checked) },
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Checkbox(checked = checked, onCheckedChange = onCheckedChange)
+        Checkbox(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            colors = CheckboxDefaults.colors(
+                checkedColor = Color(0xFF2196F3),
+                uncheckedColor = Color.LightGray
+            )
+        )
         Spacer(modifier = Modifier.width(8.dp))
-        Text(specialty)
+        Text(specialty, fontSize = 14.sp)
+    }
+}
+
+@Composable
+fun ShowMoreButton(expanded: Boolean, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 8.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = if (expanded) "Show less" else "Show all",
+            color = Color(0xFF2196F3),
+            fontSize = 14.sp
+        )
+        Spacer(modifier = Modifier.width(4.dp))
+        Icon(
+            imageVector = PhosphorIcons.Regular.CaretDown,
+            contentDescription = if (expanded) "Show less" else "Show more",
+            modifier = Modifier
+                .size(16.dp)
+                .rotate(if (expanded) 180f else 0f),
+            tint = Color(0xFF2196F3)
+        )
+    }
+}
+
+@Composable
+fun RatingSelector(currentRating: Float, onRatingChanged: (Float) -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        for (i in 1..5) {
+            Icon(
+                imageVector = PhosphorIcons.Regular.Star,
+                contentDescription = "Rating $i",
+                tint = if (i <= currentRating) Color(0xFFFFC107) else Color.LightGray,
+                modifier = Modifier
+                    .size(32.dp)
+                    .clickable { onRatingChanged(i.toFloat()) }
+                    .padding(4.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun PatientRangeSelector(
+    minPatients: Int,
+    maxPatients: Int,
+    onMinPatientsChange: (Int) -> Unit,
+    onMaxPatientsChange: (Int) -> Unit
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text("Min: $minPatients", fontSize = 14.sp)
+            Text("Max: $maxPatients", fontSize = 14.sp)
+        }
+
+        // Patient Range Slider
+        val sliderPosition = remember {
+            mutableStateOf(minPatients.toFloat()..maxPatients.toFloat())
+        }
+
+        Slider(
+            value = sliderPosition.value.endInclusive,
+            onValueChange = { newValue ->
+                val newRange = sliderPosition.value.start..newValue
+                sliderPosition.value = newRange
+                onMaxPatientsChange(newValue.toInt())
+            },
+            valueRange = 0f..1000f,
+            steps = 19,  // 20 positions (0, 50, 100, ..., 1000)
+            colors = SliderDefaults.colors(
+                thumbColor = Color(0xFF2196F3),
+                activeTrackColor = Color(0xFF2196F3),
+                inactiveTrackColor = Color.LightGray
+            ),
+            modifier = Modifier.padding(top = 8.dp)
+        )
+
+        Slider(
+            value = sliderPosition.value.start,
+            onValueChange = { newValue ->
+                // Ensure min doesn't exceed max
+                val validValue = minOf(newValue, sliderPosition.value.endInclusive - 50f)
+                val newRange = validValue..sliderPosition.value.endInclusive
+                sliderPosition.value = newRange
+                onMinPatientsChange(validValue.toInt())
+            },
+            valueRange = 0f..1000f,
+            steps = 19,  // 20 positions (0, 50, 100, ..., 1000)
+            colors = SliderDefaults.colors(
+                thumbColor = Color(0xFF2196F3),
+                activeTrackColor = Color(0xFF2196F3),
+                inactiveTrackColor = Color.LightGray
+            )
+        )
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text("0", fontSize = 12.sp, color = Color.Gray)
+            Text("1000", fontSize = 12.sp, color = Color.Gray)
+        }
     }
 }

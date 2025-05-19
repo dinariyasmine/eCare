@@ -1,10 +1,13 @@
 package com.example.doctorlisting.ui.screen
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.net.Uri
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -110,6 +113,13 @@ fun parseClinicPosition(position: String?): Pair<Double, Double>? {
     }
 }
 
+// Data class to hold social media link information
+data class SocialMediaLink(
+    val icon: Any,
+    val url: String,
+    val action: (Context) -> Unit
+)
+
 @Composable
 fun DoctorDetailScreen(
     doctorId: Int?,
@@ -164,13 +174,54 @@ fun DoctorDetailScreen(
         return
     }
 
+    val context = LocalContext.current
+
+    // Define social media links for the doctor
+    val socialMediaLinks = listOf(
+        SocialMediaLink(
+            icon = PhosphorIcons.Regular.InstagramLogo,
+            url = "https://instagram.com/${doctor?.name?.replace(" ", "")?.lowercase() ?: "doctor"}",
+            action = { ctx ->
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://instagram.com/${doctor?.name?.replace(" ", "")?.lowercase() ?: "doctor"}"))
+                ctx.startActivity(intent)
+            }
+        ),
+        SocialMediaLink(
+            icon = PhosphorIcons.Regular.LinkedinLogo,
+            url = "https://linkedin.com/in/${doctor?.name?.replace(" ", "-")?.lowercase() ?: "doctor"}",
+            action = { ctx ->
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://linkedin.com/in/${doctor?.name?.replace(" ", "-")?.lowercase() ?: "doctor"}"))
+                ctx.startActivity(intent)
+            }
+        ),
+        SocialMediaLink(
+            icon = PhosphorIcons.Regular.Phone,
+            url = "tel:${doctor?.phone ?: "+213555555555"}",
+            action = { ctx ->
+                val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${doctor?.phone ?: "+213555555555"}"))
+                ctx.startActivity(intent)
+            }
+        ),
+        SocialMediaLink(
+            icon = PhosphorIcons.Regular.Envelope,
+            url = "mailto:${doctor?.email ?: "doctor@example.com"}",
+            action = { ctx ->
+                val intent = Intent(Intent.ACTION_SENDTO).apply {
+                    data = Uri.parse("mailto:${doctor?.email ?: "doctor@example.com"}")
+                    putExtra(Intent.EXTRA_SUBJECT, "Appointment Request")
+                }
+                ctx.startActivity(intent)
+            }
+        )
+    )
+
     Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            // Top bar with social media icons
+            // Top bar with clickable social media icons
             item {
                 Row(
                     modifier = Modifier
@@ -180,28 +231,46 @@ fun DoctorDetailScreen(
                 ) {
                     val iconBackground = Color(0xFFE0F0FF)
                     val iconColor = Color(0xFF3366FF)
-                    val iconSize = 12.dp
-                    val circleSize = 22.dp
+                    val iconSize = 16.dp
+                    val circleSize = 28.dp
 
-                    listOf(
-                        PhosphorIcons.Regular.InstagramLogo,
-                        PhosphorIcons.Regular.LinkedinLogo,
-                        PhosphorIcons.Regular.Phone,
-                        PhosphorIcons.Regular.Envelope
-                    ).forEach { icon ->
+                    socialMediaLinks.forEach { link ->
                         Box(
                             modifier = Modifier
                                 .size(circleSize)
                                 .clip(CircleShape)
-                                .background(iconBackground),
+                                .background(iconBackground)
+                                .clickable {
+                                    link.action(context)
+                                },
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(
-                                imageVector = icon,
-                                contentDescription = null,
-                                tint = iconColor,
-                                modifier = Modifier.size(iconSize)
-                            )
+                            when (link.icon) {
+                                PhosphorIcons.Regular.InstagramLogo -> {
+                                    Icon(
+                                        imageVector = PhosphorIcons.Regular.InstagramLogo,
+                                        contentDescription = "Instagram",
+                                        tint = iconColor,
+                                        modifier = Modifier.size(iconSize)
+                                    )
+                                }
+                                PhosphorIcons.Regular.LinkedinLogo -> {
+                                    Icon(
+                                        imageVector = PhosphorIcons.Regular.LinkedinLogo,
+                                        contentDescription = "LinkedIn",
+                                        tint = iconColor,
+                                        modifier = Modifier.size(iconSize)
+                                    )
+                                }
+                                PhosphorIcons.Regular.Phone -> {
+                                    Icon(
+                                        imageVector = PhosphorIcons.Regular.Phone,
+                                        contentDescription = "Phone",
+                                        tint = iconColor,
+                                        modifier = Modifier.size(iconSize)
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -234,8 +303,8 @@ fun DoctorDetailScreen(
                         Spacer(modifier = Modifier.width(16.dp))
 
                         Column(horizontalAlignment = Alignment.Start) {
-                            Text(text = doctor!!.name, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                            Text(text = doctor!!.specialty, fontSize = 14.sp, color = Color.Gray)
+                            Text(text = doctor!!.name ?: "Unknown Doctor", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                            Text(text = doctor!!.specialty ?: "No specialty listed", fontSize = 14.sp, color = Color.Gray)
 
                             Spacer(modifier = Modifier.height(4.dp))
 
@@ -247,7 +316,7 @@ fun DoctorDetailScreen(
                                     modifier = Modifier.size(16.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text(text = "${doctor!!.grade} out of 5", fontSize = 13.sp)
+                                Text(text = "${doctor!!.grade ?: "N/A"} out of 5", fontSize = 13.sp)
                             }
 
                             Spacer(modifier = Modifier.height(20.dp))
@@ -262,14 +331,14 @@ fun DoctorDetailScreen(
                                     )
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Text(text = "Patients", fontSize = 13.sp, color = Color.Gray)
-                                    Text(text = doctor!!.nbr_patients.toString(), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                                    Text(text = doctor!!.nbr_patients?.toString() ?: "Unknown", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                                     Spacer(modifier = Modifier.height(16.dp))
                                     Text(text = "Payment", fontSize = 13.sp, color = Color.Gray)
                                 }
                                 Column {
                                     Spacer(modifier = Modifier.height(56.dp))
                                     Text(
-                                        text = "${doctor!!.id * 100} DZD",
+                                        text = "${doctor!!.id?.let { it * 100 } ?: "N/A"} DZD",
                                         fontSize = 14.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = Color(0xFF3366FF)
@@ -288,32 +357,48 @@ fun DoctorDetailScreen(
             // Education
             item {
                 Text(text = "Education", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                Text(text = doctor!!.specialty, fontSize = 13.sp, color = Color.DarkGray)
-                Text(text = doctor!!.description, fontSize = 13.sp, color = Color.DarkGray)
+                Text(text = doctor!!.specialty ?: "No specialty information", fontSize = 13.sp, color = Color.DarkGray)
+                Text(text = doctor!!.description ?: "No description available", fontSize = 13.sp, color = Color.DarkGray)
             }
 
             item {
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            // Rating Section
+            // Rating Section - Modified to have "See all" button on same line
             item {
                 Column {
                     Text(text = "Rating", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                    Text(text = "★ ${doctor!!.grade} out of 5", fontSize = 14.sp, color = Color.Gray)
 
-                    Button(
-                        onClick = { navController.navigate("doctor/${doctor!!.id}/reviews") },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp),
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            backgroundColor = Color(0xFF3B82F6),
-                            contentColor = Color.White
-                        )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("See all")
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = PhosphorIcons.Regular.Star,
+                                contentDescription = null,
+                                tint = Color(0xFFFFC107),
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(text = "★ ${doctor!!.grade ?: "N/A"} out of 5", fontSize = 14.sp, color = Color.Gray)
+                        }
+
+                        Button(
+                            onClick = {
+                                doctor!!.id?.let { navController.navigate("doctor/$it/reviews") }
+                            },
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                backgroundColor = Color(0xFF3B82F6),
+                                contentColor = Color.White
+                            ),
+                            modifier = Modifier.width(100.dp)
+                        ) {
+                            Text("See all")
+                        }
                     }
                 }
             }
@@ -346,19 +431,18 @@ fun DoctorDetailScreen(
                         modifier = Modifier.padding(12.dp)
                     ) {
                         Text(
-                            text = doctor!!.clinic,
+                            text = doctor!!.clinic ?: "Unknown Clinic",
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp
                         )
                         Text(
-                            text = doctor!!.address,
+                            text = doctor!!.address ?: "No address available",
                             fontSize = 13.sp,
                             color = Color.DarkGray
                         )
                     }
 
                     // Map view
-                    val context = LocalContext.current
                     val defaultCoordinates = 36.7333 to 3.2833 // Default to Algiers
                     val coordinates = doctor!!.clinic_pos?.let { parseClinicPosition(it) } ?: defaultCoordinates
                     Log.d("DoctorDetailScreen", "Using coordinates: $coordinates")
@@ -386,8 +470,8 @@ fun DoctorDetailScreen(
                                 Marker(this).apply {
                                     position = geoPoint
                                     setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                                    title = doctor!!.clinic
-                                    snippet = doctor!!.address
+                                    title = doctor!!.clinic ?: "Unknown Clinic"
+                                    snippet = doctor!!.address ?: "No address available"
 
                                     ContextCompat.getDrawable(ctx, R.drawable.ic_location_marker)?.let { drawable ->
                                         icon = drawable
@@ -456,7 +540,7 @@ fun FeedbackCard(feedback: Feedback) {
             .padding(vertical = 4.dp)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            Text(text = "Patient: ${feedback.patient_id}", fontWeight = FontWeight.Bold)
+            Text(text = "Patient: ${feedback.patient_id ?: "Unknown"}", fontWeight = FontWeight.Bold)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = Icons.Default.Star,
@@ -465,12 +549,12 @@ fun FeedbackCard(feedback: Feedback) {
                     modifier = Modifier.size(16.dp)
                 )
                 Spacer(modifier = Modifier.width(4.dp))
-                Text(text = feedback.title, fontSize = 12.sp)
+                Text(text = feedback.title ?: "No title", fontSize = 12.sp)
             }
             Spacer(modifier = Modifier.height(4.dp))
-            Text(text = feedback.description, fontSize = 13.sp)
+            Text(text = feedback.description ?: "No description", fontSize = 13.sp)
             Text(
-                text = "Date: ${SimpleDateFormat("yyyy-MM-dd").format(feedback.date_creation)}",
+                text = "Date: ${feedback.date_creation?.let { SimpleDateFormat("yyyy-MM-dd").format(it) } ?: "Unknown date"}",
                 fontSize = 12.sp,
                 color = Color.Gray
             )

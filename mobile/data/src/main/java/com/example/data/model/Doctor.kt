@@ -2,7 +2,7 @@ package com.example.data.model
 
 // Doctor.kt (Model)
 data class Doctor(
-    override   val id: Int,
+    override   val id: Int ,
     override val name: String,
     override val email: String,
     override  val phone: String,
@@ -14,5 +14,10 @@ data class Doctor(
     val grade: Double,
     val description: String,
     val nbr_patients: Int,
-    val clinic_pos :String,
+    val clinic_pos  :String ?= null,
+    val facebook: String? = null,
+    val twitter: String? = null,
+    val linkedin: String? = null,
+    val instagram: String? = null,
+    val website: String? = null
 ): UserProfile

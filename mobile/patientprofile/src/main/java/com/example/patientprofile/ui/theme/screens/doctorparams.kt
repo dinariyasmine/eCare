@@ -119,7 +119,9 @@ fun Doctorparams(
                     icon = Icons.Default.Person,
                     text = "Personal Information"
                 ) {
-                    // navController.navigate("personal_info/${user?.id}")
+                    val docId = 11  // Replace with actual patientId
+                    navController.navigate("doctor_profile/$docId")
+                   // navController.navigate("personal_info/${user?.id}")
                 }
                 ProfileOption(
                     icon = PhosphorIcons.Regular.CalendarBlank,

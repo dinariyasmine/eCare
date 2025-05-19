@@ -1,8 +1,10 @@
 package com.example.data.viewModel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.data.model.Doctor
+import com.example.data.network.UpdateDoctorRequest
 import com.example.data.repository.DoctorRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,17 +28,31 @@ class DoctorViewModel : ViewModel() {
 
     private val repository = DoctorRepository()
 
-    // Filter state
+    // Original list of doctors (for reapplying filters)
+    private var allDoctors = listOf<Doctor>()
+
+    // Enhanced filter state
     private var nameQuery: String? = null
-    private var specialtyFilter: String? = null
-    private var ratingFilter: Double? = null
-    private var patientCountFilter: Int? = null
+    private val specialtyFilters = mutableSetOf<String>()
+    private var minRatingFilter: Float? = null
+    private var patientCountRange: Pair<Int?, Int?>? = null
 
     // Fetch list of doctors
-    suspend fun getDoctorsFromApi(): List<Doctor> {
-        val allDoctors = repository.getAllDoctors()
-        _doctors.value = allDoctors
-        return allDoctors
+    fun getDoctorsFromApi() {
+        viewModelScope.launch {
+            _loading.value = true
+            _error.value = null
+            try {
+                allDoctors = repository.getAllDoctors()
+                _doctors.value = allDoctors
+            } catch (e: Exception) {
+                _error.value = "Error loading doctors: ${e.message}"
+                allDoctors = emptyList()
+                _doctors.value = emptyList()
+            } finally {
+                _loading.value = false
+            }
+        }
     }
 
     // Load selected doctor's details
@@ -61,61 +77,114 @@ class DoctorViewModel : ViewModel() {
     }
 
     // Update doctor details
-    fun updateDoctor(firstName: String, lastName: String, email: String, phone: String, birthday: String) {
+    fun updateDoctorOnServer(doctorId: Int, updatedFields: UpdateDoctorRequest) {
         viewModelScope.launch {
-            val current = _selectedDoctor.value
-            if (current != null) {
-                val updated = current.copy(name = firstName, email = email, phone = phone, birth_date = birthday)
-                _selectedDoctor.value = updated
-            } else {
-                _error.value = "No doctor selected"
+            _loading.value = true
+            _error.value = null
+            try {
+                withContext(Dispatchers.IO) {
+                    repository.updateDoctor(doctorId, updatedFields)
+                }
+                // Refresh the doctor data after update
+                loadDoctorDetails(doctorId)
+                _error.value = null
+            } catch (e: Exception) {
+                Log.e("DoctorViewModel", "Error updating doctor: ${e.message}", e)
+                _error.value = "Failed to update doctor: ${e.message}"
+            } finally {
+                _loading.value = false
             }
         }
     }
 
-    // Filter and Search Functions
+    // Enhanced Filter and Search Functions
 
     fun searchDoctorsByName(name: String) {
-        nameQuery = name
+        nameQuery = if (name.isNotBlank()) name else null
         applyFilters()
     }
 
-    fun updateSpecialtyFilter(specialty: String?) {
-        specialtyFilter = specialty
+    fun updateSpecialtyFilter(specialty: String, selected: Boolean) {
+        if (selected) {
+            specialtyFilters.add(specialty)
+        } else {
+            specialtyFilters.remove(specialty)
+        }
         applyFilters()
     }
 
-    fun updateRatingFilter(minRating: Double?) {
-        ratingFilter = minRating
+    fun updateRatingFilter(minRating: Float) {
+        minRatingFilter = if (minRating > 0) minRating else null
         applyFilters()
     }
 
-    fun updatePatientCountFilter(minPatients: Int?) {
-        patientCountFilter = minPatients
+    fun updatePatientCountFilter(minPatients: Int, maxPatients: Int) {
+        patientCountRange = if (minPatients > 0 || maxPatients < 1000) {
+            minPatients to maxPatients
+        } else {
+            null
+        }
         applyFilters()
     }
 
     fun resetFilters() {
         nameQuery = null
-        specialtyFilter = null
-        ratingFilter = null
-        patientCountFilter = null
-        viewModelScope.launch {
-            _doctors.value = repository.getAllDoctors()
-        }
+        specialtyFilters.clear()
+        minRatingFilter = null
+        patientCountRange = null
+        _doctors.value = allDoctors
     }
 
     private fun applyFilters() {
-        viewModelScope.launch {
-            val allDoctors = repository.getAllDoctors()
-            val filtered = allDoctors.filter { doctor ->
-                val matchesName = nameQuery?.let { doctor.name.contains(it, ignoreCase = true) } ?: true
-                val matchesSpecialty = specialtyFilter?.let { doctor.specialty.equals(it, ignoreCase = true) } ?: true
-                val matchesRating = ratingFilter?.let { doctor.grade >= it } ?: true
-                val matchesPatientCount = patientCountFilter?.let { doctor.nbr_patients >= it } ?: true
-                matchesName && matchesSpecialty && matchesRating && matchesPatientCount
+        val filtered = allDoctors.filter { doctor ->
+            // Name filter
+            val matchesName = nameQuery?.let {
+                doctor.name?.contains(it, ignoreCase = true) ?: false
+            } ?: true
+
+            // Specialty filter - check if doctor's specialty is in our selected specialties set
+            val matchesSpecialty = if (specialtyFilters.isEmpty()) {
+                true
+            } else {
+                doctor.specialty?.let { specialty ->
+                    specialtyFilters.contains(specialty)
+                } ?: false
             }
-            _doctors.value = filtered
+
+            // Rating filter
+            val matchesRating = minRatingFilter?.let {
+                (doctor.grade ?: 0f) >= it as Nothing
+            } ?: true
+
+            // Patient count filter
+            val matchesPatientCount = patientCountRange?.let { (min, max) ->
+                val patientCount = doctor.nbr_patients ?: 0
+                (min == null || patientCount >= min) &&
+                        (max == null || patientCount <= max)
+            } ?: true
+
+            matchesName && matchesSpecialty && matchesRating && matchesPatientCount
         }
+
+        _doctors.value = filtered
+    }
+
+    // Utility method to get active filters count - useful for UI indicators
+    fun getActiveFilterCount(): Int {
+        var count = 0
+        if (nameQuery != null) count++
+        if (specialtyFilters.isNotEmpty()) count++
+        if (minRatingFilter != null) count++
+        if (patientCountRange != null) count++
+        return count
+    }
+
+    // Debug method to log current filters
+    fun logCurrentFilters() {
+        Log.d("DoctorViewModel", "Current filters: " +
+                "name=$nameQuery, " +
+                "specialties=${specialtyFilters.joinToString()}, " +
+                "minRating=$minRatingFilter, " +
+                "patientRange=$patientCountRange")
     }
 }
