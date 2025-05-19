@@ -26,12 +26,12 @@ class AppointmentViewSet(viewsets.ModelViewSet):
 
     def create(self, request):
         data = request.data
-        doctor_id = data.get('doctor_id')
+        doctor = data.get('doctor')
         start_time = data.get('start_time')
         end_time = data.get('end_time')
 
         availability = Availability.objects.filter(
-            doctor_id_id=doctor_id,
+            doctor_id=doctor,
             start_time__lte=start_time,
             end_time__gte=end_time,
             booked=False

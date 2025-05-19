@@ -68,8 +68,8 @@ class Patient(models.Model):
 class Appointment(models.Model):
     """Medical appointments between doctors and patients"""
     id = models.AutoField(primary_key=True)
-    doctor_id = models.ForeignKey(Doctor, on_delete=models.CASCADE, related_name='appointments')
-    patient_id = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='appointments')
+    doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE, related_name='appointments')
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='appointments')
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     created_at = models.DateTimeField(auto_now_add=True)
@@ -79,7 +79,7 @@ class Appointment(models.Model):
         ('completed', 'Completed'),
         ('in_progress', 'In Progress'),
     ], default='scheduled')
-    qr_Code = models.CharField(max_length=255, blank=True, null=True)
+    qr_Code = models.TextField(blank=True, null=True)
     
     def __str__(self):
         return f"Appointment with {self.doctor} on {self.start_time.strftime('%Y-%m-%d %H:%M')}"
