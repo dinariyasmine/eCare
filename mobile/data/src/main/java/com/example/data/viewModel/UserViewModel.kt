@@ -31,6 +31,26 @@ class UserViewModel(private val userRepository: UserRepository) : ViewModel() {
     init {
         fetchAllUsers()
     }
+    fun loginUser(email: String, password: String) {
+        viewModelScope.launch {
+            _loading.value = true
+            _error.value = null
+
+            try {
+                val user = userRepository.getUserByEmail(email)
+
+                if (user != null && user.password == password) {
+                    _selectedUser.value = user
+                } else {
+                    _error.value = "Invalid email or password"
+                }
+            } catch (e: Exception) {
+                _error.value = "Login failed: ${e.message}"
+            } finally {
+                _loading.value = false
+            }
+        }
+    }
 
     fun fetchAllUsers() {
         viewModelScope.launch {

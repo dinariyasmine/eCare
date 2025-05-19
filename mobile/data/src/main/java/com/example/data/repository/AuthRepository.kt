@@ -1,6 +1,7 @@
 package com.example.data.repository
 
 import com.example.data.model.AuthResponse
+import com.example.data.model.LoginRequest
 import com.example.data.model.RegistrationRequest
 import com.example.data.retrofit.ApiService
 import kotlinx.coroutines.Dispatchers
@@ -22,4 +23,8 @@ class AuthRepository(private val apiService: ApiService) {
             )
         }
     }
+    suspend fun login(username: String, password: String): AuthResponse {
+        return apiService.login(LoginRequest(username, password))
+    }
+
 }

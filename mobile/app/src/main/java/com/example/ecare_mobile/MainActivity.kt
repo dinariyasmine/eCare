@@ -9,6 +9,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.authentification.screen.ui.screen.*
 import com.example.core.theme.ECareMobileTheme
+import com.example.data.repository.AuthRepository
+import com.example.data.retrofit.RetrofitInstance
+import com.example.data.viewModel.AuthViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 class MainActivity : ComponentActivity() {
     private lateinit var googleAuthHelper: googleAuthHelper
@@ -38,9 +42,13 @@ class MainActivity : ComponentActivity() {
 fun MainAppContent(googleAuthHelper: googleAuthHelper) {
     val navController = rememberNavController()
 
-    // NavHost with SignIn as the start destination
+    // Create repository and ViewModel at the app level to share between screens
+    val authRepository = remember { AuthRepository(RetrofitInstance.apiService) }
+    val authViewModel: AuthViewModel = viewModel(
+        factory = AuthViewModel.Companion.Factory(authRepository)
+    )
 
-    // Add more routes as needed
+    // NavHost with SignIn as the start destination
     NavHost(
         navController = navController,
         startDestination = Routes.SIGN_IN  // or Routes.SIGN_UP, whatever you prefer
@@ -52,7 +60,11 @@ fun MainAppContent(googleAuthHelper: googleAuthHelper) {
             SignUpScreen(googleAuthHelper = googleAuthHelper, navController = navController)
         }
         composable(Routes.SIGN_UP2) {
-            SignUp2Screen(googleAuthHelper = googleAuthHelper, navController = navController)
+            SignUp2Screen(
+                googleAuthHelper = googleAuthHelper,
+                navController = navController,
+                authViewModel = authViewModel  // Pass the ViewModel instance
+            )
         }
         composable(Routes.RESET_PASS) {
             resetPass(navController = navController)
@@ -63,7 +75,9 @@ fun MainAppContent(googleAuthHelper: googleAuthHelper) {
         composable(Routes.OTP) {
             OTPScreen(navController = navController)
         }
+        composable(Routes.HOME) {
+            HomePage(navController = navController)
+        }
         // Add more routes as needed
     }
 }
-

@@ -1,6 +1,7 @@
 package com.example.authentification.screen.ui.screen
 
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
@@ -29,12 +30,15 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,6 +49,7 @@ import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -54,6 +59,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Bold
@@ -70,17 +76,57 @@ import com.example.core.theme.Primary200
 import com.example.core.theme.Primary300
 import com.example.core.theme.Primary50
 import com.example.core.theme.Primary500
+import com.example.data.model.LoginRequest
 import com.example.splashscreen.R
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.common.api.ApiException
+import com.example.data.repository.AuthRepository
+import com.example.data.retrofit.RetrofitInstance
+import com.example.data.viewModel.AuthViewModel
 
 @Composable
 fun LoginScreen(googleAuthHelper: googleAuthHelper, navController: NavController) {
+    val authRepository = remember { AuthRepository(RetrofitInstance.apiService) }
+    val authViewModel: AuthViewModel = viewModel(
+        factory = AuthViewModel.Companion.Factory(authRepository)
+    )
+
     // States for form fields
-    var email by remember { mutableStateOf("") }
+    var username by remember { mutableStateOf("") } // Changed from email to username
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var rememberMe by remember { mutableStateOf(false) }
+
+    var isLoading by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
+    // Collect states from ViewModel
+    val loginState by authViewModel.loginState.collectAsState()
+    val errorState by authViewModel.errorState.collectAsState()
+
+    // Handle login response
+    LaunchedEffect(loginState) {
+        if (loginState != null) {
+            isLoading = false
+            Toast.makeText(context, "Login successful!", Toast.LENGTH_SHORT).show()
+            // Navigate to main screen or dashboard
+            navController.navigate(Routes.HOME) {
+                popUpTo(Routes.SIGN_IN) { inclusive = true }
+            }
+            // Clear login state to avoid navigation loop
+            authViewModel.clearLoginState()
+        }
+    }
+
+    // Handle error response
+    LaunchedEffect(errorState) {
+        if (errorState != null) {
+            isLoading = false
+            Toast.makeText(context, errorState, Toast.LENGTH_LONG).show()
+            // Clear error state
+            authViewModel.clearState()
+        }
+    }
 
     // Creating the launcher using rememberLauncherForActivityResult
     val launcher = rememberLauncherForActivityResult(
@@ -92,7 +138,8 @@ fun LoginScreen(googleAuthHelper: googleAuthHelper, navController: NavController
 
             Log.d("GoogleSignIn", "Success: ${account.email}")
 
-            email = account.email ?: ""
+            // Here you might want to extract username from email or make a separate API call
+            username = account.email?.substringBefore("@") ?: ""
         } catch (e: ApiException) {
             Log.e("GoogleSignIn", "Failed", e)
         }
@@ -204,13 +251,13 @@ fun LoginScreen(googleAuthHelper: googleAuthHelper, navController: NavController
                         .padding(horizontal = 16.dp, vertical = 20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Email Field
+                    // Username Field (changed from Email)
                     OutlinedTextField(
-                        value = email,
-                        onValueChange = { email = it },
+                        value = username,
+                        onValueChange = { username = it },
                         placeholder = {
                             Text(
-                                text = "Email",
+                                text = "Username",
                                 color = Gray500,
                                 textAlign = TextAlign.Start,
                                 fontSize = 14.sp
@@ -227,7 +274,7 @@ fun LoginScreen(googleAuthHelper: googleAuthHelper, navController: NavController
                             unfocusedContainerColor = Gray50,
                             focusedContainerColor = Primary100
                         ),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                         textStyle = TextStyle(
                             textAlign = TextAlign.Start,
                             fontSize = 14.sp,
@@ -321,22 +368,44 @@ fun LoginScreen(googleAuthHelper: googleAuthHelper, navController: NavController
 
                     // Login Button
                     Button(
-                        onClick = { /* Handle login logic */ },
+                        onClick = {
+                            if (username.isBlank() || password.isBlank()) {
+                                Toast.makeText(context, "Please enter username and password", Toast.LENGTH_SHORT).show()
+                                return@Button
+                            }
+
+                            isLoading = true
+                            Log.d("LoginScreen", "Logging in user: $username")
+
+                            val loginRequest = LoginRequest(
+                                username = username,
+                                password = password
+                            )
+
+                            authViewModel.login(loginRequest)
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(50.dp),
                         shape = RoundedCornerShape(5.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Primary500
-                        ),
-                        contentPadding = PaddingValues(0.dp)
+                        colors = ButtonDefaults.buttonColors(containerColor = Primary500),
+                        contentPadding = PaddingValues(0.dp),
+                        enabled = !isLoading
                     ) {
-                        Text(
-                            text = "Login",
-                            color = Color.White,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 16.sp
-                        )
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text(
+                                text = "Login",
+                                color = Color.White,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 16.sp
+                            )
+                        }
                     }
 
                     // Or divider
@@ -408,8 +477,6 @@ fun LoginScreen(googleAuthHelper: googleAuthHelper, navController: NavController
                     }
                 }
             }
-
-
         }
     }
 }

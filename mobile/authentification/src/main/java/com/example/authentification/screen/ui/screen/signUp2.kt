@@ -1,8 +1,7 @@
 package com.example.authentification.screen.ui.screen
 
 import android.util.Log
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -26,9 +25,12 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,6 +42,7 @@ import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -47,13 +50,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Bold
 import com.adamglin.phosphoricons.bold.CaretDown
-import com.example.splashscreen.R
-import com.example.authentification.screen.ui.screen.CustomTextField
-import com.example.authentification.screen.ui.screen.DatePickerField
+import com.example.core.theme.Gray100
+import com.example.core.theme.Gray500
+import com.example.core.theme.Gray600
 import com.example.core.theme.Gray900
 import com.example.core.theme.Primary100
 import com.example.core.theme.Primary200
@@ -61,14 +65,31 @@ import com.example.core.theme.Primary300
 import com.example.core.theme.Primary400
 import com.example.core.theme.Primary50
 import com.example.core.theme.Primary500
-import com.example.core.theme.Gray100
-import com.example.core.theme.Gray500
-import com.example.core.theme.Gray600
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.common.api.ApiException
+import com.example.data.model.RegistrationRequest
+import com.example.data.repository.AuthRepository
+import com.example.data.retrofit.RetrofitInstance
+import com.example.data.viewModel.AuthViewModel
+import com.example.splashscreen.R
+import kotlinx.coroutines.flow.firstOrNull
 
 @Composable
-fun SignUp2Screen(googleAuthHelper: googleAuthHelper, navController: NavController) {
+fun SignUp2Screen(googleAuthHelper: googleAuthHelper, navController: NavController, authViewModel: AuthViewModel) {
+    // Create repository and ViewModel
+
+    val registrationState by authViewModel.registrationState.collectAsState()
+    val errorState by authViewModel.errorState.collectAsState()
+    val currentUser by authViewModel.currentUser.collectAsState()
+    val currentPassword by authViewModel.currentPassword.collectAsState()
+
+    // Collect state from ViewModel
+
+
+
+    // Local UI state
+    var isLoading by remember { mutableStateOf(false) }
+    var dataLoaded by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
     // States for form fields
     var firstName by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
@@ -78,26 +99,73 @@ fun SignUp2Screen(googleAuthHelper: googleAuthHelper, navController: NavControll
     var instagram by remember { mutableStateOf("") }
     var socialMedia3 by remember { mutableStateOf("") }
     var clinicName by remember { mutableStateOf("") }
+    var clinicId by remember { mutableStateOf(15) } // Default to first clinic
     var clinicAddress by remember { mutableStateOf("") }
-    var availabilitySchedule by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
     var userType by remember { mutableStateOf("Doctor") } // Default to Doctor
 
-    // Creating the launcher using rememberLauncherForActivityResult
-    val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-        try {
-            val account = task.getResult(ApiException::class.java)
-            // Handle the signed-in account (account.id, account.email, etc.)
-            Log.d("GoogleSignIn", "Success: ${account.email}")
+    // Map clinic names to IDs - this would typically come from an API
+    val clinics = remember {
+        mapOf(
+            "Clinic A" to 15,
+            "Clinic B" to 16,
+            "Clinic C" to 17,
+            "Clinic D" to 18
+        )
+    }
 
+    // Retrieve doctor information when the screen is first loaded
+    LaunchedEffect(Unit) {
+        Log.d("SignUp2Screen", "Screen composed, checking for user data...")
 
-            email = account.email ?: ""
-            firstName = account.givenName ?: ""
-            lastName = account.familyName ?: ""
-        } catch (e: ApiException) {
-            Log.e("GoogleSignIn", "Failed", e)
+        // Get the stored user data
+        val user = currentUser
+
+        if (user != null) {
+            Log.d("SignUp2Screen", "Found user data: ${user.name}, ${user.email}")
+            val nameParts = user.name.split(" ")
+            firstName = nameParts.getOrNull(0) ?: ""
+            lastName = nameParts.getOrElse(1) { "" }
+            email = user.email
+            dataLoaded = true
+        } else {
+            Log.d("SignUp2Screen", "User data is null, will try to retrieve it")
+
+            // Wait a moment and check again (sometimes state initialization is delayed)
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                val delayedUser = authViewModel.currentUser.value
+                if (delayedUser != null) {
+                    Log.d("SignUp2Screen", "Retrieved user data after delay: ${delayedUser.name}")
+                    val nameParts = delayedUser.name.split(" ")
+                    firstName = nameParts.getOrNull(0) ?: ""
+                    lastName = nameParts.getOrElse(1) { "" }
+                    email = delayedUser.email
+                    dataLoaded = true
+                } else {
+                    Log.e("SignUp2Screen", "User data still null after delay")
+                    Toast.makeText(context, "Failed to retrieve user data. Please go back and try again.", Toast.LENGTH_LONG).show()
+                }
+            }, 500) // Longer delay to ensure data is available
+        }
+    }
+
+    // Handle registration response
+    LaunchedEffect(registrationState, errorState) {
+        when {
+            registrationState != null && isLoading -> {
+                isLoading = false
+                Toast.makeText(context, "Doctor registration successful!", Toast.LENGTH_SHORT).show()
+                navController.navigate(Routes.SIGN_IN) {
+                    popUpTo(Routes.SIGN_UP) { inclusive = true }
+                }
+                authViewModel.clearState()
+                authViewModel.clearUserData()
+            }
+            errorState != null && isLoading -> {
+                isLoading = false
+                Toast.makeText(context, "Error: $errorState", Toast.LENGTH_LONG).show()
+                authViewModel.clearState()
+            }
         }
     }
 
@@ -155,7 +223,7 @@ fun SignUp2Screen(googleAuthHelper: googleAuthHelper, navController: NavControll
 
             // Title
             Text(
-                text = "Sign Up",
+                text = "Doctor Information",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = Gray900
@@ -205,7 +273,7 @@ fun SignUp2Screen(googleAuthHelper: googleAuthHelper, navController: NavControll
                         .padding(horizontal = 16.dp, vertical = 20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // User Type Selector
+                    // User Type Selector (keeping it but disabling interaction since this is the doctor registration screen)
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -215,44 +283,38 @@ fun SignUp2Screen(googleAuthHelper: googleAuthHelper, navController: NavControll
                             .border(1.dp, Color(0xFFEFF0F6), RoundedCornerShape(20.dp)),
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        // Doctor Button
+                        // Doctor Button (always selected in this screen)
                         Box(
                             modifier = Modifier
                                 .weight(1f)
                                 .padding(4.dp)
                                 .clip(RoundedCornerShape(16.dp))
-                                .background(
-                                    if (userType == "Doctor") Color.White else Color.Transparent
-                                )
-                                .clickable { userType = "Doctor" }
+                                .background(Color.White)
                                 .padding(vertical = 8.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 text = "Doctor",
-                                color = if (userType == "Doctor") Gray900 else Gray500,
-                                fontWeight = if (userType == "Doctor") FontWeight.SemiBold else FontWeight.Normal,
+                                color = Gray900,
+                                fontWeight = FontWeight.SemiBold,
                                 fontSize = 14.sp
                             )
                         }
 
-                        // Patient Button
+                        // Patient Button (disabled in this screen)
                         Box(
                             modifier = Modifier
                                 .weight(1f)
                                 .padding(4.dp)
                                 .clip(RoundedCornerShape(16.dp))
-                                .background(
-                                    if (userType == "Patient") Color.White else Color.Transparent
-                                )
-                                .clickable { userType = "Patient" }
+                                .background(Color.Transparent)
                                 .padding(vertical = 8.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 text = "Patient",
-                                color = if (userType == "Patient") Gray900 else Gray500,
-                                fontWeight = if (userType == "Patient") FontWeight.SemiBold else FontWeight.Normal,
+                                color = Gray500,
+                                fontWeight = FontWeight.Normal,
                                 fontSize = 14.sp
                             )
                         }
@@ -261,7 +323,7 @@ fun SignUp2Screen(googleAuthHelper: googleAuthHelper, navController: NavControll
                     Spacer(modifier = Modifier.height(16.dp))
 
                     // Form Fields
-                    // Specialty Dropdown
+                    // Specialty Dropdown - Important for doctor registration
                     CustomTextField(
                         value = specialty,
                         onValueChange = { specialty = it },
@@ -274,6 +336,16 @@ fun SignUp2Screen(googleAuthHelper: googleAuthHelper, navController: NavControll
                                 tint = Primary500
                             )
                         }
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Brief description about your practice
+                    CustomTextField(
+                        value = description,
+                        onValueChange = { description = it },
+                        placeholder = "Brief description about your practice",
+                        modifier = Modifier.fillMaxWidth()
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
@@ -308,11 +380,25 @@ fun SignUp2Screen(googleAuthHelper: googleAuthHelper, navController: NavControll
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // Clinic Name Field
+                    // For testing, just use clinic ID 15
+                    Text(
+                        text = "Using Clinic ID: 15 (for testing)",
+                        color = Gray600,
+                        fontSize = 12.sp,
+                        modifier = Modifier.align(Alignment.Start)
+                    )
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    // Clinic Name Field - this is important for the API (clinicId)
                     CustomTextField(
                         value = clinicName,
-                        onValueChange = { clinicName = it },
-                        placeholder = "Clinic Name",
+                        onValueChange = {
+                            clinicName = it
+                            // For testing, always use ID 15
+                            clinicId = 15
+                        },
+                        placeholder = "Clinic Name (Optional for testing)",
                         modifier = Modifier.fillMaxWidth(),
                         trailingIcon = {
                             Icon(
@@ -329,25 +415,64 @@ fun SignUp2Screen(googleAuthHelper: googleAuthHelper, navController: NavControll
                     CustomTextField(
                         value = clinicAddress,
                         onValueChange = { clinicAddress = it },
-                        placeholder = "Clinic Adress",
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // Using the new DatePickerField component
-                    DatePickerField(
-                        value = availabilitySchedule,
-                        onValueChange = { availabilitySchedule = it },
-                        placeholder = "Availability Schedule",
+                        placeholder = "Clinic Address (Optional for testing)",
                         modifier = Modifier.fillMaxWidth()
                     )
 
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    // Sign Up Button
+                    // Complete Registration Button
                     Button(
-                        onClick = { /* Handle sign up logic */ },
+                        onClick = {
+                            if (specialty.isNotBlank()) {
+                                isLoading = true
+                                Log.d("SignUp2Screen", "Starting doctor registration process")
+
+                                // Retrieve stored user data
+                                val userData = currentUser
+                                val storedPassword = currentPassword
+
+                                Log.d("SignUp2Screen", "User data present: ${userData != null}")
+                                Log.d("SignUp2Screen", "Password present: ${storedPassword != null}")
+
+                                if (userData != null && storedPassword != null) {
+                                    Log.d("SignUp2Screen", "Creating doctor registration request")
+                                    Log.d("SignUp2Screen", "Username: ${userData.username}")
+                                    Log.d("SignUp2Screen", "Email: ${userData.email}")
+                                    Log.d("SignUp2Screen", "Specialty: $specialty")
+                                    Log.d("SignUp2Screen", "Clinic ID: $clinicId")
+
+                                    // Create doctor registration request with specialty and clinic_id
+                                    val request = RegistrationRequest(
+                                        username = userData.username,
+                                        email = userData.email,
+                                        password = storedPassword,
+                                        password2 = storedPassword,
+                                        name = userData.name,
+                                        phone = userData.phone,
+                                        address = userData.address,
+                                        birth_date = userData.birth_date,
+                                        role = "doctor",
+                                        specialty = specialty,
+                                        clinic_id = clinicId
+                                    )
+
+                                    // Register doctor with specialty and clinic info
+                                    Log.d("SignUp2Screen", "Calling registerDoctor")
+                                    authViewModel.registerDoctor(request)
+                                } else {
+                                    isLoading = false
+                                    Log.e("SignUp2Screen", "User data or password is null")
+                                    Toast.makeText(context, "User data not found, please start over", Toast.LENGTH_SHORT).show()
+                                    // Ensure clean navigation back to sign up page
+                                    navController.navigate(Routes.SIGN_UP) {
+                                        popUpTo(Routes.SIGN_UP) { inclusive = true }
+                                    }
+                                }
+                            } else {
+                                Toast.makeText(context, "Please fill in your specialty", Toast.LENGTH_SHORT).show()
+                            }
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(50.dp),
@@ -357,78 +482,18 @@ fun SignUp2Screen(googleAuthHelper: googleAuthHelper, navController: NavControll
                         ),
                         contentPadding = PaddingValues(0.dp)
                     ) {
-                        Text(
-                            text = "Sign Up",
-                            color = Color.White,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 16.sp
-                        )
-                    }
-
-                    // Or divider
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Spacer(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(1.dp)
-                                .background(Primary300)
-                        )
-                        Text(
-                            text = "Or",
-                            color = Gray600,
-                            modifier = Modifier.padding(horizontal = 16.dp),
-                            fontSize = 12.sp
-                        )
-                        Spacer(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(1.dp)
-                                .background(Primary300)
-                        )
-                    }
-
-                    // Google Sign In Button
-                    Button(
-                        onClick = {
-                            val signInIntent = googleAuthHelper.googleSignInClient.signInIntent
-                            launcher.launch(signInIntent)
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp),
-                        shape = RoundedCornerShape(5.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.White
-                        ),
-                        elevation = ButtonDefaults.buttonElevation(
-                            defaultElevation = 0.dp
-                        ),
-                        border = androidx.compose.foundation.BorderStroke(
-                            1.dp,
-                            Primary300
-                        ),
-                        contentPadding = PaddingValues(0.dp)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.google),
-                                contentDescription = "Google Logo",
-                                modifier = Modifier.size(20.dp)
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
+                        } else {
                             Text(
-                                text = "Continue with Google",
-                                color = Gray600,
-                                fontWeight = FontWeight.Medium,
-                                fontSize = 14.sp
+                                text = "Complete Registration",
+                                color = Color.White,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 16.sp
                             )
                         }
                     }

@@ -73,6 +73,7 @@ import androidx.navigation.NavController
 import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Bold
 import com.adamglin.phosphoricons.bold.CalendarDots
+import com.adamglin.phosphoricons.bold.CaretDown
 import com.adamglin.phosphoricons.bold.Eye
 import com.adamglin.phosphoricons.bold.EyeSlash
 import com.example.core.theme.Gray100
@@ -114,40 +115,43 @@ fun SignUpScreen(googleAuthHelper: googleAuthHelper, navController: NavControlle
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // States for form fields
+    // Common fields for both doctor and patient
     var firstName by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var phoneNumber by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
-    var address by remember { mutableStateOf("") } // Added for API integration
-    var username by remember { mutableStateOf("") } // Added for API integration
+    var address by remember { mutableStateOf("") }
+    var username by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
     var userType by remember { mutableStateOf("Patient") }
-    var showDatePicker by remember { mutableStateOf(false) }
     var dateOfBirth by remember { mutableStateOf("") }
+
+    // Doctor-specific fields
+    var specialty by remember { mutableStateOf("") }
+    var linkedin by remember { mutableStateOf("") }
+    var instagram by remember { mutableStateOf("") }
+    var socialMedia3 by remember { mutableStateOf("") }
+    var clinicName by remember { mutableStateOf("") }
+    var clinicId by remember { mutableStateOf(15) } // Default clinic ID
+
+    // For date picker
+    var showDatePicker by remember { mutableStateOf(false) }
 
     // Handle registration response
     LaunchedEffect(registrationState, errorState) {
         when {
-            registrationState != null -> {
+            registrationState != null && isLoading -> {
                 isLoading = false
                 Toast.makeText(context, "Registration successful!", Toast.LENGTH_SHORT).show()
-
-                if (userType == "Doctor") {
-                    // For doctors, navigate to the next screen
-                    navController.navigate(Routes.SIGN_UP2)
-                } else {
-                    // For patients, navigate to sign in screen
-                    navController.navigate(Routes.SIGN_IN)
-                }
-                authViewModel.clearState() // Clear the state after handling
+                navController.navigate(Routes.SIGN_IN)
+                authViewModel.clearState()
             }
-            errorState != null -> {
+            errorState != null && isLoading -> {
                 isLoading = false
-                Toast.makeText(context, errorState, Toast.LENGTH_LONG).show()
+                Toast.makeText(context, errorState ?: "An error occurred", Toast.LENGTH_LONG).show()
                 authViewModel.clearState() // Clear the error state after handling
             }
         }
@@ -172,8 +176,8 @@ fun SignUpScreen(googleAuthHelper: googleAuthHelper, navController: NavControlle
         }
     }
 
-    // Define validation function here so it has access to the state variables
-    val validateFields = {
+    // Define validation function for common fields
+    val validateCommonFields = {
         username.isNotBlank() &&
                 email.isNotBlank() && email.contains("@") &&
                 firstName.isNotBlank() &&
@@ -183,6 +187,11 @@ fun SignUpScreen(googleAuthHelper: googleAuthHelper, navController: NavControlle
                 dateOfBirth.isNotBlank() &&
                 phoneNumber.isNotBlank() &&
                 address.isNotBlank()
+    }
+
+    // Additional validation for doctor fields
+    val validateDoctorFields = {
+        validateCommonFields() && specialty.isNotBlank() && clinicName.isNotBlank()
     }
 
     // Function to format date for API
@@ -210,7 +219,7 @@ fun SignUpScreen(googleAuthHelper: googleAuthHelper, navController: NavControlle
                 )
             )
     ) {
-        // Background circles like in the SignUp2Screen
+        // Background circles
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -281,7 +290,7 @@ fun SignUpScreen(googleAuthHelper: googleAuthHelper, navController: NavControlle
                     }
             )
 
-            // Main Content Card with improved Glassmorphism effect as in SignUp2
+            // Main Content Card with Glassmorphism effect
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -358,8 +367,8 @@ fun SignUpScreen(googleAuthHelper: googleAuthHelper, navController: NavControlle
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Form Fields
-                    // Username (Added for API integration)
+                    // Common Form Fields
+                    // Username
                     CustomTextField(
                         value = username,
                         onValueChange = { username = it },
@@ -400,7 +409,7 @@ fun SignUpScreen(googleAuthHelper: googleAuthHelper, navController: NavControlle
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // Address (Added for API integration)
+                    // Address
                     CustomTextField(
                         value = address,
                         onValueChange = { address = it },
@@ -432,10 +441,10 @@ fun SignUpScreen(googleAuthHelper: googleAuthHelper, navController: NavControlle
                                 .height(50.dp)
                                 .border(
                                     width = 1.dp,
-                                    color = Primary300, // Color(0xFF90CAF9) instead of Color(0xFF93C5FD)
+                                    color = Primary300,
                                     shape = RoundedCornerShape(5.dp)
                                 )
-                                .background(Gray100) // Color(0xFFF5F5F5) instead of Color(0xFFF9FAFB)
+                                .background(Gray100)
                                 .padding(horizontal = 8.dp),
                             contentAlignment = Alignment.Center
                         ) {
@@ -468,6 +477,77 @@ fun SignUpScreen(googleAuthHelper: googleAuthHelper, navController: NavControlle
                             placeholder = "Phone Number",
                             keyboardType = KeyboardType.Phone,
                             modifier = Modifier.weight(0.7f)
+                        )
+                    }
+
+                    // Doctor-specific fields - only show when Doctor is selected
+                    if (userType == "Doctor") {
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // Specialty Field
+                        CustomTextField(
+                            value = specialty,
+                            onValueChange = { specialty = it },
+                            placeholder = "Specialty",
+                            modifier = Modifier.fillMaxWidth(),
+                            trailingIcon = {
+                                Icon(
+                                    imageVector = PhosphorIcons.Bold.CaretDown,
+                                    contentDescription = "CaretDown",
+                                    tint = Primary500
+                                )
+                            }
+                        )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // Clinic Name Field
+                        CustomTextField(
+                            value = clinicName,
+                            onValueChange = {
+                                clinicName = it
+                                // For testing, always use ID 15
+                                clinicId = 15
+                            },
+                            placeholder = "Clinic Name",
+                            modifier = Modifier.fillMaxWidth(),
+                            trailingIcon = {
+                                Icon(
+                                    imageVector = PhosphorIcons.Bold.CaretDown,
+                                    contentDescription = "CaretDown",
+                                    tint = Primary500
+                                )
+                            }
+                        )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // LinkedIn Field
+                        CustomTextField(
+                            value = linkedin,
+                            onValueChange = { linkedin = it },
+                            placeholder = "LinkedIn (Optional)",
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // Instagram Field
+                        CustomTextField(
+                            value = instagram,
+                            onValueChange = { instagram = it },
+                            placeholder = "Instagram (Optional)",
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // Social Media 3 Field
+                        CustomTextField(
+                            value = socialMedia3,
+                            onValueChange = { socialMedia3 = it },
+                            placeholder = "Social Media 3 (Optional)",
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
 
@@ -520,9 +600,14 @@ fun SignUpScreen(googleAuthHelper: googleAuthHelper, navController: NavControlle
                     // Sign Up Button
                     Button(
                         onClick = {
-                            // Validate fields
-                            if (validateFields()) {
+                            val isDoctor = userType == "Doctor"
+
+                            // Validate fields based on user type
+                            val isValid = if (isDoctor) validateDoctorFields() else validateCommonFields()
+
+                            if (isValid) {
                                 isLoading = true
+                                Log.d("SignUpScreen", "Submitting form - User type: $userType")
 
                                 // Create registration request
                                 val request = RegistrationRequest(
@@ -534,13 +619,24 @@ fun SignUpScreen(googleAuthHelper: googleAuthHelper, navController: NavControlle
                                     phone = "+213$phoneNumber",
                                     address = address,
                                     birth_date = formatDateForApi(dateOfBirth),
-                                    role = if (userType == "Doctor") "doctor" else "patient"
+                                    role = if (isDoctor) "doctor" else "patient",
+                                    specialty = if (isDoctor) specialty else null,
+                                    clinic_id = if (isDoctor) clinicId else null
                                 )
 
                                 // Register user with appropriate type
-                                authViewModel.registerUser(request, isDoctor = userType == "Doctor")
+                                if (isDoctor) {
+                                    authViewModel.registerDoctor(request)
+                                } else {
+                                    authViewModel.registerUser(request, isDoctor = false)
+                                }
                             } else {
-                                Toast.makeText(context, "Please fill all required fields correctly", Toast.LENGTH_SHORT).show()
+                                val message = if (isDoctor)
+                                    "Please fill all required fields including specialty and clinic"
+                                else
+                                    "Please fill all required fields correctly"
+
+                                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                             }
                         },
                         modifier = Modifier
@@ -561,7 +657,7 @@ fun SignUpScreen(googleAuthHelper: googleAuthHelper, navController: NavControlle
                             )
                         } else {
                             Text(
-                                text = if (userType == "Doctor") "Next" else "Sign Up",
+                                text = "Sign Up",
                                 color = Color.White,
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 16.sp
@@ -693,7 +789,6 @@ fun CustomTextField(
         trailingIcon = trailingIcon
     )
 }
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DatePickerField(

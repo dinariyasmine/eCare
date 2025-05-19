@@ -8,6 +8,7 @@ object Routes {
     const val RESET_PASS = "resetpass"
     const val FORGOT_PASS = "forgotpass"
     const val OTP = "otp"
+    const val HOME ="home"
 
 
 

@@ -2,7 +2,7 @@ package com.example.data.model
 
 data class AuthResponse(
     val user: UserResponse,
-    val tokens: TokenResponse
+    val tokens: TokenResponse?
 )
 
 data class UserResponse(
