@@ -27,6 +27,9 @@ urlpatterns = [
     
     path('api/auth/', include('authentication.urls')),
     
+    path('appointments', include('appointments.urls')),
+    path('availabilities', include('availabilities.urls')),
+    
     
     # Swagger documentation URLs
     re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),

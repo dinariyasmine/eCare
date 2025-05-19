@@ -31,11 +31,10 @@ class PatientSerializer(serializers.ModelSerializer):
 
 
 class AppointmentSerializer(serializers.ModelSerializer):
-    doctor = DoctorSerializer()
 
     class Meta:
         model = Appointment
-        fields = ['id', 'doctor', 'patient', 'start_time', 'end_time', 'created_at', 'updated_at', 'status', 'qr_Code']
+        fields = ['id', 'doctor', 'patient', 'start_time', 'end_time', 'status', 'qr_Code']
 
 
 class NotificationSerializer(serializers.ModelSerializer):
@@ -132,8 +131,6 @@ class AddPrescriptionItemSerializer(serializers.Serializer):
 # End Prescription System Serializers
 
 class AvailabilitySerializer(serializers.ModelSerializer):
-    doctor_id = DoctorSerializer()
-
     class Meta:
         model = Availability
         fields = ['id', 'doctor_id', 'start_time', 'end_time', 'booked']

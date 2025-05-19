@@ -50,6 +50,8 @@ INSTALLED_APPS = [
     'authentication',
     'drf_yasg',
     'rest_framework_simplejwt',
+    'appointments',
+    'availabilities'
 ]
 
 MIDDLEWARE = [
