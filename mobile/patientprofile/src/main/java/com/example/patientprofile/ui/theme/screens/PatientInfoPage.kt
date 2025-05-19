@@ -161,7 +161,8 @@ fun PatientProfileScreen(
                 title = {
                     Text(
                         "Personal Informations",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Medium)
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+
                     )
                 },
                 navigationIcon = {
@@ -207,7 +208,7 @@ fun PatientProfileScreen(
                     modifier = Modifier
                         .size(100.dp)
                         .clip(CircleShape)
-                        .background(Color.LightGray)
+                        .background(Color(0xFF93C5FD))
                 ) {
                     // Replace with actual image resource
                     // For now using a placeholder icon
@@ -276,7 +277,7 @@ fun PatientProfileScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Phone field with country code
-                Column(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.fillMaxWidth()  .padding(horizontal = 18.dp)) {
                     Text(
                         "Phone Number",
                         style = MaterialTheme.typography.bodyMedium,
@@ -289,7 +290,9 @@ fun PatientProfileScreen(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedBorderColor = Color.LightGray,
+                            unfocusedBorderColor = Color(0xFF93C5FD),
+                            focusedContainerColor = Color(0xFFF9FAFB),
+                            unfocusedContainerColor = Color(0xFFF9FAFB),
                             focusedBorderColor = Color(0xFF2196F3)
                         ),
                         leadingIcon = {
@@ -351,7 +354,7 @@ fun PatientProfileScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 24.dp)
-                        .height(48.dp),
+                        .height(48.dp)  .padding(horizontal = 18.dp),
                     shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFF2196F3) // Bright blue color as seen in the image
@@ -382,7 +385,7 @@ fun FormField(
     onValueChange: (String) -> Unit,
     trailingIcon: @Composable (() -> Unit)? = null
 ) {
-    Column(modifier = Modifier.fillMaxWidth()) {
+    Column(modifier = Modifier.fillMaxWidth()  .padding(horizontal = 18.dp),) {
         Text(
             label,
             style = MaterialTheme.typography.bodyMedium,
@@ -393,9 +396,13 @@ fun FormField(
             value = value,
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(8.dp),
+
+
+           shape = RoundedCornerShape(8.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                unfocusedBorderColor = Color.LightGray,
+                unfocusedBorderColor = Color(0xFF93C5FD),
+                focusedContainerColor = Color(0xFFF9FAFB),
+                unfocusedContainerColor = Color(0xFFF9FAFB),
                 focusedBorderColor = Color(0xFF2196F3)
             ),
             trailingIcon = trailingIcon,

@@ -40,7 +40,7 @@ fun Patientparams(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Patient Parameters", color = Color.Black) },
+                title = {   },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.Black)
@@ -70,7 +70,8 @@ fun Patientparams(
 
                 ProfileOption(
                     icon = PhosphorIcons.Regular.Pill,
-                    text = "Prescriptions"
+                    text = "Prescriptions",
+
                 ) {
 
                 }

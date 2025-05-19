@@ -46,7 +46,7 @@ fun ProfileOption(icon: ImageVector, text: String, onClick: () -> Unit) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = Color(0xFF2196F3)  // Using a blue color for better contrast
+                tint = Color.Black  // Using a blue color for better contrast
             )
             Spacer(modifier = Modifier.width(16.dp))
             Text(

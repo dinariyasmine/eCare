@@ -28,7 +28,7 @@ fun ProfileHeader(user: UserProfile?) {
                 imageVector = Icons.Default.AccountCircle,
                 contentDescription = "Profile Picture",
                 modifier = Modifier.size(64.dp),
-                tint = MaterialTheme.colorScheme.primary
+                tint = Color(0xFF93C5FD)
             )
 
             Spacer(modifier = Modifier.width(12.dp))
