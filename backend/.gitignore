@@ -1,0 +1,39 @@
+# Python bytecode files
+*.pyc
+*.pyo
+__pycache__/
+
+# Django specific
+*.log
+*.pot
+*.pyc
+*.sqlite3
+db.sqlite3
+
+# Virtual environment
+venv/
+.env/
+
+# IDE or editor specific files
+.idea/
+.vscode/
+*.sublime-workspace
+*.sublime-project
+
+# Operating System files
+.DS_Store
+Thumbs.db
+
+# Dependencies
+*.egg-info/
+*.dist-info/
+.eggs/
+
+# Coverage reports
+.coverage
+.coverage.*
+nosetests.xml
+test_*.xml
+
+# Ignore the .env file which contains secrets (never commit this)
+.env

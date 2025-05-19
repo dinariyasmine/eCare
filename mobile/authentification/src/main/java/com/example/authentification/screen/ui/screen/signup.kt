@@ -1,6 +1,7 @@
 package com.example.authentification.screen.ui.screen
 
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -28,15 +29,21 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.SelectableDates
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,22 +55,29 @@ import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Bold
 import com.adamglin.phosphoricons.bold.CalendarDots
 import com.adamglin.phosphoricons.bold.Eye
 import com.adamglin.phosphoricons.bold.EyeSlash
+import com.example.core.theme.Gray100
+import com.example.core.theme.Gray500
+import com.example.core.theme.Gray600
 import com.example.core.theme.Gray900
 import com.example.core.theme.Primary100
 import com.example.core.theme.Primary200
@@ -71,9 +85,11 @@ import com.example.core.theme.Primary300
 import com.example.core.theme.Primary400
 import com.example.core.theme.Primary50
 import com.example.core.theme.Primary500
-import com.example.core.theme.Gray100
-import com.example.core.theme.Gray500
-import com.example.core.theme.Gray600
+import com.example.core.theme.White
+import com.example.data.model.RegistrationRequest
+import com.example.data.repository.AuthRepository
+import com.example.data.retrofit.RetrofitInstance
+import com.example.data.viewModel.AuthViewModel
 import com.example.splashscreen.R
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.common.api.ApiException
@@ -83,6 +99,21 @@ import java.util.Locale
 
 @Composable
 fun SignUpScreen(googleAuthHelper: googleAuthHelper, navController: NavController) {
+    // Create repository and ViewModel
+    val authRepository = remember { AuthRepository(RetrofitInstance.apiService) }
+    val authViewModel: AuthViewModel = viewModel(
+        factory = AuthViewModel.Companion.Factory(authRepository)
+    )
+
+    // Collect state from ViewModel
+    val registrationState by authViewModel.registrationState.collectAsState()
+    val errorState by authViewModel.errorState.collectAsState()
+
+    // Local UI state
+    var isLoading by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
+
     // States for form fields
     var firstName by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
@@ -90,13 +121,39 @@ fun SignUpScreen(googleAuthHelper: googleAuthHelper, navController: NavControlle
     var phoneNumber by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+    var address by remember { mutableStateOf("") } // Added for API integration
+    var username by remember { mutableStateOf("") } // Added for API integration
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
     var userType by remember { mutableStateOf("Patient") }
     var showDatePicker by remember { mutableStateOf(false) }
     var dateOfBirth by remember { mutableStateOf("") }
 
-    // Creating the launcher using rememberLauncherForActivityResult
+    // Handle registration response
+    LaunchedEffect(registrationState, errorState) {
+        when {
+            registrationState != null -> {
+                isLoading = false
+                Toast.makeText(context, "Registration successful!", Toast.LENGTH_SHORT).show()
+
+                if (userType == "Doctor") {
+                    // For doctors, navigate to the next screen
+                    navController.navigate(Routes.SIGN_UP2)
+                } else {
+                    // For patients, navigate to sign in screen
+                    navController.navigate(Routes.SIGN_IN)
+                }
+                authViewModel.clearState() // Clear the state after handling
+            }
+            errorState != null -> {
+                isLoading = false
+                Toast.makeText(context, errorState, Toast.LENGTH_LONG).show()
+                authViewModel.clearState() // Clear the error state after handling
+            }
+        }
+    }
+
+    // Google sign-in launcher
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -109,8 +166,34 @@ fun SignUpScreen(googleAuthHelper: googleAuthHelper, navController: NavControlle
             email = account.email ?: ""
             firstName = account.givenName ?: ""
             lastName = account.familyName ?: ""
+            username = account.email?.substringBefore("@") ?: ""
         } catch (e: ApiException) {
             Log.e("GoogleSignIn", "Failed", e)
+        }
+    }
+
+    // Define validation function here so it has access to the state variables
+    val validateFields = {
+        username.isNotBlank() &&
+                email.isNotBlank() && email.contains("@") &&
+                firstName.isNotBlank() &&
+                lastName.isNotBlank() &&
+                password.isNotBlank() && password.length >= 8 &&
+                password == confirmPassword &&
+                dateOfBirth.isNotBlank() &&
+                phoneNumber.isNotBlank() &&
+                address.isNotBlank()
+    }
+
+    // Function to format date for API
+    val formatDateForApi = { dateString: String ->
+        try {
+            val inputFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+            val outputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            val date = inputFormat.parse(dateString)
+            date?.let { outputFormat.format(it) } ?: dateString
+        } catch (e: Exception) {
+            dateString
         }
     }
 
@@ -276,6 +359,16 @@ fun SignUpScreen(googleAuthHelper: googleAuthHelper, navController: NavControlle
                     Spacer(modifier = Modifier.height(16.dp))
 
                     // Form Fields
+                    // Username (Added for API integration)
+                    CustomTextField(
+                        value = username,
+                        onValueChange = { username = it },
+                        placeholder = "Username",
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
                     // First Name
                     CustomTextField(
                         value = firstName,
@@ -307,8 +400,23 @@ fun SignUpScreen(googleAuthHelper: googleAuthHelper, navController: NavControlle
 
                     Spacer(modifier = Modifier.height(12.dp))
 
+                    // Address (Added for API integration)
+                    CustomTextField(
+                        value = address,
+                        onValueChange = { address = it },
+                        placeholder = "Address",
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
                     // Date of Birth Field
-                    DateOfBirthField(dateOfBirth, { dateOfBirth = it }, showDatePicker, { showDatePicker = it })
+                    DatePickerField(
+                        value = dateOfBirth,
+                        onValueChange = { dateOfBirth = it },
+                        placeholder = "Date of Birth (DD/MM/YYYY)",
+                        modifier = Modifier.fillMaxWidth()
+                    )
 
                     Spacer(modifier = Modifier.height(12.dp))
 
@@ -412,11 +520,27 @@ fun SignUpScreen(googleAuthHelper: googleAuthHelper, navController: NavControlle
                     // Sign Up Button
                     Button(
                         onClick = {
-                            if (userType == "Doctor") {
-                                navController.navigate(Routes.SIGN_UP2)
-                            } else {
-                                // Handle patient sign up logic here
+                            // Validate fields
+                            if (validateFields()) {
+                                isLoading = true
 
+                                // Create registration request
+                                val request = RegistrationRequest(
+                                    username = username,
+                                    email = email,
+                                    password = password,
+                                    password2 = confirmPassword,
+                                    name = "$firstName $lastName",
+                                    phone = "+213$phoneNumber",
+                                    address = address,
+                                    birth_date = formatDateForApi(dateOfBirth),
+                                    role = if (userType == "Doctor") "doctor" else "patient"
+                                )
+
+                                // Register user with appropriate type
+                                authViewModel.registerUser(request, isDoctor = userType == "Doctor")
+                            } else {
+                                Toast.makeText(context, "Please fill all required fields correctly", Toast.LENGTH_SHORT).show()
                             }
                         },
                         modifier = Modifier
@@ -426,14 +550,23 @@ fun SignUpScreen(googleAuthHelper: googleAuthHelper, navController: NavControlle
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Primary500
                         ),
-                        contentPadding = PaddingValues(0.dp)
+                        contentPadding = PaddingValues(0.dp),
+                        enabled = !isLoading
                     ) {
-                        Text(
-                            text = if (userType == "Doctor") "Next" else "Sign Up",
-                            color = Color.White,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 16.sp
-                        )
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text(
+                                text = if (userType == "Doctor") "Next" else "Sign Up",
+                                color = Color.White,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 16.sp
+                            )
+                        }
                     }
 
                     // Or divider
@@ -518,82 +651,124 @@ fun SignUpScreen(googleAuthHelper: googleAuthHelper, navController: NavControlle
     }
 }
 
+@Composable
+fun CustomTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    modifier: Modifier = Modifier,
+    keyboardType: KeyboardType = KeyboardType.Text,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    trailingIcon: @Composable (() -> Unit)? = null
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        placeholder = {
+            Text(
+                text = placeholder,
+                color = Gray500,
+                textAlign = TextAlign.Start,
+                fontSize = 14.sp
+            )
+        },
+        modifier = modifier
+            .height(50.dp),
+        shape = RoundedCornerShape(5.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = Primary500,
+            unfocusedBorderColor = Primary300,
+            cursorColor = Primary500,
+            unfocusedContainerColor = Gray100,
+            focusedContainerColor = Gray100
+        ),
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+        visualTransformation = visualTransformation,
+        textStyle = TextStyle(
+            textAlign = TextAlign.Start,
+            fontSize = 14.sp,
+            color = Gray900
+        ),
+        singleLine = true,
+        trailingIcon = trailingIcon
+    )
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DateOfBirthField(
-    dateOfBirth: String,
-    onDateChange: (String) -> Unit,
-    showDatePicker: Boolean,
-    onShowDatePickerChange: (Boolean) -> Unit
+fun DatePickerField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    modifier: Modifier = Modifier
 ) {
-    // State for the date picker
-    val datePickerState = rememberDatePickerState(
-        selectableDates = object : SelectableDates {
-            // Optional: Limit selectable dates (e.g., only past dates for birth date)
-            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-                return utcTimeMillis <= System.currentTimeMillis() // Only past dates
-            }
-        }
-    )
+    var showDatePicker by remember { mutableStateOf(false) }
 
-    // Show date picker dialog when the state is true
-    if (showDatePicker) {
-        DatePickerDialog(
-            onDismissRequest = { onShowDatePickerChange(false) },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        // Convert selected date to formatted string
-                        datePickerState.selectedDateMillis?.let { millis ->
-                            val date = Date(millis)
-                            val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                            onDateChange(formatter.format(date))
-                        }
-                        onShowDatePickerChange(false)
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Primary500
+    Column {
+        // Text field with calendar icon
+        CustomTextField(
+            value = value,
+            onValueChange = onValueChange,
+            placeholder = placeholder,
+            modifier = modifier,
+            trailingIcon = {
+                IconButton(onClick = { showDatePicker = true }) {
+                    Icon(
+                        imageVector = PhosphorIcons.Bold.CalendarDots,
+                        contentDescription = "Calendar",
+                        tint = Primary500
                     )
-                ) {
-                    Text("Confirm")
-                }
-            },
-            dismissButton = {
-                Button(
-                    onClick = { onShowDatePickerChange(false) },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.White,
-                        contentColor = Primary500
-                    )
-                ) {
-                    Text("Cancel")
                 }
             }
-        ) {
-            DatePicker(
-                state = datePickerState,
-                title = { Text("Select Date of Birth") }
+        )
+
+        // Date Picker Dialog
+        if (showDatePicker) {
+            val datePickerState = rememberDatePickerState(
+                selectableDates = object : SelectableDates {
+                    // Optional: Limit selectable dates (e.g., only past dates for birth date)
+                    override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                        return utcTimeMillis <= System.currentTimeMillis() // Only past dates
+                    }
+                }
             )
-        }
-    }
 
-    // Date of Birth text field with calendar icon
-    CustomTextField(
-        value = dateOfBirth,
-        onValueChange = { onDateChange(it) },
-        placeholder = "18/03/2025",
-        modifier = Modifier.fillMaxWidth(),
-        keyboardType = KeyboardType.Number,
-        trailingIcon = {
-            IconButton(
-                onClick = { onShowDatePickerChange(true) }
+            DatePickerDialog(
+                onDismissRequest = { showDatePicker = false },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            datePickerState.selectedDateMillis?.let { millis ->
+                                val date = Date(millis)
+                                val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                                onValueChange(formatter.format(date))
+                            }
+                            showDatePicker = false
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Primary500
+                        )
+                    ) {
+                        Text("Confirm")
+                    }
+                },
+                dismissButton = {
+                    Button(
+                        onClick = { showDatePicker = false },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = White,
+                            contentColor = Primary500
+                        )
+                    ) {
+                        Text("Cancel")
+                    }
+                }
             ) {
-                Icon(
-                    imageVector = PhosphorIcons.Bold.CalendarDots,
-                    contentDescription = "Calendar",
-                    tint = Primary500
+                DatePicker(
+                    state = datePickerState,
+                    title = { Text("Select Date of Birth") }
                 )
             }
         }
-    )
+    }
 }
