@@ -68,7 +68,8 @@ class Patient(models.Model):
 class Appointment(models.Model):
     """Medical appointments between doctors and patients"""
     id = models.AutoField(primary_key=True)
-    doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE, related_name='appointments')
+    doctor_id = models.ForeignKey(Doctor, on_delete=models.CASCADE, related_name='appointments')
+    patient_id = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='appointments')
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     created_at = models.DateTimeField(auto_now_add=True)

@@ -26,7 +26,7 @@ class AppointmentViewSet(viewsets.ModelViewSet):
 
     def create(self, request):
         data = request.data
-        doctor_id = data.get('doctor')
+        doctor_id = data.get('doctor_id')
         start_time = data.get('start_time')
         end_time = data.get('end_time')
 

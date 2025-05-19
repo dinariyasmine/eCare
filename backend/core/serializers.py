@@ -34,7 +34,7 @@ class AppointmentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Appointment
-        fields = ['id', 'doctor', 'start_time', 'end_time', 'status', 'qr_Code']
+        fields = ['id', 'doctor_id', 'patient_id', 'start_time', 'end_time', 'status', 'qr_Code']
 
 
 class NotificationSerializer(serializers.ModelSerializer):
