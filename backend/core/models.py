@@ -39,6 +39,7 @@ class Clinic(models.Model):
     def __str__(self):
         return self.name
 
+
 class Doctor(models.Model):
     """Doctor profile linked to a user account"""
     id = models.AutoField(primary_key=True)
@@ -55,6 +56,7 @@ class Doctor(models.Model):
     def __str__(self):
         return f"Dr. {self.user.get_full_name()}"
 
+
 class Patient(models.Model):
     """Patient profile linked to a user account"""
     id = models.AutoField(primary_key=True)
@@ -64,6 +66,7 @@ class Patient(models.Model):
 
     def __str__(self):
         return self.user.get_full_name()
+
 
 class Appointment(models.Model):
     """Medical appointments between doctors and patients"""
@@ -182,6 +185,19 @@ class SocialMedia(models.Model):
     doctor_id = models.ForeignKey('Doctor', on_delete=models.CASCADE, related_name='social_media')
     name = models.CharField(max_length=100)  # Platform name (e.g., Facebook, Twitter)
     link = models.CharField(max_length=255)  # Profile URL
-
+    
     def __str__(self):
         return f"{self.name} profile for Dr. {self.doctor_id}"
+    
+
+
+class DoctorRating(models.Model):
+    """Rating given to a doctor by a user"""
+    doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE, related_name='ratings')
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='ratings')
+    grade = models.FloatField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Rating {self.grade} for Dr. {self.doctor} by {self.patient}"
+

@@ -14,8 +14,8 @@ class ClinicSerializer(serializers.ModelSerializer):
 
 
 class DoctorSerializer(serializers.ModelSerializer):
-    user = UserSerializer()
-    clinic = ClinicSerializer()
+    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    clinic = serializers.PrimaryKeyRelatedField(queryset=Clinic.objects.all(), required=False, allow_null=True)
 
     class Meta:
         model = Doctor
