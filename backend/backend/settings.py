@@ -29,10 +29,8 @@ FIREBASE_SERVICE_ACCOUNT_PATH = os.path.join(BASE_DIR, 'config', 'firebase-crede
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-_ua%1d+pdyfd74_)fckm*5v1g_d#*q&9eigr8g@123v5e7#f)7'
 
-# SECURITY WARNING: don't run with debug turned on in production!
+# SECURITY WARNING: don't run with debug turned on in production !
 DEBUG = True
-
-
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.ngrok.io', '.ngrok-free.app']
 
 # Application definition
