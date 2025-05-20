@@ -55,6 +55,7 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         availability.booked = True
         availability.save()
         
+        # Create notification for appointment scheduled
         NotificationService.create_appointment_notification(
             appointment=appointment,
             notification_type='appointment_scheduled'
@@ -85,7 +86,7 @@ class AppointmentViewSet(viewsets.ModelViewSet):
             return Response({'error': 'Appointment not found'}, status=status.HTTP_404_NOT_FOUND)
         appointment.status = 'in_progress'
         appointment.save()
-        
+        # Create notification for appointment in progress
         NotificationService.create_appointment_notification(
             appointment=appointment,
             notification_type='appointment_in_progress'

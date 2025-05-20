@@ -1,7 +1,42 @@
 from django.utils import timezone
+from django.conf import settings
 from core.models import Notification, User, Appointment, Prescription
+from fcm_django.models import FCMDevice
+import firebase_admin
+from firebase_admin import credentials, messaging
+
+# Initialize Firebase Admin SDK
+if not firebase_admin._apps:
+    try:
+        cred = credentials.Certificate(settings.FIREBASE_SERVICE_ACCOUNT_PATH)
+        firebase_admin.initialize_app(cred)
+    except Exception as e:
+        print(f"Firebase initialization error: {e}")
 
 class NotificationService:
+    @staticmethod
+    def send_push_notification(user, title, body, data=None):
+        """Send a push notification to a user's devices"""
+        devices = FCMDevice.objects.filter(user=user, active=True)
+        
+        if devices.exists():
+            try:
+                # Send to all user devices
+                result = devices.send_message(
+                    messaging.Message(
+                        notification=messaging.Notification(
+                            title=title,
+                            body=body,
+                        ),
+                        data=data or {},
+                    )
+                )
+                return True
+            except Exception as e:
+                print(f"Error sending push notification: {e}")
+                return False
+        return False
+    
     @staticmethod
     def create_appointment_notification(appointment, notification_type, title=None, description=None):
         """Create a notification for an appointment"""
@@ -28,7 +63,8 @@ class NotificationService:
             else:
                 description = f"Your appointment with Dr. {doctor_name} has been updated"
         
-        return Notification.objects.create(
+        # Create database notification
+        notification = Notification.objects.create(
             user=appointment.patient.user,
             title=title,
             description=description,
@@ -37,6 +73,20 @@ class NotificationService:
             type=notification_type,
             appointment=appointment
         )
+        
+        # Send push notification
+        NotificationService.send_push_notification(
+            user=appointment.patient.user,
+            title=title,
+            body=description,
+            data={
+                'notification_id': str(notification.id),
+                'notification_type': notification_type,
+                'appointment_id': str(appointment.id)
+            }
+        )
+        
+        return notification
     
     @staticmethod
     def create_prescription_notification(prescription, notification_type, title=None, description=None):
@@ -61,7 +111,8 @@ class NotificationService:
             else:
                 description = f"Reminder about your prescription from Dr. {doctor_name}"
         
-        return Notification.objects.create(
+        # Create database notification
+        notification = Notification.objects.create(
             user=prescription.patient.user,
             title=title,
             description=description,
@@ -70,3 +121,17 @@ class NotificationService:
             type=notification_type,
             prescription=prescription
         )
+        
+        # Send push notification
+        NotificationService.send_push_notification(
+            user=prescription.patient.user,
+            title=title,
+            body=description,
+            data={
+                'notification_id': str(notification.id),
+                'notification_type': notification_type,
+                'prescription_id': str(prescription.id)
+            }
+        )
+        
+        return notification

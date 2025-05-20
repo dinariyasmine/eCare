@@ -3,6 +3,7 @@ from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from django.contrib import admin
+from django.views.generic import TemplateView
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -37,7 +38,13 @@ urlpatterns = [
     
     path('api/', include('notifications.urls')),
     
-    
+        path('firebase-messaging-sw.js',
+        TemplateView.as_view(
+            template_name='firebase-messaging-sw.js',
+            content_type='application/javascript',
+        ),
+        name='firebase-messaging-sw.js'
+    ),
     # Swagger documentation URLs
     re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     re_path(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),

@@ -20,7 +20,8 @@ import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+# Firebase Configuration
+FIREBASE_SERVICE_ACCOUNT_PATH = os.path.join(BASE_DIR, 'config', 'firebase-credentials.json')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -31,8 +32,8 @@ SECRET_KEY = 'django-insecure-_ua%1d+pdyfd74_)fckm*5v1g_d#*q&9eigr8g@123v5e7#f)7
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['679b-197-206-57-1.ngrok-free.app', 'localhost','127.0.0.1','7bc9-105-235-128-137.ngrok-free.app']
 
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.ngrok.io', '.ngrok-free.app']
 
 # Application definition
 
@@ -154,6 +155,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -226,8 +230,8 @@ TEMPLATES = [
 
 
 FCM_DJANGO_SETTINGS = {
-    "APP_VERBOSE_NAME": "eCare",
-    "FCM_SERVER_KEY": "your-server-key-from-firebase-console",
+    "APP_VERBOSE_NAME": "eCare-Notifications",
+    "FCM_SERVER_KEY": "",  
     "ONE_DEVICE_PER_USER": False,
     "DELETE_INACTIVE_DEVICES": True,
 }

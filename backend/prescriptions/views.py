@@ -69,7 +69,7 @@ class PrescriptionViewSet(viewsets.ModelViewSet):
                 prescription=prescription,
                 notification_type='prescription_created'
             )
-
+        
     def update(self, request, *args, **kwargs):
         """Override update to send notification when prescription is updated"""
         partial = kwargs.pop('partial', False)
@@ -133,7 +133,6 @@ class PrescriptionViewSet(viewsets.ModelViewSet):
                 prescribed_to=prescription.patient
             )
             
-            # Create notification for prescription update
             NotificationService.create_prescription_notification(
                 prescription=prescription,
                 notification_type='prescription_updated'
