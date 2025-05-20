@@ -9,6 +9,7 @@ import qrcode
 
 from core.models import Appointment, Availability
 from core.serializers import AppointmentSerializer
+from notifications.services import NotificationService
 
 
 def generate_qr_code(content):
@@ -53,6 +54,11 @@ class AppointmentViewSet(viewsets.ModelViewSet):
 
         availability.booked = True
         availability.save()
+        
+        NotificationService.create_appointment_notification(
+            appointment=appointment,
+            notification_type='appointment_scheduled'
+        )
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -79,5 +85,10 @@ class AppointmentViewSet(viewsets.ModelViewSet):
             return Response({'error': 'Appointment not found'}, status=status.HTTP_404_NOT_FOUND)
         appointment.status = 'in_progress'
         appointment.save()
+        
+        NotificationService.create_appointment_notification(
+            appointment=appointment,
+            notification_type='appointment_in_progress'
+        )
         return Response({'message': 'Appointment validated successfully.'}, status=status.HTTP_200_OK)
 

@@ -87,20 +87,8 @@ class Appointment(models.Model):
     def __str__(self):
         return f"Appointment with {self.doctor} on {self.start_time.strftime('%Y-%m-%d %H:%M')}"
 
-class Notification(models.Model):
-    """System notifications for users"""
-    id = models.AutoField(primary_key=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
-    title = models.CharField(max_length=255)
-    description = models.TextField()
-    date_creation = models.DateField()
-    time_creation = models.TimeField()
-    type = models.CharField(max_length=50)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
-    def __str__(self):
-        return self.title
+
 
 class Feedback(models.Model):
     """Patient feedback for doctors or appointments"""
@@ -201,3 +189,39 @@ class DoctorRating(models.Model):
     def __str__(self):
         return f"Rating {self.grade} for Dr. {self.doctor} by {self.patient}"
 
+
+
+class Notification(models.Model):
+    """System notifications for users"""
+    NOTIFICATION_TYPES = [
+        # Appointment related
+        ('appointment_scheduled', 'Appointment Scheduled'),
+        ('appointment_reminder', 'Appointment Reminder'),
+        ('appointment_canceled', 'Appointment Canceled'),
+        ('appointment_rescheduled', 'Appointment Rescheduled'),
+        ('appointment_completed', 'Appointment Completed'),
+        
+        # Prescription related
+        ('prescription_created', 'Prescription Created'),
+        ('prescription_updated', 'Prescription Updated'),
+        ('medication_reminder', 'Medication Reminder'),
+    ]
+    
+    id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+    date_creation = models.DateField()
+    time_creation = models.TimeField()
+    type = models.CharField(max_length=50, choices=NOTIFICATION_TYPES, default='appointment_reminder')
+    read = models.BooleanField(default=False)  # Add this field to track read status
+    
+    # References to related objects
+    appointment = models.ForeignKey(Appointment, on_delete=models.CASCADE, null=True, blank=True, related_name='notifications')
+    prescription = models.ForeignKey(Prescription, on_delete=models.CASCADE, null=True, blank=True, related_name='notifications')
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.title

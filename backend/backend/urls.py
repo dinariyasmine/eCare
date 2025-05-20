@@ -27,13 +27,15 @@ urlpatterns = [
     
     path('api/auth/', include('authentication.urls')),
     
-    path('appointments', include('appointments.urls')),
-    path('availabilities', include('availabilities.urls')),
+    path('appointments/', include('appointments.urls')),
+    path('availabilities/', include('availabilities.urls')),
     
     
     path('api/', include('doctor.urls')),
     path('api/', include('clinic.urls')),
     path('api/', include('feedback_rating.urls')),
+    
+    path('api/', include('notifications.urls')),
     
     
     # Swagger documentation URLs

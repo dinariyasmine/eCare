@@ -53,6 +53,8 @@ INSTALLED_APPS = [
     'appointments',
     'availabilities',
     'doctor',
+    'notifications',
+    'fcm_django',
 ]
 
 MIDDLEWARE = [
@@ -221,3 +223,11 @@ TEMPLATES = [
         },
     },
 ]
+
+
+FCM_DJANGO_SETTINGS = {
+    "APP_VERBOSE_NAME": "eCare",
+    "FCM_SERVER_KEY": "your-server-key-from-firebase-console",
+    "ONE_DEVICE_PER_USER": False,
+    "DELETE_INACTIVE_DEVICES": True,
+}

@@ -36,13 +36,18 @@ class AppointmentSerializer(serializers.ModelSerializer):
         model = Appointment
         fields = ['id', 'doctor', 'patient', 'start_time', 'end_time', 'status', 'qr_Code']
 
-
 class NotificationSerializer(serializers.ModelSerializer):
-    user = UserSerializer()
-
+    user = UserSerializer(read_only=True)
+    appointment_id = serializers.PrimaryKeyRelatedField(source='appointment', read_only=True)
+    prescription_id = serializers.PrimaryKeyRelatedField(source='prescription', read_only=True)
+    
     class Meta:
         model = Notification
-        fields = ['id', 'user', 'title', 'description', 'date_creation', 'time_creation', 'type', 'created_at', 'updated_at']
+        fields = [
+            'id', 'user', 'title', 'description', 'date_creation', 
+            'time_creation', 'type', 'read', 'appointment_id', 
+            'prescription_id', 'created_at', 'updated_at'
+        ]
 
 
 class FeedbackSerializer(serializers.ModelSerializer):
