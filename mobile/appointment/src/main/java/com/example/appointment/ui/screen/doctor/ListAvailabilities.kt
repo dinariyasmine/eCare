@@ -37,7 +37,7 @@ fun NewAppointmentScreen(availabilityViewModel: AvailabilityViewModel) {
     val scrollState = rememberScrollState()
 
     // Doctor ID would typically come from authentication or navigation arguments
-    val doctorId = 101
+    val doctorId = 11
 
     val selectedDate = remember { mutableStateOf(LocalDate.now()) }
     val selectedSlots = remember { mutableStateOf<Set<String>>(emptySet()) } // Track multiple selections

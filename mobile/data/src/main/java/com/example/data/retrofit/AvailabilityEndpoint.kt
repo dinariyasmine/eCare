@@ -14,7 +14,7 @@ import retrofit2.http.Path
 
 interface AvailabilityEndpoint {
 
-    @GET("availabilities/doctor/{id}")
+    @GET("availabilities/doctor/{id}/")
     suspend fun getAvailabilitiesByDoctor(@Path("id") id: Int): List<Availability>
 
     @POST("availabilities/")

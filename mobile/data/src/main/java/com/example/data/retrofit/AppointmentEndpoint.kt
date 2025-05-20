@@ -14,10 +14,10 @@ import retrofit2.http.Path
 
 interface AppointmentEndpoint {
 
-    @GET("appointments/doctor/{id}")
+    @GET("appointments/doctor/{id}/")
     suspend fun getAppointsByDoctor(@Path("id") id: Int): List<Appointment>
 
-    @GET("appointments/patient/{id}")
+    @GET("appointments/patient/{id}/")
     suspend fun getAppointsByPatient(@Path("id") id: Int): List<Appointment>
 
     @POST("appointments/")

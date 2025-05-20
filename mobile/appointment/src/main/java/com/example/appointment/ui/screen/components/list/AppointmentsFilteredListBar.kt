@@ -84,6 +84,17 @@ fun AppointmentsFilteredListBar(patientId: Int, viewModel: AppointmentViewModel)
         }
     }
 
+    LaunchedEffect(patientId) {
+        isLoading = true
+        try {
+            viewModel.getAppointmentsByPatient(patientId)
+        } catch (e: Exception) {
+            error = "Failed to load appointments: ${e.message}"
+        } finally {
+            isLoading = false
+        }
+    }
+
     // Show error if any
     if (error != null) {
         LaunchedEffect(error) {

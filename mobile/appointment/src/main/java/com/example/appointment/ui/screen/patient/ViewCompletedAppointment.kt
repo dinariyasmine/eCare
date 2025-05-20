@@ -148,7 +148,7 @@ fun ViewCompletedAppointmentScreen(viewModel: AppointmentViewModel, availability
                             TimeSlotPicker(
                                 selectedDate = date,
                                 selectedSlot = selectedSlot.value,
-                                doctorId = 101,
+                                doctorId = 11,
                                 onSlotSelected = { /* Disabled */ },
                                 availabilityViewModel = availabilityViewModel
                             )

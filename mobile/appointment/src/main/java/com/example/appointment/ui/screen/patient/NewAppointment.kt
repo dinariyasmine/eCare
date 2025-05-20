@@ -98,7 +98,7 @@ fun NewAppointmentScreen(viewModel: AppointmentViewModel, availabilityViewModel:
                 TimeSlotPicker(
                     selectedDate = date,
                     selectedSlot = selectedSlot.value,
-                    doctorId = 101,
+                    doctorId = 11,
                     onSlotSelected = { slot -> selectedSlot.value = slot },
                     availabilityViewModel = availabilityViewModel,
                 )
@@ -126,8 +126,8 @@ fun NewAppointmentScreen(viewModel: AppointmentViewModel, availabilityViewModel:
 
                         // Create request
                         val request = AppointmentRequest(
-                            doctor_id = 101,
-                            patient_id = 123,
+                            doctor_id = 11,
+                            patient_id = 1,
                             date = selectedDate.value,
                             start_time = startTime,
                             end_time = startTime.plusMinutes(30),

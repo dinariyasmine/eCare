@@ -6,16 +6,17 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverter
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
 @Entity
 data class Appointment(
     @PrimaryKey val id: Int=0,
     val doctor_id: Int,
     val patient_id: Int,
-    val date: LocalDate,
-    val start_time: LocalTime,
-    val end_time: LocalTime,
+    val start_time: LocalDateTime,
+    val end_time: LocalDateTime,
     val name: String,
     val gender: String,
     val age: String,
@@ -33,9 +34,8 @@ enum class AppointmentStatus {
 data class AppointmentRequest(
     val doctor_id: Int,
     val patient_id: Int,
-    val date: LocalDate,
-    val start_time: LocalTime,
-    val end_time: LocalTime,
+    val start_time: LocalDateTime,
+    val end_time: LocalDateTime,
     val name: String,
     val gender: String,
     val age: String,
@@ -43,6 +43,14 @@ data class AppointmentRequest(
 )
 
 class Converters {
+
+    @TypeConverter
+    fun fromLocalDateTime(dateTime: LocalDateTime): String = dateTime.toString()
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    @TypeConverter
+    fun toLocalDateTime(dateTimeString: String): LocalDateTime =
+        LocalDateTime.parse(dateTimeString, DateTimeFormatter.ISO_DATE_TIME)
 
     @TypeConverter
     fun fromLocalDate(date: LocalDate): String = date.toString()

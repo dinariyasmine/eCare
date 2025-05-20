@@ -14,7 +14,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.appointment.ui.screen.components.list.AppointmentsFilteredListBar
 import com.example.appointment.ui.screen.components.list.DayViewAgenda
 import com.example.core.theme.ECareMobileTheme
@@ -62,7 +61,7 @@ fun ListAppointmentsScreen(viewModel: AppointmentViewModel) {
                 viewModel = viewModel
             )
 
-            AppointmentsFilteredListBar(0, viewModel)
+            AppointmentsFilteredListBar(1, viewModel)
 
         }
     }

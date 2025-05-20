@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Modifier
+import com.example.appointment.ui.screen.patient.ListAppointmentsScreen
 import com.example.appointment.ui.screen.patient.ViewConfirmedAppointmentScreen
 import com.example.core.theme.ECareMobileTheme
 import com.example.data.viewModel.AppointmentViewModel
@@ -18,10 +19,10 @@ class MainActivity : ComponentActivity() {
             ECareMobileTheme {
                 val app = applicationContext as MyApplication
                 val appointmentModel = AppointmentViewModel(app.appointmentRepository)
-                val availabilityViewModel = AvailabilityViewModel(app.availabilityRepository, 101)
-                //ListAppointmentsScreen()
+                //val availabilityViewModel = AvailabilityViewModel(app.availabilityRepository, 11)
+                ListAppointmentsScreen(viewModel = appointmentModel)
                 //NewAppointmentScreen()
-                ViewConfirmedAppointmentScreen(appointmentModel, availabilityViewModel)
+                //ViewConfirmedAppointmentScreen(appointmentModel, availabilityViewModel)
             }
         }
     }

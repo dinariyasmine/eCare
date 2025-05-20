@@ -17,7 +17,7 @@ class MainActivity : ComponentActivity() {
             ECareMobileTheme {
                 val app = applicationContext as MyApplication
                 val appointmentModel = AppointmentViewModel(app.appointmentRepository)
-                val availabilityViewModel = AvailabilityViewModel(app.availabilityRepository, 101)
+                val availabilityViewModel = AvailabilityViewModel(app.availabilityRepository, 11)
                 //ListAppointmentsScreen()
                 //NewAppointmentScreen()
                 ViewConfirmedAppointmentScreen(appointmentModel, availabilityViewModel)

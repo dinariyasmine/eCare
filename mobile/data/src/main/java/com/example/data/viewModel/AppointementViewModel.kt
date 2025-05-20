@@ -44,18 +44,22 @@ class AppointmentViewModel(
     }
 
     fun getAppointmentsForDate(date: LocalDate): List<Appointment> {
-        return appointments.value!!.filter { it.date == date }
-            .sortedBy { it.start_time }
+        return appointments.value?.filter { it.date == date }
+            ?.sortedBy { it.start_time }
+            ?: emptyList()
     }
 
     fun getAppointmentsByPatient(patientId: Int) {
         _isLoading.value = true
         viewModelScope.launch {
             try {
+                println("Fetching appointments for patient ID: $patientId")
                 val appointments = repository.getAppointmentsByPatient(patientId)
+                println("Fetched: ${appointments.size} appointments")
                 _appointments.value = appointments
                 _operationSuccess.value = true
             } catch (e: Exception) {
+                println("Error: ${e.message}")
                 _error.value = "Failed to fetch patient's appointments: ${e.message}"
                 _operationSuccess.value = false
             } finally {
