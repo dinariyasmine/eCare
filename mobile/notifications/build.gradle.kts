@@ -48,6 +48,8 @@ dependencies {
     implementation(project(":data"))
     implementation(project(":core"))
 
+    implementation("com.adamglin:phosphor-icon:1.0.0")
+
     // Firebase
     implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
     implementation("com.google.firebase:firebase-messaging-ktx")

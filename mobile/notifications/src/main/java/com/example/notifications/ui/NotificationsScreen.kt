@@ -1,11 +1,13 @@
-// mobile/notifications/src/main/java/com/example/notifications/ui/NotificationsScreen.kt
 package com.example.notifications.ui
 
+import android.util.Log
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -14,15 +16,31 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Bold
+import com.adamglin.phosphoricons.bold.ArrowsClockwise
+import com.adamglin.phosphoricons.bold.Check
+import com.adamglin.phosphoricons.bold.FilePlus
+import com.adamglin.phosphoricons.bold.FileText
+import com.adamglin.phosphoricons.bold.Hourglass
+import com.adamglin.phosphoricons.bold.Pill
+import com.adamglin.phosphoricons.bold.X
+import com.example.core.theme.Primary500
+import com.example.core.theme.Error600
+import com.example.core.theme.Info500
+import com.example.core.theme.Warning400
 import com.example.data.model.Notification
 import com.example.data.model.NotificationType
 import com.example.data.viewModel.NotificationTab
 import com.example.data.viewModel.NotificationViewModel
+import com.example.notifications.R
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -34,36 +52,103 @@ fun NotificationsScreen(viewModel: NotificationViewModel) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(Color(0xFFF8F9FA))
     ) {
-        // Tab selector
-        TabRow(
-            selectedTabIndex = selectedTab.ordinal,
-            modifier = Modifier.fillMaxWidth()
+        // Tab selector - styled as in your UI
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
         ) {
-            Tab(
-                selected = selectedTab == NotificationTab.UNREAD,
+            TabButton(
+                text = "Unread",
+                isSelected = selectedTab == NotificationTab.UNREAD,
                 onClick = { viewModel.selectTab(NotificationTab.UNREAD) },
-                text = { Text("Unread") }
+                modifier = Modifier.weight(1f)
             )
-            Tab(
-                selected = selectedTab == NotificationTab.READ,
+            TabButton(
+                text = "Read",
+                isSelected = selectedTab == NotificationTab.READ,
                 onClick = { viewModel.selectTab(NotificationTab.READ) },
-                text = { Text("Read") }
+                modifier = Modifier.weight(1f)
             )
+        }
+
+        // Add "Mark All as Read" button when viewing unread notifications
+        if (selectedTab == NotificationTab.UNREAD && uiState.notifications.isNotEmpty()) {
+            OutlinedButton(
+                onClick = {
+                    Log.d("NotificationsScreen", "Mark all as read clicked")
+                    viewModel.markAllAsRead()
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = Primary500,
+                ),
+                border = ButtonDefaults.outlinedButtonBorder.copy(
+                    brush = androidx.compose.ui.graphics.SolidColor(Primary500)
+                )
+            ) {
+                Icon(
+                    imageVector = PhosphorIcons.Bold.Check,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = Primary500
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    "Mark All as Read",
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 14.sp
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
         }
 
         // Notifications content
         if (uiState.isLoading) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+                CircularProgressIndicator(color = Primary500)
             }
         } else if (uiState.notifications.isEmpty()) {
             EmptyNotificationsState()
         } else {
             NotificationsList(
                 notificationGroups = uiState.notifications,
-                onNotificationClick = { viewModel.markAsRead(it.id) }
+                onNotificationClick = { notification ->
+                    Log.d("NotificationsScreen", "Notification clicked: ${notification.id}")
+                    viewModel.markAsRead(notification.id)
+                }
+            )
+        }
+    }
+}
+
+@Composable
+fun TabButton(
+    text: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier
+            .height(40.dp),
+        shape = RoundedCornerShape(8.dp),
+        color = if (isSelected) Primary500 else Color.White,
+        onClick = onClick
+    ) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            Text(
+                text = text,
+                color = if (isSelected) Color.White else Color.Gray,
+                fontWeight = FontWeight.Medium
             )
         }
     }
@@ -71,35 +156,36 @@ fun NotificationsScreen(viewModel: NotificationViewModel) {
 
 @Composable
 fun EmptyNotificationsState() {
-    Box(
+    Column(
         modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            // Replace with your actual icon resource
-            Icon(
-                painter = painterResource(id = android.R.drawable.ic_dialog_info),
-                contentDescription = "No notifications",
-                modifier = Modifier.size(100.dp),
-                tint = Color.LightGray
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "No New Notifications",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Gray
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "You're all caught up! No new notifications.",
-                fontSize = 16.sp,
-                color = Color.Gray
-            )
-        }
+        // Use PNG image from drawable instead of icon
+        Image(
+            painter = painterResource(id = R.drawable.ic_empty_notifications),
+            contentDescription = "No notifications",
+            modifier = Modifier.size(160.dp)
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            text = "No New Notifications",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.Black
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = "You're all caught up! No new notifications.",
+            fontSize = 16.sp,
+            color = Color.Gray,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 32.dp)
+        )
     }
 }
 
@@ -142,7 +228,10 @@ fun NotificationItem(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(12.dp),
+        onClick = onClick  // Make the entire card clickable
     ) {
         Row(
             modifier = Modifier
@@ -155,11 +244,11 @@ fun NotificationItem(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(getNotificationColor(notification.type)),
+                    .background(getNotificationColor(notification.notificationType)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    painter = painterResource(id = getNotificationIcon(notification.type)),
+                    imageVector = getNotificationIcon(notification.notificationType),
                     contentDescription = null,
                     tint = Color.White,
                     modifier = Modifier.size(24.dp)
@@ -180,7 +269,8 @@ fun NotificationItem(
                     text = notification.description,
                     fontSize = 14.sp,
                     maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
+                    color = Color.Gray
                 )
             }
 
@@ -197,28 +287,29 @@ fun NotificationItem(
 }
 
 // Helper functions
+@Composable
 private fun getNotificationColor(type: NotificationType): Color {
     return when (type) {
-        NotificationType.APPOINTMENT_CONFIRMED -> Color(0xFF4CAF50) // Green
-        NotificationType.APPOINTMENT_RESCHEDULED -> Color(0xFF2196F3) // Blue
-        NotificationType.APPOINTMENT_CANCELED -> Color(0xFFF44336) // Red
+        NotificationType.APPOINTMENT_CONFIRMED -> Primary500 // Green
+        NotificationType.APPOINTMENT_RESCHEDULED -> Info500 // Blue
+        NotificationType.APPOINTMENT_CANCELED -> Error600 // Red
         NotificationType.APPOINTMENT_REMINDER -> Color(0xFF9C27B0) // Purple
         NotificationType.PRESCRIPTION_CREATED,
         NotificationType.PRESCRIPTION_UPDATED,
-        NotificationType.MEDICATION_REMINDER -> Color(0xFFFF9800) // Orange
+        NotificationType.MEDICATION_REMINDER -> Warning400 // Orange
     }
 }
 
-private fun getNotificationIcon(type: NotificationType): Int {
-    // Replace with your actual icon resources
+@Composable
+private fun getNotificationIcon(type: NotificationType): ImageVector {
     return when (type) {
-        NotificationType.APPOINTMENT_CONFIRMED -> android.R.drawable.ic_dialog_info
-        NotificationType.APPOINTMENT_RESCHEDULED -> android.R.drawable.ic_dialog_info
-        NotificationType.APPOINTMENT_CANCELED -> android.R.drawable.ic_dialog_alert
-        NotificationType.APPOINTMENT_REMINDER -> android.R.drawable.ic_dialog_info
-        NotificationType.PRESCRIPTION_CREATED,
-        NotificationType.PRESCRIPTION_UPDATED,
-        NotificationType.MEDICATION_REMINDER -> android.R.drawable.ic_dialog_info
+        NotificationType.APPOINTMENT_CONFIRMED -> PhosphorIcons.Bold.Check
+        NotificationType.APPOINTMENT_RESCHEDULED -> PhosphorIcons.Bold.ArrowsClockwise
+        NotificationType.APPOINTMENT_CANCELED -> PhosphorIcons.Bold.X
+        NotificationType.APPOINTMENT_REMINDER -> PhosphorIcons.Bold.Hourglass
+        NotificationType.PRESCRIPTION_CREATED -> PhosphorIcons.Bold.FilePlus
+        NotificationType.PRESCRIPTION_UPDATED -> PhosphorIcons.Bold.FileText
+        NotificationType.MEDICATION_REMINDER -> PhosphorIcons.Bold.Pill
     }
 }
 

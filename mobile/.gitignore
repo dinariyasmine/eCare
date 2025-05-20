@@ -13,3 +13,9 @@
 .externalNativeBuild
 .cxx
 local.properties
+# Firebase configuration files
+google-services.json
+**/google-services.json
+firebase-credentials.json
+**/firebase-credentials.json
+.firebase/

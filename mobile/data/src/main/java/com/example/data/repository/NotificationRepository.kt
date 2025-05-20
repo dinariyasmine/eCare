@@ -1,13 +1,11 @@
 // mobile/data/src/main/java/com/example/data/repository/NotificationRepository.kt
 package com.example.data.repository
 
+import android.util.Log
 import com.example.data.model.Notification
-import com.example.data.model.NotificationType
 import com.example.data.network.ApiService
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
-import java.util.Date
 
 class NotificationRepository(private val apiService: ApiService) {
 
@@ -40,22 +38,34 @@ class NotificationRepository(private val apiService: ApiService) {
     }
 
     // Mark notification as read on server
-    suspend fun markAsRead(notificationId: String): Boolean {
-        try {
+    suspend fun markAsRead(notificationId: Int): Boolean {
+        return try {
+            Log.d("NotificationRepo", "Marking notification $notificationId as read")
             val response = apiService.markNotificationAsRead(notificationId)
-            return response.isSuccessful
+            Log.d(
+                "NotificationRepo",
+                "Mark as read response: ${response.code()}, ${response.message()}"
+            )
+            response.isSuccessful
         } catch (e: Exception) {
-            return false
+            Log.e("NotificationRepo", "Error marking notification as read: ${e.message}")
+            false
         }
     }
 
     // Mark all notifications as read on server
     suspend fun markAllAsRead(): Boolean {
-        try {
+        return try {
+            Log.d("NotificationRepo", "Marking all notifications as read")
             val response = apiService.markAllNotificationsAsRead()
-            return response.isSuccessful
+            Log.d(
+                "NotificationRepo",
+                "Mark all as read response: ${response.code()}, ${response.message()}"
+            )
+            response.isSuccessful
         } catch (e: Exception) {
-            return false
+            Log.e("NotificationRepo", "Error marking all notifications as read: ${e.message}")
+            false
         }
     }
 }

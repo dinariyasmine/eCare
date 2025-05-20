@@ -8,23 +8,25 @@ import retrofit2.http.POST
 import retrofit2.http.Path
 
 interface ApiService {
-    @GET("api/core/notifications/")
+    @GET("api/notifications/")
     suspend fun getNotifications(): Response<List<Notification>>
 
-    @GET("api/core/notifications/unread/")
+    @GET("api/notifications/unread/")
     suspend fun getUnreadNotifications(): Response<List<Notification>>
 
-    @POST("api/core/notifications/{id}/mark_as_read/")
-    suspend fun markNotificationAsRead(@Path("id") notificationId: String): Response<Unit>
+    @POST("api/notifications/{id}/mark_as_read/")
+    suspend fun markNotificationAsRead(@Path("id") notificationId: Int): Response<Map<String, String>>
 
-    @POST("api/core/notifications/mark_all_as_read/")
-    suspend fun markAllNotificationsAsRead(): Response<Unit>
+    @POST("api/notifications/mark_all_as_read/")
+    suspend fun markAllNotificationsAsRead(): Response<Map<String, String>>
 
-    @POST("api/core/devices/register/")
+
+    @POST("api/devices/register/")
     suspend fun registerDevice(
         @retrofit2.http.Body deviceInfo: DeviceRegistration
     ): Response<DeviceRegistrationResponse>
 }
+
 
 data class DeviceRegistration(
     val registration_id: String,

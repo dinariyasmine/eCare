@@ -1,6 +1,7 @@
 // mobile/data/src/main/java/com/example/data/viewModel/NotificationViewModel.kt
 package com.example.data.viewModel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.data.model.Notification
@@ -26,54 +27,89 @@ class NotificationViewModel(
         loadNotifications()
     }
 
-    private fun loadNotifications() {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true)
-
-            when (_selectedTab.value) {
-                NotificationTab.UNREAD -> {
-                    notificationRepository.getUnreadNotifications().collectLatest { notifications ->
-                        _uiState.value = _uiState.value.copy(
-                            notifications = groupNotificationsByDate(notifications),
-                            isLoading = false
-                        )
-                    }
-                }
-                NotificationTab.READ -> {
-                    notificationRepository.getNotifications().collectLatest { allNotifications ->
-                        val readNotifications = allNotifications.filter { it.isRead }
-                        _uiState.value = _uiState.value.copy(
-                            notifications = groupNotificationsByDate(readNotifications),
-                            isLoading = false
-                        )
-                    }
-                }
-            }
-        }
-    }
 
     fun selectTab(tab: NotificationTab) {
         _selectedTab.value = tab
         loadNotifications()
     }
 
-    fun markAsRead(notificationId: String) {
+    private fun loadNotifications() {
         viewModelScope.launch {
-            val success = notificationRepository.markAsRead(notificationId)
-            if (success) {
-                loadNotifications()
+            _uiState.value = _uiState.value.copy(isLoading = true)
+
+            try {
+                when (_selectedTab.value) {
+                    NotificationTab.UNREAD -> {
+                        notificationRepository.getUnreadNotifications().collectLatest { notifications ->
+                            _uiState.value = _uiState.value.copy(
+                                notifications = groupNotificationsByDate(notifications),
+                                isLoading = false
+                            )
+                        }
+                    }
+                    NotificationTab.READ -> {
+                        notificationRepository.getNotifications().collectLatest { allNotifications ->
+                            val readNotifications = allNotifications.filter { it.isRead }
+                            _uiState.value = _uiState.value.copy(
+                                notifications = groupNotificationsByDate(readNotifications),
+                                isLoading = false
+                            )
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = e.message
+                )
+            }
+        }
+    }
+
+
+    fun markAsRead(notificationId: Int) {
+        viewModelScope.launch {
+            try {
+                Log.d("NotificationViewModel", "Attempting to mark notification $notificationId as read")
+                val success = notificationRepository.markAsRead(notificationId)
+                if (success) {
+                    Log.d("NotificationViewModel", "Successfully marked notification $notificationId as read")
+                    loadNotifications()
+                } else {
+                    Log.e("NotificationViewModel", "Failed to mark notification $notificationId as read")
+                }
+            } catch (e: Exception) {
+                Log.e("NotificationViewModel", "Error marking notification as read: ${e.message}")
             }
         }
     }
 
     fun markAllAsRead() {
         viewModelScope.launch {
-            val success = notificationRepository.markAllAsRead()
-            if (success) {
-                loadNotifications()
+            try {
+                val success = notificationRepository.markAllAsRead()
+                if (success) {
+                    Log.d("NotificationViewModel", "Successfully marked all notifications as read")
+
+                    // If we're on the unread tab, we should now show empty state
+                    if (_selectedTab.value == NotificationTab.UNREAD) {
+                        _uiState.value = _uiState.value.copy(
+                            notifications = emptyMap(),
+                            isLoading = false
+                        )
+                    } else {
+                        // Otherwise, reload notifications to get updated read status
+                        loadNotifications()
+                    }
+                } else {
+                    Log.e("NotificationViewModel", "Failed to mark all notifications as read")
+                }
+            } catch (e: Exception) {
+                Log.e("NotificationViewModel", "Error marking all notifications as read: ${e.message}")
             }
         }
     }
+
 
     private fun groupNotificationsByDate(notifications: List<Notification>): Map<String, List<Notification>> {
         return notifications.groupBy { notification ->

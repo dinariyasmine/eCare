@@ -5,12 +5,15 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
@@ -25,6 +28,7 @@ import com.example.data.viewModel.NotificationViewModel
 import com.example.ecare_mobile.navigation.AppNavigationHandler
 import com.example.notifications.service.ECareFirebaseMessagingService
 import com.example.notifications.ui.NotificationsScreen
+import com.google.firebase.FirebaseApp
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -45,6 +49,11 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        try {
+            FirebaseApp.initializeApp(this)
+        } catch (e: Exception) {
+            Log.e("Firebase", "Error initializing Firebase: ${e.message}")
+        }
         ECareFirebaseMessagingService.setNavigationHandler(AppNavigationHandler())
 
         // Check and request notification permission
@@ -61,6 +70,7 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
 
     private fun checkNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -88,19 +98,22 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun getFirebaseToken() {
-        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                val token = task.result
-                // Send token to your server
-                CoroutineScope(Dispatchers.IO).launch {
-                    try {
-                        val deviceInfo = DeviceRegistration(registration_id = token)
-                        ApiClient.apiService.registerDevice(deviceInfo)
-                    } catch (e: Exception) {
-                        // Handle error
+        try {
+            if (FirebaseApp.getApps(this).isNotEmpty()) {
+                FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val token = task.result
+                        // Send token to your server
+                        Log.d("FCM Token", token)
+                    } else {
+                        Log.e("FCM Token", "Failed to get token: ${task.exception?.message}")
                     }
                 }
+            } else {
+                Log.e("Firebase", "Firebase not initialized")
             }
+        } catch (e: Exception) {
+            Log.e("Firebase", "Error getting token: ${e.message}")
         }
     }
 }
@@ -109,9 +122,12 @@ class MainActivity : ComponentActivity() {
 fun ECareApp() {
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = "home") {
+    NavHost(navController = navController, startDestination = "notifications") {
         composable("home") {
-            // Your home screen
+            Text("Home Screen")
+            Button(onClick = { navController.navigate("notifications") }) {
+                Text("Go to Notifications")
+            }
         }
         composable("notifications") {
             val notificationRepository = NotificationRepository(ApiClient.apiService)
