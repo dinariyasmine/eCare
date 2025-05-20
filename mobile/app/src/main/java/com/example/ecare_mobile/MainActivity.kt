@@ -13,6 +13,8 @@ import com.example.data.repository.AuthRepository
 import com.example.data.retrofit.RetrofitInstance
 import com.example.data.viewModel.AuthViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 
 class MainActivity : ComponentActivity() {
     private lateinit var googleAuthHelper: googleAuthHelper
@@ -51,7 +53,7 @@ fun MainAppContent(googleAuthHelper: googleAuthHelper) {
     // NavHost with SignIn as the start destination
     NavHost(
         navController = navController,
-        startDestination = Routes.SIGN_IN  // or Routes.SIGN_UP, whatever you prefer
+        startDestination = Routes.SIGN_IN
     ) {
         composable(Routes.SIGN_IN) {
             LoginScreen(googleAuthHelper = googleAuthHelper, navController = navController)
@@ -63,18 +65,47 @@ fun MainAppContent(googleAuthHelper: googleAuthHelper) {
             SignUp2Screen(
                 googleAuthHelper = googleAuthHelper,
                 navController = navController,
-                authViewModel = authViewModel  // Pass the ViewModel instance
+                authViewModel = authViewModel
             )
         }
-        composable(Routes.RESET_PASS) {
-            resetPass(navController = navController)
-        }
+
+        // Forgot Password screen
         composable(Routes.FORGOT_PASS) {
-            ForgotPass(navController = navController)
+            ForgotPass(navController = navController, viewModel = authViewModel)
         }
-        composable(Routes.OTP) {
-            OTPScreen(navController = navController)
+
+        // OTP Verification screen
+        composable(
+            "${Routes.OTP}/{email}",
+            arguments = listOf(navArgument("email") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val email = backStackEntry.arguments?.getString("email") ?: ""
+            OTPScreen(
+                navController = navController,
+                email = email,
+                authViewModel = authViewModel
+            )
         }
+
+        // Reset Password screen - Modified to match the parameters in your code
+        composable(
+            "${Routes.RESET_PASS}/{email}/{otpCode}",
+            arguments = listOf(
+                navArgument("email") { type = NavType.StringType },
+                navArgument("otpCode") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val email = backStackEntry.arguments?.getString("email") ?: ""
+            val otpCode = backStackEntry.arguments?.getString("otpCode") ?: ""
+
+            ResetPasswordScreen(
+                navController = navController,
+                authViewModel = authViewModel,
+                email = email,
+                otpCode = otpCode
+            )
+        }
+
         composable(Routes.HOME) {
             HomePage(navController = navController)
         }

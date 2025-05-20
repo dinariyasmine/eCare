@@ -24,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -42,31 +43,59 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.splashscreen.R
-import kotlinx.coroutines.delay
-import com.adamglin.phosphoricons.Bold
 import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Bold
 import com.adamglin.phosphoricons.bold.Backspace
 import com.adamglin.phosphoricons.bold.CaretLeft
 import androidx.compose.foundation.border
 import androidx.navigation.NavController
+import com.example.splashscreen.R
 import com.example.core.theme.*
+import com.example.data.viewModel.AuthViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.delay
 
 @Composable
 fun OTPScreen(
     navController: NavController,
-    email: String = "your-email@example.com",
-    onBackClick: () -> Unit = {},
-    onVerifyComplete: () -> Unit = {}
+    email: String,
+    authViewModel: AuthViewModel
 ) {
-    // State for OTP digits (6 digits)
-    val otpDigits = remember { mutableStateListOf("", "", "", "", "", "") }
+    // State for OTP digits (5 digits)
+    val otpDigits = remember { mutableStateListOf("", "", "", "", "") }
     var currentDigitIndex by remember { mutableIntStateOf(0) }
     var isVerifying by remember { mutableStateOf(false) }
     var showResendMessage by remember { mutableStateOf(false) }
+    var showNetworkError by remember { mutableStateOf(false) }
+    var networkErrorMessage by remember { mutableStateOf("") }
 
+    // Collect state from ViewModel
+    val otpVerificationState by authViewModel.otpVerificationState.collectAsState()
+    val errorState by authViewModel.errorState.collectAsState()
 
+    // Handle OTP verification result
+    LaunchedEffect(otpVerificationState) {
+        otpVerificationState?.let {
+            // OTP verification was successful
+            // Navigate to the reset password screen
+            // How OTPScreen should navigate to ResetPasswordScreen
+            val completeOtp = otpDigits.joinToString("")
+            navController.navigate("${Routes.RESET_PASS}/${email}/${completeOtp}")
+            authViewModel.clearPasswordResetStates()
+        }
+    }
 
+    // Handle error state
+    LaunchedEffect(errorState) {
+        errorState?.let {
+            showNetworkError = true
+            networkErrorMessage = it
+            // Clear error after showing
+            delay(5000)
+            showNetworkError = false
+            authViewModel.clearState()
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -81,21 +110,20 @@ fun OTPScreen(
                 .padding(vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-
             Icon(
                 imageVector = PhosphorIcons.Bold.CaretLeft,
                 contentDescription = "Back",
                 modifier = Modifier
                     .size(24.dp)
                     .clickable {
-                        navController.navigate(Routes.RESET_PASS)
+                        navController.navigate(Routes.SIGN_IN)
                     },
                 tint = Primary500
             )
 
             Spacer(modifier = Modifier.width(16.dp))
-
         }
+
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
@@ -139,7 +167,7 @@ fun OTPScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            for (i in 0 until 6) {
+            for (i in 0 until 5) {
                 OTPDigitBox(
                     value = otpDigits.getOrNull(i) ?: "",
                     isFocused = currentDigitIndex == i,
@@ -149,6 +177,21 @@ fun OTPScreen(
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+
+        // Network error message
+        AnimatedVisibility(
+            visible = showNetworkError,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            Text(
+                text = networkErrorMessage,
+                fontSize = 14.sp,
+                color = Error600,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+        }
 
         // Wrong code message with resend option
         AnimatedVisibility(
@@ -173,12 +216,13 @@ fun OTPScreen(
                     text = wrongCodeText,
                     fontSize = 14.sp,
                     modifier = Modifier.clickable {
-                        // Reset OTP and prepare for new entry
+                        // Reset OTP and request new code
                         for (i in otpDigits.indices) {
                             otpDigits[i] = ""
                         }
                         currentDigitIndex = 0
                         showResendMessage = false
+                        authViewModel.requestPasswordReset(email)
                     }
                 )
             }
@@ -200,9 +244,9 @@ fun OTPScreen(
                     KeypadButton(
                         text = number.toString(),
                         onClick = {
-                            if (currentDigitIndex < 6) {
+                            if (currentDigitIndex < 5) {
                                 otpDigits[currentDigitIndex] = number.toString()
-                                if (currentDigitIndex < 5) currentDigitIndex++
+                                if (currentDigitIndex < 4) currentDigitIndex++
                             }
                         }
                     )
@@ -219,9 +263,9 @@ fun OTPScreen(
                     KeypadButton(
                         text = number.toString(),
                         onClick = {
-                            if (currentDigitIndex < 6) {
+                            if (currentDigitIndex < 5) {
                                 otpDigits[currentDigitIndex] = number.toString()
-                                if (currentDigitIndex < 5) currentDigitIndex++
+                                if (currentDigitIndex < 4) currentDigitIndex++
                             }
                         }
                     )
@@ -238,9 +282,9 @@ fun OTPScreen(
                     KeypadButton(
                         text = number.toString(),
                         onClick = {
-                            if (currentDigitIndex < 6) {
+                            if (currentDigitIndex < 5) {
                                 otpDigits[currentDigitIndex] = number.toString()
-                                if (currentDigitIndex < 5) currentDigitIndex++
+                                if (currentDigitIndex < 4) currentDigitIndex++
                             }
                         }
                     )
@@ -260,15 +304,15 @@ fun OTPScreen(
                 KeypadButton(
                     text = "0",
                     onClick = {
-                        if (currentDigitIndex < 6) {
+                        if (currentDigitIndex < 5) {
                             otpDigits[currentDigitIndex] = "0"
-                            if (currentDigitIndex < 5) currentDigitIndex++
+                            if (currentDigitIndex < 4) currentDigitIndex++
                         }
                     },
                     modifier = Modifier.weight(1f)
                 )
 
-                // Backspace button - updated to use PhosphorIcons
+                // Backspace button
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -307,6 +351,7 @@ fun OTPScreen(
 
             TextButton(onClick = {
                 // Resend code logic
+                authViewModel.requestPasswordReset(email)
                 for (i in otpDigits.indices) {
                     otpDigits[i] = ""
                 }
@@ -334,24 +379,18 @@ fun OTPScreen(
     // Verify OTP when all digits are filled
     LaunchedEffect(otpDigits.joinToString("")) {
         val completeOtp = otpDigits.joinToString("")
-        if (completeOtp.length == 6 && !isVerifying) {
+        if (completeOtp.length == 5 && !isVerifying) {
             isVerifying = true
 
-            // Simulate verification (replace with actual verification)
+            // Call the API to verify the OTP
+            authViewModel.verifyOtp(email, completeOtp)
+
+            // Add a small delay to avoid rapid firing
             delay(1000)
-
-            // For demonstration: show error message or proceed
-            if (completeOtp == "123456") {
-                onVerifyComplete()
-            } else {
-                showResendMessage = true
-            }
-
             isVerifying = false
         }
     }
 }
-
 
 @Composable
 fun OTPDigitBox(
@@ -382,7 +421,6 @@ fun OTPDigitBox(
         )
     }
 }
-
 
 @Composable
 fun KeypadButton(

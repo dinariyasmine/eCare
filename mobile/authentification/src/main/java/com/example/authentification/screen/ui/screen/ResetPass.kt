@@ -19,15 +19,19 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,15 +59,50 @@ import com.example.core.theme.Primary500
 import com.example.core.theme.Gray500
 import com.example.core.theme.Gray300
 import com.example.core.theme.White
+import com.example.core.theme.Error600
+import com.example.data.viewModel.AuthViewModel
+import kotlinx.coroutines.launch
 
 @Composable
-fun resetPass(navController: NavController) {
+fun ResetPasswordScreen(
+    navController: NavController,
+    authViewModel: AuthViewModel,
+    email: String,
+    otpCode: String
+) {
     var newPassword by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(false) }
+    var passwordError by remember { mutableStateOf<String?>(null) }
 
     val keyboardController = LocalSoftwareKeyboardController.current
+    val coroutineScope = rememberCoroutineScope()
+
+    // Collect states from ViewModel
+    val passwordResetState by authViewModel.passwordResetState.collectAsState()
+    val errorState by authViewModel.errorState.collectAsState()
+
+    // Handle response from password reset
+    LaunchedEffect(passwordResetState) {
+        passwordResetState?.let {
+            // Password reset was successful
+            isLoading = false
+            navController.navigate(Routes.SIGN_IN) {
+                // Clear the back stack
+                popUpTo(Routes.SIGN_IN) { inclusive = true }
+            }
+            authViewModel.clearPasswordResetStates()
+        }
+    }
+
+    // Handle error state
+    LaunchedEffect(errorState) {
+        if (errorState != null) {
+            isLoading = false
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -83,26 +122,22 @@ fun resetPass(navController: NavController) {
                     .padding(vertical = 16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Updated to use PhosphorIcons.Bold.Caretleft
+                // Back button
                 Icon(
                     imageVector = PhosphorIcons.Bold.CaretLeft,
                     contentDescription = "Back",
                     modifier = Modifier
                         .size(24.dp)
                         .clickable {
-                            navController.navigate(Routes.SIGN_IN)
+                            navController.popBackStack()
                         },
                     tint = Primary500
                 )
 
                 Spacer(modifier = Modifier.width(16.dp))
-
             }
-            Spacer(modifier = Modifier.height(64.dp)) // More space above logo
 
-            // App Logo (centered and larger as per SVG)
-
-            Spacer(modifier = Modifier.height(48.dp)) // Between logo and card
+            Spacer(modifier = Modifier.height(64.dp))
 
             Column(
                 modifier = Modifier
@@ -127,6 +162,9 @@ fun resetPass(navController: NavController) {
                         color = Gray900
                     )
                 }
+
+                Spacer(modifier = Modifier.height(32.dp))
+
                 // Title
                 Text(
                     text = "Reset your password",
@@ -135,7 +173,6 @@ fun resetPass(navController: NavController) {
                     color = Gray900,
                     textAlign = TextAlign.Center
                 )
-                Spacer(modifier = Modifier.height(64.dp))
 
                 Spacer(modifier = Modifier.height(8.dp))
 
@@ -152,7 +189,10 @@ fun resetPass(navController: NavController) {
                 // New Password
                 OutlinedTextField(
                     value = newPassword,
-                    onValueChange = { newPassword = it },
+                    onValueChange = {
+                        newPassword = it
+                        passwordError = null
+                    },
                     placeholder = { Text("New password") },
                     modifier = Modifier.fillMaxWidth(),
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -180,7 +220,10 @@ fun resetPass(navController: NavController) {
                 // Confirm Password
                 OutlinedTextField(
                     value = confirmPassword,
-                    onValueChange = { confirmPassword = it },
+                    onValueChange = {
+                        confirmPassword = it
+                        passwordError = null
+                    },
                     placeholder = { Text("Confirm password") },
                     modifier = Modifier.fillMaxWidth(),
                     visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -203,27 +246,82 @@ fun resetPass(navController: NavController) {
                     )
                 )
 
+                // Display password error if any
+                if (passwordError != null) {
+                    Text(
+                        text = passwordError!!,
+                        color = Error600,
+                        fontSize = 12.sp,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 4.dp, start = 4.dp)
+                    )
+                }
+
+                // Display API error if any
+                if (errorState != null) {
+                    Text(
+                        text = errorState!!,
+                        color = Error600,
+                        fontSize = 12.sp,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 4.dp, start = 4.dp)
+                    )
+                }
+
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // Button
+                // Reset Password Button
                 Button(
-                    onClick = { /* Reset password logic */ },
+                    onClick = {
+                        // Validate passwords
+                        when {
+                            newPassword.length < 6 -> {
+                                passwordError = "Password must be at least 6 characters"
+                            }
+                            newPassword != confirmPassword -> {
+                                passwordError = "Passwords don't match"
+                            }
+                            else -> {
+                                // Passwords valid, submit reset request
+                                isLoading = true
+                                keyboardController?.hide()
+                                coroutineScope.launch {
+                                    authViewModel.resetPassword(
+                                        email = email,
+                                        otpCode = otpCode,
+                                        password = newPassword,
+                                        password2 = confirmPassword
+                                    )
+                                }
+                            }
+                        }
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp),
                     shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Primary500)
+                    colors = ButtonDefaults.buttonColors(containerColor = Primary500),
+                    enabled = newPassword.isNotBlank() && confirmPassword.isNotBlank() && !isLoading
                 ) {
-                    Text(
-                        text = "Reset Password",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = White
-                    )
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = White
+                        )
+                    } else {
+                        Text(
+                            text = "Reset Password",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = White
+                        )
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp)) // Padding at the bottom
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }

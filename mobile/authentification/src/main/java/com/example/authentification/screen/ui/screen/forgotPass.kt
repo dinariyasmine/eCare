@@ -18,13 +18,17 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.splashscreen.R
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavController
 import com.example.core.theme.Gray100
 import com.example.core.theme.Gray500
@@ -43,17 +48,42 @@ import com.example.core.theme.Gray900
 import com.example.core.theme.Primary500
 import com.example.core.theme.Gray300
 import com.example.core.theme.White
+import com.example.data.viewModel.AuthViewModel
+import kotlinx.coroutines.launch
 
 @Composable
-fun ForgotPass(navController: NavController) {
+fun ForgotPass(navController: NavController, viewModel: AuthViewModel) {
     var email by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+
+    // Collect states from ViewModel
+    val resetRequestState by viewModel.passwordResetRequestState.collectAsState()
+    val errorState by viewModel.errorState.collectAsState()
+    val coroutineScope = rememberCoroutineScope()
+
+    // Handle response from password reset request
+    LaunchedEffect(resetRequestState) {
+        resetRequestState?.let {
+            // OTP sent successfully, navigate to OTP verification screen
+            isLoading = false
+            // Pass email as parameter in the navigation
+            navController.navigate("${Routes.OTP}/${email}")
+            viewModel.clearPasswordResetStates()
+        }
+    }
+
+    // Handle error state
+    LaunchedEffect(errorState) {
+        if (errorState != null) {
+            isLoading = false
+        }
+    }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Gray100)
     ) {
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -95,7 +125,7 @@ fun ForgotPass(navController: NavController) {
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Enter your email to receive a reset link",
+                text = "Enter your email to receive a reset code",
                 fontSize = 14.sp,
                 color = Gray500,
                 textAlign = TextAlign.Center
@@ -119,22 +149,51 @@ fun ForgotPass(navController: NavController) {
                 shape = RoundedCornerShape(8.dp)
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Show error message if any
+            if (errorState != null) {
+                Text(
+                    text = errorState!!,
+                    fontSize = 14.sp,
+                    color = Color.Red,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
 
             Button(
-                onClick = { navController.navigate(Routes.OTP) },
+                onClick = {
+                    if (email.isNotBlank()) {
+                        isLoading = true
+                        coroutineScope.launch {
+                            viewModel.requestPasswordReset(email)
+                        }
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
                 shape = RoundedCornerShape(8.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Primary500)
+                colors = ButtonDefaults.buttonColors(containerColor = Primary500),
+                enabled = email.isNotBlank() && !isLoading
             ) {
-                Text(
-                    text = "Send Reset Link",
-                    color = White,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 16.sp
-                )
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = White
+                    )
+                } else {
+                    Text(
+                        text = "Send Reset Code",
+                        color = White,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 16.sp
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))

@@ -4,10 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.example.data.model.AuthResponse
-import com.example.data.model.LoginRequest
-import com.example.data.model.RegistrationRequest
-import com.example.data.model.UserResponse
+import com.example.data.model.*
 import com.example.data.repository.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -33,6 +30,17 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
     // Store password temporarily for doctor registration (securely in production)
     private val _currentPassword = MutableStateFlow<String?>(null)
     val currentPassword: StateFlow<String?> = _currentPassword
+
+    // Password Reset States
+    private val _passwordResetRequestState = MutableStateFlow<MessageResponse?>(null)
+    val passwordResetRequestState: StateFlow<MessageResponse?> = _passwordResetRequestState
+
+    private val _otpVerificationState = MutableStateFlow<MessageResponse?>(null)
+    val otpVerificationState: StateFlow<MessageResponse?> = _otpVerificationState
+
+    private val _passwordResetState = MutableStateFlow<MessageResponse?>(null)
+    val passwordResetState: StateFlow<MessageResponse?> = _passwordResetState
+
     fun login(request: LoginRequest) {
         viewModelScope.launch {
             try {
@@ -48,7 +56,6 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
     fun clearLoginState() {
         _loginState.value = null
     }
-
 
     fun registerUser(request: RegistrationRequest, isDoctor: Boolean) {
         viewModelScope.launch {
@@ -121,6 +128,49 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         }
     }
 
+    // Password Reset Functions
+    fun requestPasswordReset(email: String) {
+        Log.d("AuthViewModel", "Requesting password reset for email: $email")
+        viewModelScope.launch {
+            try {
+                val response = authRepository.requestPasswordReset(email)
+                Log.d("AuthViewModel", "Password reset request successful: ${response.message}")
+                _passwordResetRequestState.value = response
+            } catch (e: Exception) {
+                Log.e("AuthViewModel", "Password reset request failed", e)
+                _errorState.value = e.message ?: "Password reset request failed"
+            }
+        }
+    }
+
+    fun verifyOtp(email: String, otpCode: String) {
+        Log.d("AuthViewModel", "Verifying OTP for email: $email")
+        viewModelScope.launch {
+            try {
+                val response = authRepository.verifyOtp(email, otpCode)
+                Log.d("AuthViewModel", "OTP verification successful: ${response.message}")
+                _otpVerificationState.value = response
+            } catch (e: Exception) {
+                Log.e("AuthViewModel", "OTP verification failed", e)
+                _errorState.value = e.message ?: "OTP verification failed"
+            }
+        }
+    }
+
+    fun resetPassword(email: String, otpCode: String, password: String, password2: String) {
+        Log.d("AuthViewModel", "Resetting password for email: $email")
+        viewModelScope.launch {
+            try {
+                val response = authRepository.resetPassword(email, otpCode, password, password2)
+                Log.d("AuthViewModel", "Password reset successful: ${response.message}")
+                _passwordResetState.value = response
+            } catch (e: Exception) {
+                Log.e("AuthViewModel", "Password reset failed", e)
+                _errorState.value = e.message ?: "Password reset failed"
+            }
+        }
+    }
+
     fun clearState() {
         Log.d("AuthViewModel", "Clearing registration and error state")
         _registrationState.value = null
@@ -138,7 +188,12 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         _currentPassword.value = null
     }
 
-
+    fun clearPasswordResetStates() {
+        Log.d("AuthViewModel", "Clearing password reset states")
+        _passwordResetRequestState.value = null
+        _otpVerificationState.value = null
+        _passwordResetState.value = null
+    }
 
     companion object {
         class Factory(private val authRepository: AuthRepository) : ViewModelProvider.Factory {
