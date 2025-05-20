@@ -47,12 +47,19 @@ class NotificationService:
                 title = "Appointment Reminder"
             elif notification_type == 'appointment_canceled':
                 title = "Appointment Canceled"
+            elif notification_type == 'appointment_rescheduled':
+                title = "Appointment Rescheduled"
             else:
                 title = "Appointment Update"
         
         if not description:
             doctor_name = appointment.doctor.user.name or appointment.doctor.user.get_full_name()
-            appointment_time = appointment.start_time.strftime('%Y-%m-%d at %H:%M')
+            
+            # Check if start_time is a string or datetime object
+            if isinstance(appointment.start_time, str):
+                appointment_time = appointment.start_time  # Already a formatted string
+            else:
+                appointment_time = appointment.start_time.strftime('%Y-%m-%d at %H:%M')
             
             if notification_type == 'appointment_scheduled':
                 description = f"Your appointment with Dr. {doctor_name} has been scheduled for {appointment_time}"
@@ -60,6 +67,8 @@ class NotificationService:
                 description = f"Reminder: You have an appointment with Dr. {doctor_name} on {appointment_time}"
             elif notification_type == 'appointment_canceled':
                 description = f"Your appointment with Dr. {doctor_name} on {appointment_time} has been canceled"
+            elif notification_type == 'appointment_rescheduled':
+                description = f"Your appointment with Dr. {doctor_name} has been rescheduled to {appointment_time}"
             else:
                 description = f"Your appointment with Dr. {doctor_name} has been updated"
         
@@ -87,7 +96,6 @@ class NotificationService:
         )
         
         return notification
-    
     @staticmethod
     def create_prescription_notification(prescription, notification_type, title=None, description=None):
         """Create a notification for a prescription"""
@@ -135,3 +143,34 @@ class NotificationService:
         )
         
         return notification
+    @staticmethod
+    def send_appointment_reminders():
+        """Send reminder notifications for appointments happening in the next hour"""
+        # Find appointments happening between now and 1 hour from now
+        now = timezone.now()
+        one_hour_from_now = now + timezone.timedelta(hours=1)
+        
+        # Find confirmed appointments in the next hour that haven't had reminders sent
+        upcoming_appointments = Appointment.objects.filter(
+            start_time__gt=now,
+            start_time__lte=one_hour_from_now,
+            status='confirmed',
+            
+        )
+        
+        reminder_count = 0
+        for appointment in upcoming_appointments:
+            # Create reminder notification
+            NotificationService.create_appointment_notification(
+                appointment=appointment,
+                notification_type='appointment_reminder'
+            )
+            
+            # Optionally mark that a reminder was sent
+            # appointment.reminder_sent = True
+            # appointment.save()
+            
+            reminder_count += 1
+        
+        return reminder_count
+

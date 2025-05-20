@@ -31,8 +31,7 @@ SECRET_KEY = 'django-insecure-_ua%1d+pdyfd74_)fckm*5v1g_d#*q&9eigr8g@123v5e7#f)7
 
 # SECURITY WARNING: don't run with debug turned on in production !
 DEBUG = True
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.ngrok.io', '.ngrok-free.app']
-
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.ngrok.io', '.ngrok-free.app', '10.0.2.2']
 # Application definition
 
 INSTALLED_APPS = [
@@ -54,6 +53,9 @@ INSTALLED_APPS = [
     'doctor',
     'notifications',
     'fcm_django',
+    'push_notifications',
+    'rest_framework_simplejwt.token_blacklist',
+
 ]
 
 MIDDLEWARE = [
@@ -233,3 +235,6 @@ FCM_DJANGO_SETTINGS = {
     "ONE_DEVICE_PER_USER": False,
     "DELETE_INACTIVE_DEVICES": True,
 }
+
+
+

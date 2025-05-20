@@ -52,10 +52,15 @@ class PrescriptionViewSet(viewsets.ModelViewSet):
     
     def perform_create(self, serializer):
         """
+<<<<<<< HEAD
         Automatically assigns the logged-in doctor to the prescription upon creation.
         
         Args:
             serializer (PrescriptionSerializer): Serializer instance to be saved.
+=======
+        Automatically assigns the logged-in doctor to the prescription upon creation
+        and marks the related appointment as done.
+>>>>>>> notifications
         """
         doctor = Doctor.objects.filter(user=self.request.user).first()
         if doctor:
@@ -63,13 +68,41 @@ class PrescriptionViewSet(viewsets.ModelViewSet):
         else:
             prescription = serializer.save()
             
+<<<<<<< HEAD
         # Create notification for the patient
+=======
+        # Mark related appointment as done if it exists
+        patient = prescription.patient
+        if patient:
+            # Find the most recent in-progress appointment for this patient with this doctor
+            appointment = Appointment.objects.filter(
+                patient=patient,
+                doctor=doctor,
+                status='in_progress'
+            ).order_by('-start_time').first()
+            
+            if appointment:
+                appointment.status = 'done'
+                appointment.save()
+                
+                # Create notification for appointment completed
+                NotificationService.create_appointment_notification(
+                    appointment=appointment,
+                    notification_type='appointment_completed'
+                )
+        
+        # Create notification for the patient about new prescription
+>>>>>>> notifications
         if prescription.patient and prescription.patient.user:
             NotificationService.create_prescription_notification(
                 prescription=prescription,
                 notification_type='prescription_created'
             )
+<<<<<<< HEAD
         
+=======
+   
+>>>>>>> notifications
     def update(self, request, *args, **kwargs):
         """Override update to send notification when prescription is updated"""
         partial = kwargs.pop('partial', False)

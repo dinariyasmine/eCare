@@ -15,7 +15,8 @@ import os
 from core.models import User 
 
 from .serializers import (
-    LoginSerializer, 
+    LoginSerializer,
+    LogoutSerializer, 
     RegisterUserSerializer, 
     DoctorRegisterSerializer,
     UserSerializer,
@@ -278,3 +279,32 @@ logger.debug(f"Verifying OTP {PasswordResetOTP.otp_code} for user {User.email}")
 
 # In ResetPasswordView
 logger.debug(f"Resetting password for user {User.email}")
+
+
+class LogoutView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    @swagger_auto_schema(
+        request_body=LogoutSerializer,
+        responses={
+            205: openapi.Response(description="Logout successful"),
+            400: openapi.Response(description="Bad request")
+        },
+        operation_summary="Logout user",
+        operation_description="Blacklist the refresh token to prevent further use"
+    )
+    def post(self, request):
+        serializer = LogoutSerializer(data=request.data)
+        if serializer.is_valid():
+            try:
+                refresh_token = serializer.validated_data['refresh_token']
+                token = RefreshToken(refresh_token)
+                token.blacklist()
+
+                logger.debug(f"User {request.user.username} logged out successfully")
+                return Response({'message': 'Logout successful'}, status=status.HTTP_205_RESET_CONTENT)
+            except Exception as e:
+                logger.error(f"Error during logout: {str(e)}")
+                return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

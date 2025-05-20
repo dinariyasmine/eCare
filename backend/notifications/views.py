@@ -25,6 +25,16 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
     def mark_all_as_read(self, request):
         Notification.objects.filter(user=request.user, read=False).update(read=True)
         return Response({'status': 'all notifications marked as read'})
+    @action(detail=False, methods=['get'])
+    def unread(self, request):
+        """Get only unread notifications for the current user"""
+        unread_notifications = Notification.objects.filter(
+            user=self.request.user, 
+            read=False
+        ).order_by('-created_at')
+        
+        serializer = self.get_serializer(unread_notifications, many=True)
+        return Response(serializer.data)
 
 class FCMDeviceViewSet(viewsets.ModelViewSet):
     queryset = FCMDevice.objects.all()
@@ -36,3 +46,5 @@ class FCMDeviceViewSet(viewsets.ModelViewSet):
     
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+
