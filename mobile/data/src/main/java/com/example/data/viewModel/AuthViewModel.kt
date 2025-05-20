@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.data.model.*
 import com.example.data.repository.AuthRepository
+import com.example.data.repository.SocialMediaRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -45,9 +46,16 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         viewModelScope.launch {
             try {
                 val response = authRepository.login(request.username, request.password)
+
+                // Debug the response
+                Log.d("AuthViewModel", "Login response received: $response")
+                Log.d("AuthViewModel", "Access token: ${response.access}")
+                Log.d("AuthViewModel", "User: ${response.user}")
+
                 _loginState.value = response
                 _currentUser.value = response.user
             } catch (e: Exception) {
+                Log.e("AuthViewModel", "Login failed", e)
                 _errorState.value = e.message ?: "Login failed"
             }
         }
@@ -110,20 +118,33 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         Log.d("AuthViewModel", "Password is null? ${_currentPassword.value == null}")
     }
 
-    fun registerDoctor(request: RegistrationRequest) {
-        Log.d("AuthViewModel", "Starting doctor registration: ${request.username}, specialty: ${request.specialty}, clinic: ${request.clinic_id}")
-
-        // Debug checks before registration
-        checkStoredData()
-
+    fun registerDoctor(request: RegistrationRequest, socialMediaLinks: List<SocialMedia> = emptyList()) {
         viewModelScope.launch {
+            _registrationState.value = null
+            _errorState.value = null
+
             try {
+                // Register the doctor first
                 val response = authRepository.registerDoctor(request)
-                Log.d("AuthViewModel", "Doctor registration successful")
                 _registrationState.value = response
+
+                // If doctor registration is successful and we have social media links to save
+                // Updated to check access token directly (not nested in tokens)
+                if (response.access != null && socialMediaLinks.isNotEmpty()) {
+                    // Create social media repository
+                    val socialMediaRepository = SocialMediaRepository()
+
+                    // Add each social media link with the doctor's ID
+                    val doctorId = response.user?.id ?: return@launch
+
+                    socialMediaLinks.forEach { socialMedia ->
+                        socialMediaRepository.createSocialMedia(
+                            socialMedia.copy(doctor_id = doctorId)
+                        )
+                    }
+                }
             } catch (e: Exception) {
-                Log.e("AuthViewModel", "Doctor registration failed", e)
-                _errorState.value = e.message ?: "Doctor registration failed"
+                _errorState.value = e.message ?: "An error occurred during registration"
             }
         }
     }

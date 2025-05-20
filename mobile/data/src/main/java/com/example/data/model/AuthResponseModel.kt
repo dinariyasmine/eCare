@@ -1,8 +1,9 @@
 package com.example.data.model
 
 data class AuthResponse(
-    val user: UserResponse,
-    val tokens: TokenResponse?
+    val refresh: String?,
+    val access: String?,
+    val user: UserResponse?
 )
 
 data class UserResponse(
@@ -14,9 +15,4 @@ data class UserResponse(
     val address: String,
     val role: String,
     val birth_date: String
-)
-
-data class TokenResponse(
-    val refresh: String,
-    val access: String
 )

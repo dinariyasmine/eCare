@@ -15,12 +15,14 @@ import com.example.data.viewModel.AuthViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import com.example.data.util.TokenManager
 
 class MainActivity : ComponentActivity() {
     private lateinit var googleAuthHelper: googleAuthHelper
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        TokenManager.init(applicationContext)
 
         // Initialize Google Auth Helper
         googleAuthHelper = googleAuthHelper(this)

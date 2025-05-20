@@ -1,5 +1,6 @@
 package com.example.data.viewModel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -30,14 +31,25 @@ class ClinicViewModel(private val clinicRepository: ClinicRepository) : ViewMode
             _error.value = null
 
             try {
-                _clinics.value = clinicRepository.getAllClinics()
+                val clinicList = clinicRepository.getAllClinics()
+                Log.d("ClinicViewModel", "Fetched ${clinicList.size} clinics")
+
+                if (clinicList.isEmpty()) {
+                    Log.w("ClinicViewModel", "Clinic list is empty from repository")
+                } else {
+                    Log.d("ClinicViewModel", "First clinic: ${clinicList.first().name}")
+                }
+
+                _clinics.value = clinicList
             } catch (e: Exception) {
+                Log.e("ClinicViewModel", "Failed to load clinics", e)
                 _error.value = "Failed to load clinics: ${e.message}"
             } finally {
                 _loading.value = false
             }
         }
     }
+
 
     fun getClinicById(id: Int) {
         viewModelScope.launch {

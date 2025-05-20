@@ -76,12 +76,14 @@ import com.example.core.theme.Primary200
 import com.example.core.theme.Primary300
 import com.example.core.theme.Primary50
 import com.example.core.theme.Primary500
+import com.example.data.model.AuthResponse
 import com.example.data.model.LoginRequest
 import com.example.splashscreen.R
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.common.api.ApiException
 import com.example.data.repository.AuthRepository
 import com.example.data.retrofit.RetrofitInstance
+import com.example.data.util.TokenManager
 import com.example.data.viewModel.AuthViewModel
 
 @Composable
@@ -105,19 +107,50 @@ fun LoginScreen(googleAuthHelper: googleAuthHelper, navController: NavController
     val errorState by authViewModel.errorState.collectAsState()
 
     // Handle login response
+    // Handle login response
     LaunchedEffect(loginState) {
-        if (loginState != null) {
+        val currentLoginState = loginState
+        if (currentLoginState != null && currentLoginState is AuthResponse) {
             isLoading = false
+            Log.d("LoginScreen", "Full response: $currentLoginState")
+
+            // Access token directly from root level
+            Log.d("LoginScreen", "Access token raw: ${currentLoginState.access}")
+
+            // Enhanced token and user data storage
+            currentLoginState.access?.let {
+                TokenManager.saveToken(it)
+                Log.d("LoginScreen", "Access token saved: $it")
+            }
+
+            currentLoginState.refresh?.let {
+                TokenManager.saveRefreshToken(it)
+                Log.d("LoginScreen", "Refresh token saved: $it")
+            }
+
+            // Save user ID
+            currentLoginState.user?.id?.let {
+                TokenManager.saveUserId(it)
+                Log.d("LoginScreen", "User ID saved: $it")
+            }
+
+            // Save user role
+            currentLoginState.user?.role?.let {
+                TokenManager.saveUserRole(it)
+                Log.d("LoginScreen", "User role saved: $it")
+            }
+
             Toast.makeText(context, "Login successful!", Toast.LENGTH_SHORT).show()
+
             // Navigate to main screen or dashboard
             navController.navigate(Routes.HOME) {
                 popUpTo(Routes.SIGN_IN) { inclusive = true }
             }
+
             // Clear login state to avoid navigation loop
             authViewModel.clearLoginState()
         }
     }
-
     // Handle error response
     LaunchedEffect(errorState) {
         if (errorState != null) {

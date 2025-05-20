@@ -35,6 +35,7 @@ import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.SelectableDates
@@ -91,15 +92,48 @@ import com.example.data.model.RegistrationRequest
 import com.example.data.repository.AuthRepository
 import com.example.data.retrofit.RetrofitInstance
 import com.example.data.viewModel.AuthViewModel
+import com.example.data.viewModel.ClinicViewModel
 import com.example.splashscreen.R
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.common.api.ApiException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.example.data.repository.ClinicRepository
+import com.example.data.model.SocialMedia
+import com.example.data.repository.SocialMediaRepository
+import com.example.data.util.TokenManager
 
 @Composable
 fun SignUpScreen(googleAuthHelper: googleAuthHelper, navController: NavController) {
+    /// Get ClinicViewModel instance
+    val clinicViewModel: ClinicViewModel = viewModel(
+        factory = ClinicViewModel.Factory(ClinicRepository())
+    )
+    var clinicQuery by remember { mutableStateOf("") }
+
+
+// Collect states from ViewModel
+    val clinics = clinicViewModel.clinics.collectAsState().value
+    val loading = clinicViewModel.loading.collectAsState().value
+    val error = clinicViewModel.error.collectAsState().value
+
+// Use LaunchedEffect to fetch clinics when the screen appears
+    LaunchedEffect(key1 = Unit) {
+        clinicViewModel.fetchAllClinics()
+    }
+
+// Compute filtered clinics based on user query
+    val filteredClinics = remember(clinics, clinicQuery) {
+        if (clinicQuery.isBlank()) {
+            clinics
+        } else {
+            clinics.filter { it.name.contains(clinicQuery, ignoreCase = true) }
+        }
+    }
+
+
+
     // Create repository and ViewModel
     val authRepository = remember { AuthRepository(RetrofitInstance.apiService) }
     val authViewModel: AuthViewModel = viewModel(
@@ -131,31 +165,128 @@ fun SignUpScreen(googleAuthHelper: googleAuthHelper, navController: NavControlle
 
     // Doctor-specific fields
     var specialty by remember { mutableStateOf("") }
+    var specialtyQuery by remember { mutableStateOf("") }
+    var isSpecialtyDropdownExpanded by remember { mutableStateOf(false) }
     var linkedin by remember { mutableStateOf("") }
     var instagram by remember { mutableStateOf("") }
     var socialMedia3 by remember { mutableStateOf("") }
     var clinicName by remember { mutableStateOf("") }
     var clinicId by remember { mutableStateOf(15) } // Default clinic ID
+    var isClinicDropdownExpanded by remember { mutableStateOf(false) }
 
     // For date picker
     var showDatePicker by remember { mutableStateOf(false) }
 
+    // List of medical specialties
+    val medicalSpecialties = listOf(
+        "Cardiology",
+        "Dermatology",
+        "Endocrinology",
+        "Family Medicine",
+        "Gastroenterology",
+        "Hematology",
+        "Infectious Disease",
+        "Internal Medicine",
+        "Nephrology",
+        "Neurology",
+        "Obstetrics and Gynecology",
+        "Oncology",
+        "Ophthalmology",
+        "Orthopedics",
+        "Otolaryngology (ENT)",
+        "Pediatrics",
+        "Psychiatry",
+        "Pulmonology",
+        "Radiology",
+        "Urology"
+    )
+
+    // Filtered specialties based on user input
+    val filteredSpecialties = remember(specialtyQuery) {
+        if (specialtyQuery.isEmpty()) {
+            medicalSpecialties
+        } else {
+            medicalSpecialties.filter { it.contains(specialtyQuery, ignoreCase = true) }
+        }
+    }
+
+
+
     // Handle registration response
     LaunchedEffect(registrationState, errorState) {
+        val reg = registrationState  // local variable to enable smart cast
+
         when {
-            registrationState != null && isLoading -> {
+            reg != null && isLoading -> {
                 isLoading = false
+                Log.d("LoginScreen", "Access token raw: ${reg.access}")
+                // Save tokens and user info
+                reg.access?.let {
+                    TokenManager.saveToken(it)
+                    Log.d("SignupScreen", "Access token saved: $it")
+                }
+
+                reg.refresh?.let {
+                    TokenManager.saveRefreshToken(it)
+                    Log.d("SignupScreen", "Refresh token saved: $it")
+                }
+
+                // Save user ID
+                reg.user?.id?.let {
+                    TokenManager.saveUserId(it)
+                    Log.d("SignupScreen", "User ID saved: $it")
+                }
+
+                // Save user role
+                reg.user?.role?.let {
+                    TokenManager.saveUserRole(it)
+                    Log.d("SignupScreen", "User role saved: $it")
+                }
+
+                // If this was a doctor registration and we have social media links
+                if (userType == "Doctor" && (linkedin.isNotBlank() || instagram.isNotBlank() || socialMedia3.isNotBlank())) {
+                    val doctorId = reg.user?.id
+
+                    if (doctorId != null) {
+                        val socialMediaRepository = SocialMediaRepository()
+
+                        if (linkedin.isNotBlank()) {
+                            socialMediaRepository.createSocialMedia(
+                                SocialMedia(id = 0, doctor_id = doctorId, name = "LinkedIn", link = linkedin)
+                            )
+                        }
+
+                        if (instagram.isNotBlank()) {
+                            socialMediaRepository.createSocialMedia(
+                                SocialMedia(id = 0, doctor_id = doctorId, name = "Instagram", link = instagram)
+                            )
+                        }
+
+                        if (socialMedia3.isNotBlank()) {
+                            socialMediaRepository.createSocialMedia(
+                                SocialMedia(id = 0, doctor_id = doctorId, name = "Other", link = socialMedia3)
+                            )
+                        }
+                    }
+                }
+
                 Toast.makeText(context, "Registration successful!", Toast.LENGTH_SHORT).show()
-                navController.navigate(Routes.SIGN_IN)
+
+                navController.navigate(Routes.HOME) {
+                    popUpTo(Routes.SIGN_UP) { inclusive = true }
+                }
+
                 authViewModel.clearState()
             }
+
             errorState != null && isLoading -> {
                 isLoading = false
                 Toast.makeText(context, errorState ?: "An error occurred", Toast.LENGTH_LONG).show()
-                authViewModel.clearState() // Clear the error state after handling
+                authViewModel.clearState()
             }
         }
     }
+
 
     // Google sign-in launcher
     val launcher = rememberLauncherForActivityResult(
@@ -484,42 +615,170 @@ fun SignUpScreen(googleAuthHelper: googleAuthHelper, navController: NavControlle
                     if (userType == "Doctor") {
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // Specialty Field
-                        CustomTextField(
-                            value = specialty,
-                            onValueChange = { specialty = it },
-                            placeholder = "Specialty",
-                            modifier = Modifier.fillMaxWidth(),
-                            trailingIcon = {
-                                Icon(
-                                    imageVector = PhosphorIcons.Bold.CaretDown,
-                                    contentDescription = "CaretDown",
-                                    tint = Primary500
-                                )
+                        // Specialty Field with searchable dropdown
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            CustomTextField(
+                                value = specialtyQuery,
+                                onValueChange = {
+                                    specialtyQuery = it
+                                    if (!isSpecialtyDropdownExpanded) {
+                                        isSpecialtyDropdownExpanded = true
+                                    }
+                                },
+                                placeholder = "Specialty",
+                                modifier = Modifier.fillMaxWidth(),
+                                trailingIcon = {
+                                    IconButton(onClick = {
+                                        isSpecialtyDropdownExpanded = !isSpecialtyDropdownExpanded
+                                    }) {
+                                        Icon(
+                                            imageVector = PhosphorIcons.Bold.CaretDown,
+                                            contentDescription = "Select Specialty",
+                                            tint = Primary500
+                                        )
+                                    }
+                                }
+                            )
+
+                            androidx.compose.material3.DropdownMenu(
+                                expanded = isSpecialtyDropdownExpanded,
+                                onDismissRequest = { isSpecialtyDropdownExpanded = false },
+                                modifier = Modifier
+                                    .fillMaxWidth(0.9f)
+                                    .background(White)
+                            ) {
+                                if (filteredSpecialties.isEmpty()) {
+                                    androidx.compose.material3.DropdownMenuItem(
+                                        text = { Text("No matching specialties") },
+                                        onClick = { /* Do nothing */ }
+                                    )
+                                } else {
+                                    filteredSpecialties.forEach { specialtyOption ->
+                                        androidx.compose.material3.DropdownMenuItem(
+                                            text = { Text(specialtyOption) },
+                                            onClick = {
+                                                specialty = specialtyOption
+                                                specialtyQuery = specialtyOption
+                                                isSpecialtyDropdownExpanded = false
+                                            }
+                                        )
+                                    }
+                                }
                             }
-                        )
+                        }
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // Clinic Name Field
-                        CustomTextField(
-                            value = clinicName,
-                            onValueChange = {
-                                clinicName = it
-                                // For testing, always use ID 15
-                                clinicId = 15
-                            },
-                            placeholder = "Clinic Name",
-                            modifier = Modifier.fillMaxWidth(),
-                            trailingIcon = {
-                                Icon(
-                                    imageVector = PhosphorIcons.Bold.CaretDown,
-                                    contentDescription = "CaretDown",
-                                    tint = Primary500
-                                )
-                            }
-                        )
+                        // Clinic Name Field with searchable dropdown
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            CustomTextField(
+                                value = clinicQuery,
+                                onValueChange = {
+                                    clinicQuery = it
+                                    if (!isClinicDropdownExpanded) {
+                                        isClinicDropdownExpanded = true
+                                    }
+                                    // Add debug output
+                                    Log.d("SignUpScreen", "Query changed to: '$it'")
+                                },
+                                placeholder = "Select Clinic",
+                                modifier = Modifier.fillMaxWidth(),
+                                trailingIcon = {
+                                    IconButton(onClick = {
+                                        isClinicDropdownExpanded = !isClinicDropdownExpanded
+                                        // Refresh the clinic list when opening the dropdown
+                                        if (isClinicDropdownExpanded) {
+                                            Log.d("SignUpScreen", "Refreshing clinic list")
+                                            clinicViewModel.fetchAllClinics()
+                                        }
+                                    }) {
+                                        Icon(
+                                            imageVector = PhosphorIcons.Bold.CaretDown,
+                                            contentDescription = "Expand Clinic Dropdown",
+                                            tint = Primary500
+                                        )
+                                    }
+                                }
+                            )
 
+                            androidx.compose.material3.DropdownMenu(
+                                expanded = isClinicDropdownExpanded,
+                                onDismissRequest = { isClinicDropdownExpanded = false },
+                                modifier = Modifier
+                                    .fillMaxWidth(0.9f)
+                                    .background(White)
+                            ) {
+                                if (loading) {
+                                    // Show loading indicator in dropdown
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        CircularProgressIndicator(color = Primary500)
+                                    }
+                                } else if (error != null) {
+                                    // Show error message with more details
+                                    androidx.compose.material3.DropdownMenuItem(
+                                        text = {
+                                            Column {
+                                                Text(
+                                                    text = "Error loading clinics",
+                                                    color = androidx.compose.ui.graphics.Color.Red
+                                                )
+                                                Text(
+                                                    text = error,
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = androidx.compose.ui.graphics.Color.Red
+                                                )
+                                            }
+                                        },
+                                        onClick = {
+                                            // Retry on click
+                                            clinicViewModel.clearError()
+                                            clinicViewModel.fetchAllClinics()
+                                        }
+                                    )
+                                } else if (clinics.isEmpty()) {
+                                    // Specifically check if the main clinics list is empty
+                                    androidx.compose.material3.DropdownMenuItem(
+                                        text = {
+                                            Text("No clinics available. Tap to refresh.")
+                                        },
+                                        onClick = {
+                                            clinicViewModel.fetchAllClinics()
+                                        }
+                                    )
+                                } else if (filteredClinics.isEmpty()) {
+                                    // Show message when no clinics match filter
+                                    androidx.compose.material3.DropdownMenuItem(
+                                        text = { Text("No clinics match '${clinicQuery}'") },
+                                        onClick = { /* Do nothing */ }
+                                    )
+                                } else {
+                                    // Show list of clinics with count
+                                    Text(
+                                        text = "${filteredClinics.size} clinic(s) found",
+                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                    // Show list of clinics
+                                    filteredClinics.forEach { clinic ->
+                                        androidx.compose.material3.DropdownMenuItem(
+                                            text = { Text(clinic.name) },
+                                            onClick = {
+                                                clinicName = clinic.name
+                                                clinicId = clinic.id
+                                                clinicQuery = clinic.name
+                                                isClinicDropdownExpanded = false
+                                                Log.d("SignUpScreen", "Selected clinic: ${clinic.name}, ID: ${clinic.id}")
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        }
                         Spacer(modifier = Modifier.height(12.dp))
 
                         // LinkedIn Field
@@ -624,9 +883,35 @@ fun SignUpScreen(googleAuthHelper: googleAuthHelper, navController: NavControlle
                                     clinic_id = if (isDoctor) clinicId else null
                                 )
 
+                                // For doctors, create a list of social media links to save
+                                val socialMediaLinks = if (isDoctor) {
+                                    listOfNotNull(
+                                        if (linkedin.isNotBlank()) SocialMedia(
+                                            id = 0, // API will assign actual ID
+                                            doctor_id = 0, // This will be assigned by the API after doctor creation
+                                            name = "LinkedIn",
+                                            link = linkedin
+                                        ) else null,
+                                        if (instagram.isNotBlank()) SocialMedia(
+                                            id = 0,
+                                            doctor_id = 0,
+                                            name = "Instagram",
+                                            link = instagram
+                                        ) else null,
+                                        if (socialMedia3.isNotBlank()) SocialMedia(
+                                            id = 0,
+                                            doctor_id = 0,
+                                            name = "Other",
+                                            link = socialMedia3
+                                        ) else null
+                                    )
+                                } else {
+                                    emptyList()
+                                }
+
                                 // Register user with appropriate type
                                 if (isDoctor) {
-                                    authViewModel.registerDoctor(request)
+                                    authViewModel.registerDoctor(request, socialMediaLinks)
                                 } else {
                                     authViewModel.registerUser(request, isDoctor = false)
                                 }
@@ -755,6 +1040,7 @@ fun CustomTextField(
     modifier: Modifier = Modifier,
     keyboardType: KeyboardType = KeyboardType.Text,
     visualTransformation: VisualTransformation = VisualTransformation.None,
+    readOnly: Boolean = false,
     trailingIcon: @Composable (() -> Unit)? = null
 ) {
     OutlinedTextField(
@@ -786,7 +1072,8 @@ fun CustomTextField(
             color = Gray900
         ),
         singleLine = true,
-        trailingIcon = trailingIcon
+        trailingIcon = trailingIcon,
+        readOnly = readOnly
     )
 }
 @OptIn(ExperimentalMaterial3Api::class)
@@ -806,6 +1093,7 @@ fun DatePickerField(
             onValueChange = onValueChange,
             placeholder = placeholder,
             modifier = modifier,
+
             trailingIcon = {
                 IconButton(onClick = { showDatePicker = true }) {
                     Icon(
