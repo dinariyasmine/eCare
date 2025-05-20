@@ -12,6 +12,7 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ['id']
 
 class LoginSerializer(serializers.Serializer):
+    
     username = serializers.CharField(max_length=255, required=True)
     password = serializers.CharField(max_length=255, required=True, write_only=True)
 
@@ -77,11 +78,13 @@ class DoctorRegisterSerializer(RegisterUserSerializer):
         # Validate clinic exists if provided
         clinic_id = attrs.get('clinic_id')
         if clinic_id:
-            try:
-                Clinic.objects.get(id=clinic_id)
-            except Clinic.DoesNotExist:
-                raise serializers.ValidationError({"clinic_id": "Clinic with this ID does not exist."})
-                
+            print(f"DEBUG: Looking for clinic_id={clinic_id}, type={type(clinic_id)}")
+        try:
+            clinic = Clinic.objects.get(id=clinic_id)
+            print(f"DEBUG: Found clinic {clinic}")
+        except Clinic.DoesNotExist:
+            print(f"DEBUG: Clinic with id={clinic_id} NOT FOUND")
+            raise serializers.ValidationError({"clinic_id": "Clinic with this ID does not exist."})
         return attrs
     
     def create(self, validated_data):
