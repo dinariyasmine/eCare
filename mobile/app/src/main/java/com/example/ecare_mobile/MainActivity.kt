@@ -1,140 +1,125 @@
+// mobile/app/src/main/java/com/example/ecare_mobile/MainActivity.kt
 package com.example.ecare_mobile
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Text
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.example.core.theme.ECareMobileTheme
-import com.example.pop_ups_confirmations_template.ui.popup.ConfirmationPopup
-import com.example.pop_ups_confirmations_template.ui.popup.PopupState
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.example.data.network.ApiClient
+import com.example.data.network.DeviceRegistration
+import com.example.data.repository.NotificationRepository
+import com.example.data.viewModel.NotificationViewModel
+import com.example.ecare_mobile.navigation.AppNavigationHandler
+import com.example.notifications.service.ECareFirebaseMessagingService
+import com.example.notifications.ui.NotificationsScreen
+import com.google.firebase.messaging.FirebaseMessaging
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            // Permission granted, proceed with notifications
+            getFirebaseToken()
+        } else {
+            // Permission denied
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        ECareFirebaseMessagingService.setNavigationHandler(AppNavigationHandler())
+
+        // Check and request notification permission
+        checkNotificationPermission()
+
         setContent {
-            ECareMobileTheme {
-                PopupDemoScreen()
+            MaterialTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    ECareApp()
+                }
+            }
+        }
+    }
+
+    private fun checkNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            when {
+                ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED -> {
+                    // Permission already granted
+                    getFirebaseToken()
+                }
+                shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS) -> {
+                    // Show rationale if needed
+                    requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                }
+                else -> {
+                    // Request permission
+                    requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                }
+            }
+        } else {
+            // Permission not required for Android < 13
+            getFirebaseToken()
+        }
+    }
+
+    private fun getFirebaseToken() {
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val token = task.result
+                // Send token to your server
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        val deviceInfo = DeviceRegistration(registration_id = token)
+                        ApiClient.apiService.registerDevice(deviceInfo)
+                    } catch (e: Exception) {
+                        // Handle error
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-fun PopupDemoScreen() {
-    // State to track which popup is currently showing
-    var currentPopup by remember { mutableStateOf<PopupType?>(null) }
+fun ECareApp() {
+    val navController = rememberNavController()
 
-    // Define popup states
-    val errorState = PopupState.createErrorState(
-        title = "XXXXXX Failed !",
-        description = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxxxxxxxxxxxx xxxxxxxxxx",
-        buttonText = "xxxxxxxxxx",
-        onAction = { currentPopup = PopupType.SUCCESS }
-    )
-
-    val successState = PopupState.createSuccessState(
-        title = "XXXXXX",
-        description = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-        buttonText = "xxxxxxxxxx",
-        onAction = { currentPopup = null }
-    )
-
-    Box(modifier = Modifier.fillMaxSize()) {
-        // Home screen with buttons to trigger popups
-        AnimatedVisibility(
-            visible = currentPopup == null,
-            enter = fadeIn(),
-            exit = fadeOut()
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = "Popup Demo",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 40.dp)
-                )
-
-                Button(
-                    onClick = { currentPopup = PopupType.ERROR },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEA4335)),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp)
-                        .padding(horizontal = 24.dp)
-                ) {
-                    Text(
-                        text = "Show Error Popup",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Button(
-                    onClick = { currentPopup = PopupType.SUCCESS },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4285F4)),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp)
-                        .padding(horizontal = 24.dp)
-                ) {
-                    Text(
-                        text = "Show Success Popup",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+    NavHost(navController = navController, startDestination = "home") {
+        composable("home") {
+            // Your home screen
+        }
+        composable("notifications") {
+            val notificationRepository = NotificationRepository(ApiClient.apiService)
+            val notificationViewModel: NotificationViewModel = viewModel {
+                NotificationViewModel(notificationRepository)
             }
+            NotificationsScreen(viewModel = notificationViewModel)
         }
-
-        // Error popup
-        AnimatedVisibility(
-            visible = currentPopup == PopupType.ERROR,
-            enter = fadeIn(),
-            exit = fadeOut()
-        ) {
-            ConfirmationPopup(
-                state = errorState,
-                onClose = { currentPopup = null }
-            )
-        }
-
-        // Success popup
-        AnimatedVisibility(
-            visible = currentPopup == PopupType.SUCCESS,
-            enter = fadeIn(),
-            exit = fadeOut()
-        ) {
-            ConfirmationPopup(
-                state = successState,
-                onClose = { currentPopup = null }
-            )
-        }
+        // Add other screens as needed
     }
-}
-
-// Enum to track which popup to show
-enum class PopupType {
-    ERROR,
-    SUCCESS
 }

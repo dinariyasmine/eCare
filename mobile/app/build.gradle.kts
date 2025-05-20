@@ -41,9 +41,30 @@ android {
 }
 
 dependencies {
-    implementation(project(":core"))
+    implementation(project(":notifications"))
     implementation(project(":data"))
+    implementation(project(":core"))
+
     implementation(project(":pop-ups-confirmations-template"))
+
+    // Firebase
+    implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
+    implementation("com.google.firebase:firebase-messaging-ktx")
+    implementation("com.google.firebase:firebase-analytics-ktx")
+
+    // Retrofit
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
+
+    // Coroutines
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+
+
+
+    implementation(libs.androidx.navigation.compose.android)
+    implementation(libs.firebase.messaging.ktx)
+    implementation(project(":notifications"))
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
     implementation("com.adamglin:phosphor-icon:1.0.0")
     implementation("androidx.compose.ui:ui")
