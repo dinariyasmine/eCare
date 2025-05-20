@@ -38,4 +38,4 @@ test_*.xml
 # Ignore the .env file which contains secrets (never commit this)
 .env
 
-backend/config/firebase-credentials.json
+config\firebase-credentials.json
