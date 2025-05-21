@@ -84,33 +84,10 @@ fun AppointmentNavGraph(
             )
         }
 
-        composable(
-            route = Screen.RescheduleAppointment.route,
-            arguments = listOf(
-                navArgument("appointmentId") { type = NavType.StringType }
-            )
-        ) { backStackEntry ->
-            val appointmentId = backStackEntry.arguments?.getString("appointmentId") ?: ""
-
-            // Get the appointment from the view model by ID and observe it as state
-            val appointment = appointmentViewModel.getAppointmentsByPatient(appointmentId.toInt())
-
-            if (appointment != null) {
-//                RescheduleAppointmentScreen(
-//                    appointment = appointment,
-//                    onBack = { navController.popBackStack() },
-//                    viewModel = appointmentViewModel,
-//                    availabilityViewModel = availabilityViewModel
-//                )
-            } else {
-                // Show loading or error state
-                Text("Loading appointment or appointment not found")
-                LaunchedEffect(Unit) {
-                    // If appointment not found, navigate back after a delay
-                    delay(1000)
-                    navController.popBackStack()
-                }
-            }
+        composable(Screen.ViewCompletedAppointment.route) { backStackEntry ->
+            val appointmentId = backStackEntry.arguments?.getString("appointmentId")?.toIntOrNull()
+            if (appointmentId != null) {
+                ViewCompletedAppointmentScreen(appointmentViewModel, availabilityViewModel, navController, appointmentId)            }
         }
 
         composable(
@@ -121,19 +98,6 @@ fun AppointmentNavGraph(
         ) { backStackEntry ->
             val appointmentId = backStackEntry.arguments?.getString("appointmentId") ?: ""
             ViewConfirmedAppointmentScreen(
-                viewModel = appointmentViewModel,
-                availabilityViewModel = availabilityViewModel
-            )
-        }
-
-        composable(
-            route = Screen.ViewCompletedAppointment.route,
-            arguments = listOf(
-                navArgument("appointmentId") { type = NavType.StringType }
-            )
-        ) { backStackEntry ->
-            val appointmentId = backStackEntry.arguments?.getString("appointmentId") ?: ""
-            ViewCompletedAppointmentScreen(
                 viewModel = appointmentViewModel,
                 availabilityViewModel = availabilityViewModel
             )

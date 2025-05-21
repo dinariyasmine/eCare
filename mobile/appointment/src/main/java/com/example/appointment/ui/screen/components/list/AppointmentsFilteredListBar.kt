@@ -69,8 +69,8 @@ fun AppointmentsFilteredListBar(
     patientId: Int,
     viewModel: AppointmentViewModel,
     onReschedule: (Appointment) -> Unit,
-    onViewCompleted: (Appointment) -> Unit,
-    onViewConfirmed: (Appointment) -> Unit
+    onViewCompleted: (Int) -> Unit,
+    onViewConfirmed: (Int) -> Unit
 ) {
     val context = LocalContext.current
     var selectedTab by remember { mutableStateOf("Current") }
@@ -190,8 +190,8 @@ fun AppointmentsFilteredListBar(
                             onViewAppointment = {
                                 // Navigate based on appointment status
                                 when (appointment.status) {
-                                    AppointmentStatus.COMPLETED -> onViewCompleted(appointment)
-                                    else -> onViewConfirmed(appointment)
+                                    AppointmentStatus.COMPLETED -> onViewCompleted(appointment.id)
+                                    else -> onViewConfirmed(appointment.id)
                                 }
                             }
                         )
@@ -238,12 +238,12 @@ fun AppointmentCard(
                     verticalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "Dr. ${appointment.doctor_id}",
+                        text = "Dr. ${appointment.doctor_name}",
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "Doctor ID: ${appointment.doctor_id}",
+                        text = "${appointment.doctor_specialty}",
                         style = MaterialTheme.typography.bodySmall,
                         color = Color(0xFF4B5563)
                     )

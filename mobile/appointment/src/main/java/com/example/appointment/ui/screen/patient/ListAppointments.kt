@@ -78,14 +78,14 @@ fun ListAppointmentsScreen(
             AppointmentsFilteredListBar(
                 patientId = patientId,
                 viewModel = viewModel,
-                onReschedule = { appointment ->
-                    navController.navigate(Screen.RescheduleAppointment.createRoute(appointment.id.toString()))
+                onReschedule = { id ->
+                    navController.navigate(Screen.RescheduleAppointment.createRoute(id.toString()))
                 },
-                onViewCompleted = { appointment ->
-                    navController.navigate(Screen.ViewCompletedAppointment.createRoute(appointment.id.toString()))
+                onViewCompleted = { id ->
+                    navController.navigate(Screen.ViewCompletedAppointment.createRoute(id.toString()))
                 },
-                onViewConfirmed = { appointment ->
-                    navController.navigate(Screen.ViewConfirmedAppointment.createRoute(appointment.id.toString()))
+                onViewConfirmed = { id ->
+                    navController.navigate(Screen.ViewConfirmedAppointment.createRoute(id.toString()))
                 }
             )
         }

@@ -24,6 +24,17 @@ class AppointmentViewSet(viewsets.ModelViewSet):
     queryset = Appointment.objects.all()
     serializer_class = AppointmentSerializer
 
+    def retrieve(self, request, *args, **kwargs):
+        appointment = self.get_object()
+        serializer_data = self.get_serializer(appointment).data
+
+        # Add doctor's name and specialty
+        doctor = appointment.doctor
+        serializer_data['doctor_name'] = doctor.name if hasattr(doctor, 'name') else "Charollette Baker"
+        serializer_data['doctor_specialty'] = doctor.specialty if hasattr(doctor, 'specialty') else None
+
+        return Response(serializer_data, status=status.HTTP_200_OK)
+
     def create(self, request):
         data = request.data
         doctor = data.get('doctor')
@@ -85,10 +96,19 @@ class AppointmentViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='patient/(?P<pk>[^/.]+)')
     def appoints_by_patient(self, request, pk=None):
-        appointments = Appointment.objects.filter(patient_id=pk)
-        serializer = self.get_serializer(instance=appointments, many=True)
+        appointments = Appointment.objects.filter(patient_id=pk).select_related('doctor')
+        serializer_data = []
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        for appointment in appointments:
+            # Serialize each appointment individually
+            appointment_data = self.get_serializer(appointment).data
+            # Add doctor name and specialty to the response
+            doctor = appointment.doctor
+            appointment_data['doctor_name'] = doctor.name if hasattr(doctor, 'name') else "Charollette Baker"
+            appointment_data['doctor_specialty'] = doctor.specialty if hasattr(doctor, 'specialty') else None
+            serializer_data.append(appointment_data)
+
+        return Response(serializer_data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'])
     def validate_appointment(self, request):

@@ -21,6 +21,9 @@ interface AppointmentEndpoint {
     @GET("appointments/patient/{id}/")
     suspend fun getAppointsByPatient(@Path("id") id: Int): List<AppointmentDto>
 
+    @GET("appointments/{id}/")
+    suspend fun getAppointById(@Path("id") id: Int): AppointmentDto
+
     @POST("appointments/")
     suspend fun addAppointment(@Body data: AppointmentRequest)
 

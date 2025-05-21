@@ -209,8 +209,7 @@ fun DoctorAppointmentCard(
                     verticalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        //${appointment.patient_name}
-                        text = "Dr. ${appointment.patient_id}",
+                        text = "Dr. ${appointment.name}",
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Bold
                     )

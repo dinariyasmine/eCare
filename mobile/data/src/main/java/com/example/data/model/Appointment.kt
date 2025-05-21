@@ -21,7 +21,9 @@ data class AppointmentDto(
     val age: String,
     val problem_description: String,
     val status: String,
-    val qr_Code: String
+    val qr_Code: String,
+    val doctor_name: String?,
+    val doctor_specialty: String?
 )
 
 @Entity
@@ -36,7 +38,9 @@ data class Appointment(
     val age: String,
     val problem_description: String,
     val status: AppointmentStatus,
-    val QR_code: String
+    val QR_code: String,
+    val doctor_name: String?,
+    val doctor_specialty: String?
 )
 
 enum class AppointmentStatus {

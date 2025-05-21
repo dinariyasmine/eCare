@@ -31,6 +31,9 @@ class AppointmentViewModel(
     private val _operationSuccess = MutableLiveData<Boolean>()
     val operationSuccess: LiveData<Boolean> get() = _operationSuccess
 
+    private val _currentAppointment = MutableLiveData<Appointment>()
+    val currentAppointment: LiveData<Appointment> get() = _currentAppointment
+
     fun getAppointmentsByDoctor(doctorId: Int) {
         _isLoading.value = true
         viewModelScope.launch {
@@ -90,6 +93,22 @@ class AppointmentViewModel(
             } catch (e: Exception) {
                 Log.e("AppointmentViewModel", "Error fetching patient's appointments", e)
                 _error.value = "Failed to fetch patient's appointments: ${e.message}"
+                _operationSuccess.value = false
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun getAppointmentById(appointmentId: Int) {
+        _isLoading.value = true
+        viewModelScope.launch {
+            try {
+                val appointment = repository.getAppointmentById(appointmentId)
+                _currentAppointment.value = appointment
+                _operationSuccess.value = true
+            } catch (e: Exception) {
+                _error.value = "Failed to fetch appointment: ${e.message}"
                 _operationSuccess.value = false
             } finally {
                 _isLoading.value = false

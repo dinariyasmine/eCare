@@ -40,7 +40,9 @@ class AppointmentRepository(
             age = dto.age,
             problem_description = dto.problem_description,
             status = AppointmentStatus.valueOf(dto.status.uppercase()),
-            QR_code = dto.qr_Code
+            QR_code = dto.qr_Code,
+            doctor_name = dto.doctor_name?:"",
+            doctor_specialty = dto.doctor_specialty?:""
         )
     }
 
@@ -106,7 +108,23 @@ class AppointmentRepository(
         }
     }
 
-    // Creates an appointment (handles API + local DB)
+    // Fetches appointment by id (converts DTO to Appointment)
+    @RequiresApi(Build.VERSION_CODES.O)
+    suspend fun getAppointmentById(id: Int): Appointment {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = appointmentEndpoint.getAppointById(id)
+                val appointment = convertDtoToAppointment(response)
+                appointment
+            } catch (e: Exception) {
+                // Fallback to local DB if API fails
+                val localAppointment = appointmentDao.getAppointmentById(id)
+                localAppointment
+            }
+        }
+    }
+
+    // Creates an appointment
     suspend fun createAppointment(appointment: AppointmentRequest) {
         withContext(Dispatchers.IO) {
             try {
