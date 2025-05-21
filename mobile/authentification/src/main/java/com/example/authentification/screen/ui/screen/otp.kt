@@ -385,7 +385,7 @@ fun OTPScreen(
             // Call the API to verify the OTP
             authViewModel.verifyOtp(email, completeOtp)
 
-            // Add a small delay to avoid rapid firing
+            // Add a small delay
             delay(1000)
             isVerifying = false
         }

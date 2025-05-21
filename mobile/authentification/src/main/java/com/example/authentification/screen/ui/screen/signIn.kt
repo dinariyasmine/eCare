@@ -89,9 +89,7 @@ import com.example.data.util.TokenManager
 import com.example.data.viewModel.AuthViewModel
 import com.google.android.gms.auth.api.Auth
 import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+
 
 @Composable
 fun LoginScreen(googleAuthHelper: GoogleAuthHelper, navController: NavController) {
@@ -99,7 +97,7 @@ fun LoginScreen(googleAuthHelper: GoogleAuthHelper, navController: NavController
     val authViewModel: AuthViewModel = viewModel(
         factory = AuthViewModel.Companion.Factory(authRepository)
     )
-    val googleAuthRepository = remember { GoogleAuthRepository() }
+
     // States for form fields
     var username by remember { mutableStateOf("") } // Changed from email to username
     var password by remember { mutableStateOf("") }
@@ -149,7 +147,7 @@ fun LoginScreen(googleAuthHelper: GoogleAuthHelper, navController: NavController
 
             Toast.makeText(context, "Login successful!", Toast.LENGTH_SHORT).show()
 
-            // Navigate to main screen or dashboard
+            // Navigate to home
             navController.navigate(Routes.HOME) {
                 popUpTo(Routes.SIGN_IN) { inclusive = true }
             }
@@ -183,11 +181,9 @@ fun LoginScreen(googleAuthHelper: GoogleAuthHelper, navController: NavController
                 Log.d("GoogleSignIn", "ID Token (first 20 chars): ${account.idToken?.take(20)}")
 
                 account.idToken?.let { idToken ->
-                    // Use your ViewModel to handle authentication
+                    //  handle authentication
                     authViewModel.authenticateWithGoogle(idToken)
 
-                    // Observe authentication result in your composable
-                    // You should already have a collector for loginState and errorState
                 } ?: run {
                     Log.e("GoogleSignIn", "ID token is null")
                     Toast.makeText(context, "Failed to get ID token", Toast.LENGTH_SHORT).show()
@@ -205,7 +201,7 @@ fun LoginScreen(googleAuthHelper: GoogleAuthHelper, navController: NavController
     }
 
 
-    // Background with glass effect
+    // Background with glass effect -redo
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -289,7 +285,7 @@ fun LoginScreen(googleAuthHelper: GoogleAuthHelper, navController: NavController
                 )
             }
 
-            // Main Content Card with improved Glassmorphism effect
+            // Main Content Card
             Card(
                 modifier = Modifier
                     .fillMaxWidth()

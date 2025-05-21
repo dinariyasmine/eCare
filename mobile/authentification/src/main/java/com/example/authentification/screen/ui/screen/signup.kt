@@ -106,7 +106,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes
 
 @Composable
 fun SignUpScreen(googleAuthHelper: GoogleAuthHelper, navController: NavController) {
-    /// Get ClinicViewModel instance
+
     val clinicViewModel: ClinicViewModel = viewModel(
         factory = ClinicViewModel.Factory(ClinicRepository())
     )
@@ -254,7 +254,7 @@ fun SignUpScreen(googleAuthHelper: GoogleAuthHelper, navController: NavControlle
         }
     }
 
-// Add a separate LaunchedEffect for error state
+// error state
     LaunchedEffect(key1 = Unit) {
         authViewModel.errorState.collect { errorState ->
             if (errorState != null && isLoading) {
@@ -299,7 +299,7 @@ fun SignUpScreen(googleAuthHelper: GoogleAuthHelper, navController: NavControlle
                     Log.d("SignupScreen", "User role saved: $it")
                 }
 
-                // If this was a doctor registration and we have social media links
+                // If this was a doctor registration and we have social media links(redo it)
                 if (userType == "Doctor" && (linkedin.isNotBlank() || instagram.isNotBlank() || socialMedia3.isNotBlank())) {
                     val doctorId = reg.user?.id
 
@@ -455,8 +455,8 @@ fun SignUpScreen(googleAuthHelper: GoogleAuthHelper, navController: NavControlle
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        Primary100, // Color(0xFFE3F2FD)
-                        Primary50   // Color(0xFFE8F5FF)
+                        Primary100,
+                        Primary50
                     )
                 )
             )
@@ -789,7 +789,7 @@ fun SignUpScreen(googleAuthHelper: GoogleAuthHelper, navController: NavControlle
                                     if (!isClinicDropdownExpanded) {
                                         isClinicDropdownExpanded = true
                                     }
-                                    // Add debug output
+
                                     Log.d("SignUpScreen", "Query changed to: '$it'")
                                 },
                                 placeholder = "Select Clinic",
@@ -820,7 +820,7 @@ fun SignUpScreen(googleAuthHelper: GoogleAuthHelper, navController: NavControlle
                                     .background(White)
                             ) {
                                 if (loading) {
-                                    // Show loading indicator in dropdown
+
                                     Box(
                                         modifier = Modifier
                                             .fillMaxWidth()

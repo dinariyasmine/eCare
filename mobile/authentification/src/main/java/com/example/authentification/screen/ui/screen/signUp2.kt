@@ -65,6 +65,11 @@ import com.example.data.model.RegistrationRequest
 import com.example.data.viewModel.AuthViewModel
 import com.example.splashscreen.R
 
+
+//THIS PAGE IS NOT USED
+
+
+
 @Composable
 fun SignUp2Screen(googleAuthHelper: GoogleAuthHelper, navController: NavController, authViewModel: AuthViewModel) {
     // Create repository and ViewModel

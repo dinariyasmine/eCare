@@ -19,3 +19,4 @@ fun HomePage(navController: NavController) {
         Text(text = "Hello", fontSize = 24.sp)
     }
 }
+//just for navigation test

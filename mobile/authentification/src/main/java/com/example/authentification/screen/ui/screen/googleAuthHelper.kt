@@ -9,8 +9,7 @@ class GoogleAuthHelper(private val activity: Activity) {
     val googleSignInClient: GoogleSignInClient
 
     companion object {
-        // Make sure this matches your Django GOOGLE_OAUTH2_CLIENT_ID
-        // Must be the Web client ID, not the Android client ID
+
         const val WEB_CLIENT_ID = "453325312850-rr9fsgb9b85tq6trvmgj903okutdc48j.apps.googleusercontent.com"
     }
 

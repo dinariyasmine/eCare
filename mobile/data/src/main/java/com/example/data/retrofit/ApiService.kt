@@ -12,6 +12,7 @@ import com.example.data.model.PasswordResetRequestModel
 import com.example.data.model.RegistrationRequest
 import com.example.data.model.RegistrationResponse
 import com.example.data.model.SocialMedia
+import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -53,11 +54,12 @@ interface ApiService {
     suspend fun searchClinicsByAddress(query: String): List<Clinic>
 
     @POST("api/social-media/")
-    suspend fun createSocialMedia(@Body socialMedia: SocialMedia): Response<SocialMedia>
+    suspend fun createSocialMedia(@Body socialMedia: SocialMedia): Response<ResponseBody>
 
     @GET("api/doctors/user/{userId}/")
-    suspend fun getDoctorByUserId(@Path("userId") userId: Int): Response<Doctor>
+    suspend fun getDoctorByUserId(@Path("userId") userId: Int): Response<ResponseBody>
 
     @GET("api/doctors/{doctorId}/")
     suspend fun getDoctorById(@Path("doctorId") doctorId: Int): Response<Doctor>
+
 }

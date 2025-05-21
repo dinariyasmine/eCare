@@ -7,6 +7,8 @@ import com.example.data.network.UpdateDoctorRequest
 import com.example.data.retrofit.RetrofitInstance
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.json.JSONException
+import org.json.JSONObject
 
 //class DoctorRepository {
 //
@@ -71,7 +73,7 @@ import kotlinx.coroutines.withContext
 //
 
     class DoctorRepository {
-        suspend fun getDoctorByUserId(userId: Int): Doctor? = withContext(Dispatchers.IO) {
+        suspend fun getDoctorByUserId(userId: Int): Int? = withContext(Dispatchers.IO) {
             try {
                 Log.d("DoctorRepository", "Getting doctor by user ID: $userId")
 
@@ -81,9 +83,26 @@ import kotlinx.coroutines.withContext
                 Log.d("API_RESPONSE", "Response code: ${response.code()}")
 
                 if (response.isSuccessful && response.body() != null) {
-                    val doctor = response.body()
-                    Log.d("DoctorRepository", "Found doctor: $doctor")
-                    return@withContext doctor
+                    // Extract the doctor ID from the response body
+                    val responseBody = response.body()?.string()
+                    Log.d("DoctorRepository", "Response body: $responseBody")
+
+                    // Parse the JSON to get the doctor ID
+                    try {
+                        val jsonObject = JSONObject(responseBody ?: "")
+                        val doctorId = jsonObject.optInt("id", -1)
+
+                        if (doctorId != -1) {
+                            Log.d("DoctorRepository", "Found doctor ID: $doctorId for user ID: $userId")
+                            return@withContext doctorId
+                        } else {
+                            Log.e("DoctorRepository", "Doctor ID not found in response")
+                            return@withContext null
+                        }
+                    } catch (e: JSONException) {
+                        Log.e("DoctorRepository", "Error parsing JSON response", e)
+                        return@withContext null
+                    }
                 } else {
                     Log.e("DoctorRepository", "Failed to get doctor: ${response.errorBody()?.string()}")
                     return@withContext null
@@ -113,8 +132,8 @@ import kotlinx.coroutines.withContext
             // Make an API call to get the doctor details by ID
             val response = ApiClient.apiService.getDoctorDetailsById(doctorId)
 
-            // Assuming the response contains a "doctor" field with the doctor's details
-            val doctorData = response.doctor // 'doctor' instead of 'doctors' based on your response format
+
+            val doctorData = response.doctor
 
             // Return the Doctor object from the response
             return doctorData
