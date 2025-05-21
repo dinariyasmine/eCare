@@ -10,7 +10,6 @@ import com.example.core.theme.ECareMobileTheme
 import com.example.data.model.Appointment
 import com.example.data.viewModel.AppointmentViewModel
 import com.example.data.viewModel.AvailabilityViewModel
-import com.example.doctorlisting.ui.component.ScheduleCard
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -21,9 +20,6 @@ class MainActivity : ComponentActivity() {
                 val app = applicationContext as MyApplication
                 val appointmentModel = AppointmentViewModel(app.appointmentRepository)
                 val availabilityViewModel = AvailabilityViewModel(app.availabilityRepository, 11)
-                ListAppointmentsScreen(
-                    viewModel = appointmentModel,
-                )
                 //NewAppointmentScreen()
                // ViewConfirmedAppointmentScreen(appointmentModel, availabilityViewModel)
               //  ScheduleCard()

@@ -29,7 +29,6 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun ListAvailabilitiesScreen(availabilityViewModel: AvailabilityViewModel) {
     val context = LocalContext.current

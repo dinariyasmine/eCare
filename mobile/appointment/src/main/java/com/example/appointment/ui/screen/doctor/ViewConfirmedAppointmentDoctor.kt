@@ -2,9 +2,7 @@
 
 package com.example.appointment.ui.screen.doctor
 
-import android.os.Build
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -48,14 +46,12 @@ import androidx.compose.ui.draw.alpha
 import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Bold
 import com.adamglin.phosphoricons.bold.Article
-import com.adamglin.phosphoricons.bold.FilePdf
 import com.adamglin.phosphoricons.bold.QrCode
 import com.example.appointment.ui.screen.components.appoint.DatePicker
 import com.example.appointment.ui.screen.components.appoint.PatientForm
 import com.example.appointment.ui.screen.components.appoint.PatientFormState
 import com.example.appointment.ui.screen.components.appoint.TimeSlotPicker
 import com.example.core.theme.ECareMobileTheme
-import com.example.data.model.AppointmentStatus
 import com.example.data.viewModel.AppointmentViewModel
 import com.example.data.viewModel.AvailabilityViewModel
 import java.time.LocalDate
@@ -63,7 +59,7 @@ import java.time.ZoneId
 import java.util.Date
 
 @Composable
-fun ViewConfirmedAppointmentScreen(viewModel: AppointmentViewModel, availabilityViewModel: AvailabilityViewModel) {
+fun ViewConfirmedAppointmentDoctorScreen(viewModel: AppointmentViewModel, availabilityViewModel: AvailabilityViewModel) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
 

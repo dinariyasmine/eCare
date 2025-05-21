@@ -8,8 +8,10 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.example.appointment.ui.screen.doctor.ListAppointmentsScreen
+import com.example.appointment.ui.screen.doctor.ListAppointmentsDoctorScreen
 import com.example.appointment.ui.screen.doctor.ListAvailabilitiesScreen
+import com.example.appointment.ui.screen.doctor.ViewCompletedAppointmentDoctorScreen
+import com.example.appointment.ui.screen.doctor.ViewConfirmedAppointmentDoctorScreen
 import com.example.appointment.ui.screen.patient.ListAppointmentsScreen
 import com.example.appointment.ui.screen.patient.NewAppointmentScreen
 //import com.example.appointment.ui.screen.patient.RescheduleAppointmentScreen
@@ -22,6 +24,12 @@ import kotlinx.coroutines.delay
 sealed class Screen(val route: String) {
     object DoctorAppointments : Screen("doctor/appointments")
     object DoctorAvailabilities : Screen("doctor/availabilities")
+    object DoctorConfirmedAppointment : Screen("doctor/view-confirmed/{appointmentId}") {
+        fun createRoute(appointmentId: String) = "doctor/view-confirmed/$appointmentId"
+    }
+    object DoctorCompletedAppointment : Screen("doctor/view-completed/{appointmentId}") {
+        fun createRoute(appointmentId: String) = "doctor/view-completed/$appointmentId"
+    }
     object NewAppointment : Screen("patient/new-appointment")
     object ListAppointments : Screen("patient/appointments")
     object RescheduleAppointment : Screen("patient/reschedule/{appointmentId}") {
@@ -47,11 +55,19 @@ fun AppointmentNavGraph(
         startDestination = startDestination
     ) {
         composable(Screen.DoctorAppointments.route) {
-            ListAppointmentsScreen(viewModel = appointmentViewModel)
+            ListAppointmentsDoctorScreen(appointmentViewModel, navController)
         }
 
         composable(Screen.DoctorAvailabilities.route) {
             ListAvailabilitiesScreen(availabilityViewModel = availabilityViewModel)
+        }
+
+        composable(Screen.DoctorCompletedAppointment.route) {
+            ViewCompletedAppointmentDoctorScreen(appointmentViewModel, availabilityViewModel)
+        }
+
+        composable(Screen.DoctorCompletedAppointment.route) {
+            ViewConfirmedAppointmentDoctorScreen(appointmentViewModel, availabilityViewModel)
         }
 
         composable(Screen.NewAppointment.route) {

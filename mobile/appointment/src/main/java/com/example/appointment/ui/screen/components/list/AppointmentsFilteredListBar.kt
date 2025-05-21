@@ -64,7 +64,6 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AppointmentsFilteredListBar(
     patientId: Int,
@@ -203,7 +202,6 @@ fun AppointmentsFilteredListBar(
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AppointmentCard(
     appointment: Appointment,

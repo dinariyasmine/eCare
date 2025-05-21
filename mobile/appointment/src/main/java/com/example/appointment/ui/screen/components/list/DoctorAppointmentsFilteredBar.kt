@@ -52,14 +52,19 @@ import com.adamglin.phosphoricons.Light
 import com.example.data.viewModel.AppointmentViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.adamglin.phosphoricons.bold.Article
+import com.example.data.model.Appointment
 import com.example.data.model.AppointmentStatus
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun DoctorAppointmentsFilteredBar(doctorId: Int, viewModel: AppointmentViewModel) {
+fun DoctorAppointmentsFilteredBar(
+    doctorId: Int,
+    viewModel: AppointmentViewModel,
+    onViewCompleted: (Appointment) -> Unit,
+    onViewConfirmed: (Appointment) -> Unit
+) {
     val context = LocalContext.current
     val selectedTab = remember { mutableStateOf("Current") }
     val interactionSource = remember { MutableInteractionSource() }
@@ -155,6 +160,13 @@ fun DoctorAppointmentsFilteredBar(doctorId: Int, viewModel: AppointmentViewModel
                         },
                         onReschedule = {
                             // Handle reschedule
+                        },
+                        onViewAppointment = {
+                            // Navigate based on appointment status
+                            when (appointment.status) {
+                                AppointmentStatus.COMPLETED -> onViewCompleted(appointment)
+                                else -> onViewConfirmed(appointment)
+                            }
                         }
                     )
                 }
@@ -163,12 +175,12 @@ fun DoctorAppointmentsFilteredBar(doctorId: Int, viewModel: AppointmentViewModel
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun DoctorAppointmentCard(
     appointment: com.example.data.model.Appointment,
     onCancel: () -> Unit,
-    onReschedule: () -> Unit
+    onReschedule: () -> Unit,
+    onViewAppointment: () -> Unit
 ) {
     val formatter = DateTimeFormatter.ofPattern("EEEE, MMM d", Locale.getDefault())
     val interactionSource = remember { MutableInteractionSource() }
@@ -176,7 +188,8 @@ fun DoctorAppointmentCard(
     Card(
         modifier = Modifier
             .fillMaxSize()
-            .padding(10.dp),
+            .padding(10.dp)
+            .clickable(onClick = onViewAppointment),
         elevation = CardDefaults.cardElevation(2.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color.White

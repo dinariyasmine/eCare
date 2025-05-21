@@ -2,9 +2,7 @@
 
 package com.example.appointment.ui.screen.doctor
 
-import android.os.Build
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -61,7 +59,7 @@ import java.time.ZoneId
 import java.util.Date
 
 @Composable
-fun ViewCompletedAppointmentScreen(viewModel: AppointmentViewModel, availabilityViewModel: AvailabilityViewModel) {
+fun ViewCompletedAppointmentDoctorScreen(viewModel: AppointmentViewModel, availabilityViewModel: AvailabilityViewModel) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
 
