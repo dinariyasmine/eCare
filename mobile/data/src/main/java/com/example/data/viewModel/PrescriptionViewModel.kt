@@ -1,114 +1,63 @@
 package com.example.data.viewModel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.data.model.Prescription
 import com.example.data.repository.PrescriptionRepository
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.*
 
-class PrescriptionViewModel(private val prescriptionRepository: PrescriptionRepository) : ViewModel() {
+class PrescriptionViewModel(
+    private val repository: PrescriptionRepository
+) : ViewModel() {
 
     private val _prescriptions = MutableStateFlow<List<Prescription>>(emptyList())
-    val prescriptions: StateFlow<List<Prescription>> get() = _prescriptions
+    val prescriptions: StateFlow<List<Prescription>> = _prescriptions
 
     private val _selectedPrescription = MutableStateFlow<Prescription?>(null)
-    val selectedPrescription: StateFlow<Prescription?> get() = _selectedPrescription
+    val selectedPrescription: StateFlow<Prescription?> = _selectedPrescription
 
-    private val _loading = MutableStateFlow(false)
-    val loading: StateFlow<Boolean> get() = _loading
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading
 
     private val _error = MutableStateFlow<String?>(null)
-    val error: StateFlow<String?> get() = _error
+    val error: StateFlow<String?> = _error
 
-    private val sdf = SimpleDateFormat("yyyy-MM-dd")
-
-    init {
-        fetchAllPrescriptions()
-    }
-
-    fun fetchAllPrescriptions() {
+    fun fetchPrescriptions() {
         viewModelScope.launch {
-            _loading.value = true
+            _isLoading.value = true
             _error.value = null
-
             try {
-                _prescriptions.value = prescriptionRepository.getAllPrescriptions()
+                val result = repository.getPrescriptions()
+                _prescriptions.value = result
+                Log.d("PrescriptionViewModel", "Fetched ${result.size} prescriptions")
             } catch (e: Exception) {
-                _error.value = "Failed to load prescriptions: ${e.message}"
+                Log.e("PrescriptionViewModel", "Error fetching prescriptions: ${e.message}", e)
+                _error.value = e.message
             } finally {
-                _loading.value = false
+                _isLoading.value = false
             }
         }
     }
 
-    fun getPrescriptionById(id: Int) {
+    fun fetchPrescriptionById(id: Int) {
         viewModelScope.launch {
-            _loading.value = true
+            _isLoading.value = true
             _error.value = null
-
             try {
-                val prescription = prescriptionRepository.getPrescriptionById(id)
-                if (prescription != null) {
-                    _selectedPrescription.value = prescription
-                } else {
-                    _error.value = "Prescription not found"
-                }
+                Log.d("PrescriptionViewModel", "Fetching prescription with ID: $id")
+                val result = repository.getPrescriptionById(id)
+                _selectedPrescription.value = result
+                Log.d("PrescriptionViewModel", "Prescription fetched successfully")
             } catch (e: Exception) {
-                _error.value = "Failed to get prescription: ${e.message}"
+                Log.e("PrescriptionViewModel", "Error fetching prescription: ${e.message}", e)
+                _error.value = e.message
             } finally {
-                _loading.value = false
-            }
-        }
-    }
-
-    fun getPrescriptionsByPatientId(patientId: Int) {
-        viewModelScope.launch {
-            _loading.value = true
-            _error.value = null
-
-            try {
-                _prescriptions.value = prescriptionRepository.getPrescriptionsByPatientId(patientId)
-            } catch (e: Exception) {
-                _error.value = "Failed to load patient prescriptions: ${e.message}"
-            } finally {
-                _loading.value = false
-            }
-        }
-    }
-
-    fun getPrescriptionsByDoctorId(doctorId: Int) {
-        viewModelScope.launch {
-            _loading.value = true
-            _error.value = null
-
-            try {
-                _prescriptions.value = prescriptionRepository.getPrescriptionsByDoctorId(doctorId)
-            } catch (e: Exception) {
-                _error.value = "Failed to load doctor prescriptions: ${e.message}"
-            } finally {
-                _loading.value = false
-            }
-        }
-    }
-
-    fun getPrescriptionsByDate(dateString: String) {
-        viewModelScope.launch {
-            try {
-                val date = sdf.parse(dateString)
-                if (date != null) {
-                    _prescriptions.value = prescriptionRepository.getPrescriptionsByDate(date)
-                } else {
-                    _error.value = "Invalid date format"
-                }
-            } catch (e: Exception) {
-                _error.value = "Failed to load prescriptions by date: ${e.message}"
-            } finally {
-                _loading.value = false
+                _isLoading.value = false
             }
         }
     }
@@ -116,110 +65,77 @@ class PrescriptionViewModel(private val prescriptionRepository: PrescriptionRepo
     fun createPrescription(
         patientId: Int,
         doctorId: Int,
-        dateString: String
+        date: String,
+        notes: String,
+        onSuccess: (Int) -> Unit
     ) {
         viewModelScope.launch {
-            _loading.value = true
+            _isLoading.value = true
             _error.value = null
-
             try {
-                val date = sdf.parse(dateString)
-                if (date == null) {
-                    _error.value = "Invalid date format"
-                    _loading.value = false
-                    return@launch
-                }
+                Log.d("PrescriptionViewModel", "Creating prescription for patient $patientId with doctor $doctorId")
+                val prescriptionId = repository.createPrescription(patientId, doctorId, date, notes)
+                delay(10000)
+                Log.d("PrescriptionViewModel", "Prescription created with ID: $prescriptionId")
+                onSuccess(prescriptionId)
+            } catch (e: Exception) {
+                Log.e("PrescriptionViewModel", "Error creating prescription: ${e.message}", e)
+                _error.value = e.message
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
 
-                // Generate a new ID (in a real app, this would be handled by the backend)
-                val newId = (_prescriptions.value.maxOfOrNull { it.id } ?: 0) + 1
 
-                val newPrescription = Prescription(
-                    id = newId,
-                    patient_id = patientId,
-                    doctor_id = doctorId,
-                    date = date
+    fun addMedicationToPrescription(
+        prescriptionId: Int,
+        medicationId: Int,
+        dosage: String,
+        duration: String,
+        frequency: String,
+        instructions: String
+    ) {
+        viewModelScope.launch {
+            try {
+                Log.d("PrescriptionViewModel", "Adding medication $medicationId to prescription $prescriptionId")
+                repository.addMedicationToPrescription(
+                    prescriptionId, medicationId, dosage, duration, frequency, instructions
                 )
-
-                val success = prescriptionRepository.createPrescription(newPrescription)
-                if (success) {
-                    fetchAllPrescriptions() // Refresh the list
-                } else {
-                    _error.value =
-                        "Failed to create prescription: Prescription with the same ID already exists"
-                }
+                Log.d("PrescriptionViewModel", "Medication added successfully")
             } catch (e: Exception) {
-                _error.value = "Failed to create prescription: ${e.message}"
-            } finally {
-                _loading.value = false
+                Log.e("PrescriptionViewModel", "Error adding medication: ${e.message}", e)
+                // Handle error silently
             }
         }
     }
 
-    fun updatePrescription(prescription: Prescription) {
+    fun generatePrescriptionPdf(
+        prescriptionId: Int,
+        onComplete: ((String?) -> Unit)? = null
+    ) {
         viewModelScope.launch {
-            _loading.value = true
-            _error.value = null
-
             try {
-                val success = prescriptionRepository.updatePrescription(prescription)
-                if (success) {
-                    fetchAllPrescriptions() // Refresh the list
-                    if (_selectedPrescription.value?.id == prescription.id) {
-                        _selectedPrescription.value =
-                            prescription // Update selected prescription if it was selected
-                    }
-                } else {
-                    _error.value = "Failed to update prescription: Prescription not found"
-                }
+                Log.d("PrescriptionViewModel", "Generating PDF for prescription $prescriptionId")
+                val pdfUrl = repository.generatePrescriptionPdf(prescriptionId)
+                Log.d("PrescriptionViewModel", "PDF generated: $pdfUrl")
+                onComplete?.invoke(pdfUrl)
             } catch (e: Exception) {
-                _error.value = "Failed to update prescription: ${e.message}"
-            } finally {
-                _loading.value = false
+                Log.e("PrescriptionViewModel", "Error generating PDF: ${e.message}", e)
+                onComplete?.invoke(null)
             }
         }
     }
 
-    fun deletePrescription(id: Int) {
-        viewModelScope.launch {
-            _loading.value = true
-            _error.value = null
-
-            try {
-                val success = prescriptionRepository.deletePrescription(id)
-                if (success) {
-                    fetchAllPrescriptions() // Refresh the list
-                    if (_selectedPrescription.value?.id == id) {
-                        _selectedPrescription.value =
-                            null // Clear selected prescription if it was deleted
-                    }
-                } else {
-                    _error.value = "Failed to delete prescription: Prescription not found"
+    companion object {
+        class Factory(private val repository: PrescriptionRepository) : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                if (modelClass.isAssignableFrom(PrescriptionViewModel::class.java)) {
+                    return PrescriptionViewModel(repository) as T
                 }
-            } catch (e: Exception) {
-                _error.value = "Failed to delete prescription: ${e.message}"
-            } finally {
-                _loading.value = false
+                throw IllegalArgumentException("Unknown ViewModel class")
             }
-        }
-    }
-
-    fun clearError() {
-        _error.value = null
-    }
-
-    fun clearSelectedPrescription() {
-        _selectedPrescription.value = null
-    }
-
-    // Factory class to provide PrescriptionRepository dependency
-    class Factory(private val prescriptionRepository: PrescriptionRepository) :
-        ViewModelProvider.Factory {
-        @Suppress("UNCHECKED_CAST")
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            if (modelClass.isAssignableFrom(PrescriptionViewModel::class.java)) {
-                return PrescriptionViewModel(prescriptionRepository) as T
-            }
-            throw IllegalArgumentException("Unknown ViewModel class")
         }
     }
 }

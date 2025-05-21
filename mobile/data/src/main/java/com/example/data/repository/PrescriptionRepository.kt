@@ -1,86 +1,98 @@
 package com.example.data.repository
 
-import android.annotation.SuppressLint
+import android.util.Log
 import com.example.data.model.Prescription
+import com.example.data.network.ApiService
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
-import java.text.SimpleDateFormat
-import java.util.*
 
-class PrescriptionRepository {
-    @SuppressLint("SimpleDateFormat")
-    private val sdf = SimpleDateFormat("yyyy-MM-dd")
+class PrescriptionRepository(private val apiService: ApiService) {
 
-    // Simulating a database call with a delay
-    private suspend fun simulateDatabaseCall(): List<Prescription> = withContext(Dispatchers.IO) {
-        // Simulate network delay
-        delay(1000)
-        return@withContext listOf(
-            Prescription(
-                id = 1,
-                patient_id = 1,
-                doctor_id = 101,
-                date = sdf.parse("2025-04-10") as Date
-            ),
-            Prescription(
-                id = 2,
-                patient_id = 2,
-                doctor_id = 102,
-                date = sdf.parse("2025-04-11") as Date
-            ),
-            Prescription(
-                id = 3,
-                patient_id = 1,
-                doctor_id = 103,
-                date = sdf.parse("2025-04-12") as Date
+    suspend fun getPrescriptions(): List<Prescription> = withContext(Dispatchers.IO) {
+        try {
+            Log.d("PrescriptionRepository", "Fetching all prescriptions")
+            val prescriptions = apiService.getPrescriptions()
+            Log.d("PrescriptionRepository", "Fetched ${prescriptions.size} prescriptions")
+            prescriptions
+        } catch (e: Exception) {
+            Log.e("PrescriptionRepository", "Error fetching prescriptions: ${e.message}", e)
+            throw e
+        }
+    }
+
+    suspend fun getPrescriptionById(id: Int): Prescription = withContext(Dispatchers.IO) {
+        try {
+            Log.d("PrescriptionRepository", "Fetching prescription with ID: $id")
+            val prescription = apiService.getPrescriptionById(id)
+            Log.d("PrescriptionRepository", "Prescription fetched successfully")
+            prescription
+        } catch (e: Exception) {
+            Log.e("PrescriptionRepository", "Error fetching prescription: ${e.message}", e)
+            throw e
+        }
+    }
+
+    suspend fun createPrescription(patientId: Int,doctorId: Int, date: String, notes: String): Int = withContext(Dispatchers.IO) {
+        try {
+            Log.d("PrescriptionRepository", "Creating prescription with data: patient=$patientId, date=$date")
+            val data = mapOf(
+                "patient" to patientId,
+                "doctor" to doctorId,
+                "date" to date,
+                "notes" to notes
             )
-        )
+            val prescription = apiService.createPrescription(data)
+            Log.d("PrescriptionRepository", "Prescription created with ID: ${prescription.id}")
+            prescription.id
+        } catch (e: Exception) {
+            Log.e("PrescriptionRepository", "Error creating prescription: ${e.message}", e)
+            throw e
+        }
     }
 
-    suspend fun getAllPrescriptions(): List<Prescription> {
-        return simulateDatabaseCall()
+    suspend fun addMedicationToPrescription(
+        prescriptionId: Int,
+        medicationId: Int,
+        dosage: String,
+        duration: String,
+        frequency: String,
+        instructions: String
+    ) = withContext(Dispatchers.IO) {
+        try {
+            Log.d("PrescriptionRepository", "Adding medication $medicationId to prescription $prescriptionId")
+            val data = mapOf(
+                "medication_id" to medicationId,  // CORRECT: Changed from "medication" to "medication_id"
+                "dosage" to dosage,
+                "duration" to duration,
+                "frequency" to frequency,
+                "instructions" to instructions
+            )
+
+            // Add debug logging to see what you're sending
+            Log.d("PrescriptionRepository", "Request data: $data")
+
+            val response = apiService.addMedicationToPrescription(prescriptionId, data)
+            Log.d("PrescriptionRepository", "Medication added successfully")
+        } catch (e: Exception) {
+            Log.e("PrescriptionRepository", "Error adding medication: ${e.message}", e)
+            throw e
+        }
     }
 
-    suspend fun getPrescriptionById(id: Int): Prescription? {
-        delay(500) // Simulate delay
-        return simulateDatabaseCall().find { it.id == id }
+
+    suspend fun generatePrescriptionPdf(prescriptionId: Int): String? = withContext(Dispatchers.IO) {
+        try {
+            Log.d("PrescriptionRepository", "Generating PDF for prescription $prescriptionId")
+            val responseBody = apiService.generatePrescriptionPdf(prescriptionId)
+
+            // Save the PDF to a file or return the URL from another endpoint
+            val pdfUrl = "http://ea18-105-102-48-10.ngrok-free.app/prescriptions/prescription_$prescriptionId.pdf"
+            Log.d("PrescriptionRepository", "PDF generated: $pdfUrl")
+            pdfUrl
+        } catch (e: Exception) {
+            Log.e("PrescriptionRepository", "Error generating PDF: ${e.message}", e)
+            null
+        }
     }
 
-    suspend fun getPrescriptionsByPatientId(patientId: Int): List<Prescription> {
-        delay(500) // Simulate delay
-        return simulateDatabaseCall().filter { it.patient_id == patientId }
-    }
-
-    suspend fun getPrescriptionsByDoctorId(doctorId: Int): List<Prescription> {
-        delay(500) // Simulate delay
-        return simulateDatabaseCall().filter { it.doctor_id == doctorId }
-    }
-
-    suspend fun getPrescriptionsByDate(date: Date): List<Prescription> {
-        delay(500) // Simulate delay
-        val dateString = sdf.format(date)
-        return simulateDatabaseCall().filter { sdf.format(it.date) == dateString }
-    }
-
-    suspend fun createPrescription(prescription: Prescription): Boolean {
-        delay(500) // Simulate delay
-        // In a real implementation, this would insert into a database
-        // For now, we'll just simulate success or failure
-        return !simulateDatabaseCall().any { it.id == prescription.id }
-    }
-
-    suspend fun updatePrescription(prescription: Prescription): Boolean {
-        delay(500) // Simulate delay
-        // In a real implementation, this would update the database
-        // For now, we'll just simulate success or failure
-        return simulateDatabaseCall().any { it.id == prescription.id }
-    }
-
-    suspend fun deletePrescription(id: Int): Boolean {
-        delay(500) // Simulate delay
-        // In a real implementation, this would delete from the database
-        // For now, we'll just simulate success or failure
-        return simulateDatabaseCall().any { it.id == id }
-    }
 }

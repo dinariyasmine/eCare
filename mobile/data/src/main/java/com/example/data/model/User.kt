@@ -10,13 +10,8 @@ data class User
     val email: String,
     val password: String,
     val phone: String,
-    val adress: String,
-    val role: Role,
+    val address: String, // Note: API uses "address" not "adress"
+    val role: String,    // API uses string not enum
     val birth_date: Date
 )
 
-enum class Role {
-    ADMIN,
-    PATIENT,
-    DOCTOR
-}

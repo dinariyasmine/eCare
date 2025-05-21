@@ -7,6 +7,7 @@ import com.example.data.model.MessageResponse
 import com.example.data.model.OtpVerificationModel
 import com.example.data.model.PasswordResetModel
 import com.example.data.model.PasswordResetRequestModel
+import com.example.data.model.Patient
 import com.example.data.model.RegistrationRequest
 import com.example.data.model.RegistrationResponse
 import retrofit2.http.Body
@@ -46,4 +47,11 @@ interface ApiService {
     // The same for other methods that return List:
     suspend fun searchClinicsByName(query: String): List<Clinic>
     suspend fun searchClinicsByAddress(query: String): List<Clinic>
+
+    @GET("patients/")
+    suspend fun getPatients(): List<Patient>
+
+    @GET("patients/{id}/")
+    suspend fun getPatientById(@Path("id") id: Int): Patient
+
 }

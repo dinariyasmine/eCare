@@ -45,7 +45,17 @@ dependencies {
     implementation(project(":core"))
     implementation(project(":data"))
     implementation(project(":authentification"))
+    implementation(project(":notifications"))
+    implementation(project(":prescription"))
     implementation(libs.androidx.navigation.compose)
+    implementation(project(":prescription"))
+    implementation(libs.transport.runtime)
+    implementation(libs.androidx.espresso.core)
+    implementation(libs.androidx.runner)
+    implementation(libs.androidx.monitor)
+    implementation(libs.androidx.monitor)
+    implementation(libs.androidx.monitor)
+    implementation(libs.androidx.monitor)
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
     implementation("com.adamglin:phosphor-icon:1.0.0")
     implementation("androidx.compose.ui:ui")
@@ -72,5 +82,14 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    // Retrofit
+
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation(libs.logging.interceptor)
+    // Coroutines
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.6.0") // Use the latest version
+
 
 }

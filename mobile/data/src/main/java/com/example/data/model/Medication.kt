@@ -1,10 +1,9 @@
 package com.example.data.model
 
 data class Medication(
-    val id: Int,
+    val medication_id: Int,
     val name: String,
-    val dosage: String,
-    val frequency: String,
-    val instructions: String,
-    val prescription_id: Int
+    val description: String? = null,
+    val created_at: String? = null,
+    val updated_at: String? = null
 )

@@ -2,19 +2,19 @@ package com.example.data.viewModel
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.data.model.Patient
 import com.example.data.network.UpdatePatientRequest
 import com.example.data.repository.PatientRepository
+import com.example.data.retrofit.RetrofitInstance
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class PatientViewModel : ViewModel() {
-
-    private val repository = PatientRepository()
+class PatientViewModel(private val repository: PatientRepository) : ViewModel() {
 
     private val _patients = MutableStateFlow<List<Patient>>(emptyList())
     val patients: StateFlow<List<Patient>> = _patients
@@ -59,6 +59,7 @@ class PatientViewModel : ViewModel() {
             }
         }
     }
+
     fun loadPatientDetails(patientId: Int) {
         viewModelScope.launch {
             _loading.value = true
@@ -117,4 +118,15 @@ class PatientViewModel : ViewModel() {
         }
     }
 
+    companion object {
+        class Factory(private val repository: PatientRepository) : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                if (modelClass.isAssignableFrom(PatientViewModel::class.java)) {
+                    return PatientViewModel(repository) as T
+                }
+                throw IllegalArgumentException("Unknown ViewModel class")
+            }
+        }
+    }
 }

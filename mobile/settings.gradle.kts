@@ -28,6 +28,7 @@ include(":patientprofile")
 include(":data")
 include(":core")
 include(":authentification")
-
+include(":notifications")
 include(":pop-ups-confirmations-template")
 
+include(":prescription")

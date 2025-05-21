@@ -87,7 +87,7 @@ import com.example.data.util.TokenManager
 import com.example.data.viewModel.AuthViewModel
 
 @Composable
-fun LoginScreen(googleAuthHelper: googleAuthHelper, navController: NavController) {
+fun LoginScreen(googleAuthHelper: googleAuthHelper, navController: NavController, onLoginSuccess: () -> Unit = {}) {
     val authRepository = remember { AuthRepository(RetrofitInstance.apiService) }
     val authViewModel: AuthViewModel = viewModel(
         factory = AuthViewModel.Companion.Factory(authRepository)
@@ -142,6 +142,7 @@ fun LoginScreen(googleAuthHelper: googleAuthHelper, navController: NavController
 
             Toast.makeText(context, "Login successful!", Toast.LENGTH_SHORT).show()
 
+            onLoginSuccess()
             // Navigate to main screen or dashboard
 
                 navController.navigate(Routes.DOCTOR_PARAMS){

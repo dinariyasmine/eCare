@@ -1,19 +1,42 @@
 package com.example.data.network
 
 import com.google.gson.GsonBuilder
+import com.google.gson.JsonDeserializationContext
+import com.google.gson.JsonDeserializer
+import com.google.gson.JsonElement
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.lang.reflect.Type
 import java.util.concurrent.TimeUnit
 
-// In mobile/data/src/main/java/com/example/data/network/ApiClient.kt
 object ApiClient {
-    private const val BASE_URL = "https://6f35-41-104-172-163.ngrok-free.app"
+    private const val BASE_URL = "https://ea18-105-102-48-10.ngrok-free.app"
+
+    // Custom deserializer for handling both User objects and user IDs
+    class AnyDeserializer : JsonDeserializer<Any> {
+        override fun deserialize(
+            json: JsonElement,
+            typeOfT: Type,
+            context: JsonDeserializationContext
+        ): Any {
+            return if (json.isJsonPrimitive) {
+                if (json.asJsonPrimitive.isNumber) {
+                    json.asInt
+                } else {
+                    json.asString
+                }
+            } else {
+                context.deserialize(json, Map::class.java)
+            }
+        }
+    }
 
     private val gson = GsonBuilder()
         .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
+        .registerTypeAdapter(Any::class.java, AnyDeserializer())
         .create()
 
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
@@ -24,16 +47,14 @@ object ApiClient {
         val original = chain.request()
         val requestBuilder = original.newBuilder()
             .header("Content-Type", "application/json")
-           .header("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc0NzkwOTk5MCwiaWF0IjoxNzQ3ODIzNTkwLCJqdGkiOiJjZmY2NDc5MWFjZGM0NTFhOGM3YjRiN2Q3YWRkODc2OCIsInVzZXJfaWQiOjU0fQ.TAu3QKGJ-UN4q747hafu_lmTu6vBK5hH4ZG8BhH5i0o")
+            .header("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ3ODY2MjYzLCJpYXQiOjE3NDc4NjI2NjMsImp0aSI6IjlkZGYwNjMzMGE2YjQ0YjFhMzZiMWEyZGM0MzgyZmMyIiwidXNlcl9pZCI6Njl9.34igxVyNo1Rz6zWE0X78bv4jLogv2rSbltRySvP29AY")
             .method(original.method, original.body)
-
         chain.proceed(requestBuilder.build())
     }
 
-
     private val okHttpClient = OkHttpClient.Builder()
         .addInterceptor(loggingInterceptor)
-       // .addInterceptor(authInterceptor)
+        .addInterceptor(authInterceptor)
         .connectTimeout(60, TimeUnit.SECONDS)
         .readTimeout(60, TimeUnit.SECONDS)
         .writeTimeout(60, TimeUnit.SECONDS)
@@ -46,17 +67,5 @@ object ApiClient {
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
             .create(ApiService::class.java)
-
     }
-}
-
-// Simple token manager
-object TokenManager {
-    private var token: String? = null
-
-    fun setToken(newToken: String) {
-        token = newToken
-    }
-
-    fun getToken(): String? = token
 }

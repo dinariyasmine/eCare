@@ -23,6 +23,9 @@ foundationAndroidVersion = "1.8.1"
 navigationComposeAndroid = "2.9.0"
 firebaseMessagingKtx = "24.1.1"
 playServicesBasement = "18.0.0"
+transportRuntime = "3.1.8"
+runner = "1.5.2"
+monitor = "1.6.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -57,6 +60,9 @@ play-services-basement = { group = "com.google.android.gms", name = "play-servic
 androidx-navigation-runtime-android = { group = "androidx.navigation", name = "navigation-runtime-android", version.ref = "navigationComposeAndroid" }
 androidx-foundation-layout-android = { group = "androidx.compose.foundation", name = "foundation-layout-android", version.ref = "foundationAndroid" }
 androidx-runtime-livedata = { group = "androidx.compose.runtime", name = "runtime-livedata", version.ref = "composeBom" }
+transport-runtime = { group = "com.google.android.datatransport", name = "transport-runtime", version.ref = "transportRuntime" }
+androidx-runner = { group = "androidx.test", name = "runner", version.ref = "runner" }
+androidx-monitor = { group = "androidx.test", name = "monitor", version.ref = "monitor" }
 
 
 [plugins]

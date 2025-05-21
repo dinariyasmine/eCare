@@ -1,6 +1,6 @@
 package com.example.data.repository
 
-import com.example.data.model.Role
+
 import com.example.data.model.User
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -23,8 +23,8 @@ class UserRepository {
                     email = "john.doe@example.com",
                     password = "securePassword123",
                     phone = "+1-555-123-4567",
-                    adress = "123 Main St, Springfield, USA",
-                    role = Role.ADMIN,
+                    address = "123 Main St, Springfield, USA",
+                    role = "admin",
                     birth_date = sdf.parse("1990-04-15")
                 ),
                 User(
@@ -33,8 +33,8 @@ class UserRepository {
                     email = "jane.smith@example.com",
                     password = "strongPass456",
                     phone = "+1-555-987-6543",
-                    adress = "456 Oak Ave, Metropolis, USA",
-                    role = Role.DOCTOR,
+                    address = "456 Oak Ave, Metropolis, USA",
+                    role = "doctor",
                     birth_date = sdf.parse("1988-07-22")
                 ),
                 User(
@@ -43,8 +43,8 @@ class UserRepository {
                     email = "alice.johnson@example.com",
                     password = "alicePass789",
                     phone = "+1-555-456-7890",
-                    adress = "789 Pine St, Gotham, USA",
-                    role = Role.PATIENT,
+                    address = "789 Pine St, Gotham, USA",
+                    role = "patient",
                     birth_date = sdf.parse("1995-11-30")
                 )
             )
@@ -63,8 +63,8 @@ class UserRepository {
                 email = "john.doe@example.com",
                 password = "securePassword123",
                 phone = "+1-555-123-4567",
-                adress = "123 Main St, Springfield, USA",
-                role = Role.ADMIN,
+                address = "123 Main St, Springfield, USA",
+                role = "admin",
                 birth_date = sdf.parse("1990-04-15")
             ),
             User(
@@ -73,8 +73,8 @@ class UserRepository {
                 email = "jane.smith@example.com",
                 password = "strongPass456",
                 phone = "+1-555-987-6543",
-                adress = "456 Oak Ave, Metropolis, USA",
-                role = Role.DOCTOR,
+                address = "456 Oak Ave, Metropolis, USA",
+                role = "doctor",
                 birth_date = sdf.parse("1988-07-22")
             ),
             User(
@@ -83,8 +83,8 @@ class UserRepository {
                 email = "alice.johnson@example.com",
                 password = "alicePass789",
                 phone = "+1-555-456-7890",
-                adress = "789 Pine St, Gotham, USA",
-                role = Role.PATIENT,
+                address = "789 Pine St, Gotham, USA",
+                role = "patient",
                 birth_date = sdf.parse("1995-11-30")
             )
         )
@@ -97,8 +97,8 @@ class UserRepository {
             email = "alice.johnson@example.com",
             password = "alicePass789",
             phone = "+1-555-456-7890",
-            adress = "789 Pine St, Gotham, USA",
-            role = Role.PATIENT,
+            address = "789 Pine St, Gotham, USA",
+            role = "patient",
             birth_date = sdf.parse("1995-11-30")
         )
     }
@@ -108,7 +108,7 @@ class UserRepository {
         return simulateDatabaseCall().find { it.email == email }
     }
 
-    suspend fun getUsersByRole(role: Role): List<User> {
+    suspend fun getUsersByRole(role: String): List<User> {
         delay(500) // Simulate delay
         return simulateDatabaseCall().filter { it.role == role }
     }

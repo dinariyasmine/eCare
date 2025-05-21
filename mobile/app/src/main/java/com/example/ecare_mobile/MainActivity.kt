@@ -7,131 +7,109 @@ import androidx.compose.runtime.*
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.authentification.screen.ui.screen.*
 import com.example.core.theme.ECareMobileTheme
-import com.example.data.repository.AuthRepository
+import com.example.data.repository.MedicationRepository
+import com.example.data.repository.PatientRepository
+import com.example.data.repository.PrescriptionRepository
+import com.example.data.network.ApiClient
 import com.example.data.retrofit.RetrofitInstance
-import com.example.data.viewModel.AuthViewModel
+import com.example.data.util.TokenManager
+import com.example.data.viewModel.MedicationViewModel
+import com.example.data.viewModel.PatientViewModel
+import com.example.data.viewModel.PrescriptionViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
-import com.example.data.util.TokenManager
-import com.example.doctorlisting.ui.screen.DoctorDetailScreen
-import com.example.doctorlisting.ui.screen.DoctorFeedbackScreen
-import com.example.doctorlisting.ui.screen.DoctorListScreen
-import com.example.doctorlisting.ui.screen.DoctorReviewsScreen
-import com.example.doctorlisting.ui.screen.HomeScreen
-import com.example.patientprofile.ui.theme.screens.DoctorProfileScreen
-import com.example.patientprofile.ui.theme.screens.Doctorparams
-import com.example.patientprofile.ui.theme.screens.PatientProfileScreen
-import com.example.patientprofile.ui.theme.screens.Patientparams
+import com.example.prescription.navigation.PrescriptionDestinations
+import com.example.prescription.ui.screen.CreatePrescriptionScreen
+import com.example.prescription.ui.screen.PrescriptionDetailScreen
+import com.example.prescription.ui.screen.PrescriptionListScreen
 
 class MainActivity : ComponentActivity() {
-    private lateinit var googleAuthHelper: googleAuthHelper
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         TokenManager.init(applicationContext)
 
-        // Initialize Google Auth Helper
-        googleAuthHelper = googleAuthHelper(this)
-
         setContent {
             ECareMobileTheme {
-                var showSplash by remember { mutableStateOf(true) }
-
-                // Show splash screen first, then automatically transition to SignIn
-                if (showSplash) {
-                    SplashScreen(onSplashComplete = { showSplash = false })
-                } else {
-                    MainAppContent(googleAuthHelper)
-                }
+                PrescriptionApp()
             }
         }
     }
 }
 
 @Composable
-fun MainAppContent(googleAuthHelper: googleAuthHelper) {
+fun PrescriptionApp() {
     val navController = rememberNavController()
 
-    // Create repository and ViewModel at the app level to share between screens
-    val authRepository = remember { AuthRepository(RetrofitInstance.apiService) }
-    val authViewModel: AuthViewModel = viewModel(
-        factory = AuthViewModel.Companion.Factory(authRepository)
+    // Create repositories
+    val prescriptionRepository = remember { PrescriptionRepository(ApiClient.apiService) }
+    val medicationRepository = remember { MedicationRepository(ApiClient.apiService) }
+    val patientRepository = remember { PatientRepository(RetrofitInstance.apiService) }
+
+    // Create ViewModels
+    val prescriptionViewModel: PrescriptionViewModel = viewModel(
+        factory = PrescriptionViewModel.Companion.Factory(prescriptionRepository)
+    )
+    val medicationViewModel: MedicationViewModel = viewModel(
+        factory = MedicationViewModel.Companion.Factory(medicationRepository)
+    )
+    val patientViewModel: PatientViewModel = viewModel(
+        factory = PatientViewModel.Companion.Factory(patientRepository)
     )
 
-    // NavHost with SignIn as the start destination
+    // NavHost with PrescriptionList as the start destination
     NavHost(
         navController = navController,
-        startDestination = Routes.SIGN_IN
+        startDestination = PrescriptionDestinations.PRESCRIPTION_LIST
     ) {
-        composable(Routes.SIGN_IN) {
-            LoginScreen(googleAuthHelper = googleAuthHelper, navController = navController)
-        }
-        composable(Routes.SIGN_UP) {
-            SignUpScreen(googleAuthHelper = googleAuthHelper, navController = navController)
-        }
-        composable(Routes.SIGN_UP2) {
-            SignUp2Screen(
-                googleAuthHelper = googleAuthHelper,
-                navController = navController,
-                authViewModel = authViewModel
+        // Prescription screens
+        composable(PrescriptionDestinations.PRESCRIPTION_LIST) {
+            PrescriptionListScreen(
+                navigateToPrescriptionDetail = { prescriptionId ->
+                    navController.navigate(PrescriptionDestinations.prescriptionDetailRoute(prescriptionId))
+                },
+                navigateToCreatePrescription = {
+                    navController.navigate(PrescriptionDestinations.createPrescriptionRoute(33))
+                },
+                viewModel = prescriptionViewModel,
+                isDoctor = true // Set to true for testing as a doctor
             )
         }
 
-        // Forgot Password screen
-        composable(Routes.FORGOT_PASS) {
-            ForgotPass(navController = navController, viewModel = authViewModel)
-        }
-
-        // OTP Verification screen
         composable(
-            "${Routes.OTP}/{email}",
-            arguments = listOf(navArgument("email") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val email = backStackEntry.arguments?.getString("email") ?: ""
-            OTPScreen(
-                navController = navController,
-                email = email,
-                authViewModel = authViewModel
-            )
-        }
-
-        // Reset Password screen - Modified to match the parameters in your code
-        composable(
-            "${Routes.RESET_PASS}/{email}/{otpCode}",
+            PrescriptionDestinations.PRESCRIPTION_DETAIL,
             arguments = listOf(
-                navArgument("email") { type = NavType.StringType },
-                navArgument("otpCode") { type = NavType.StringType }
+                navArgument("prescriptionId") { type = NavType.IntType }
             )
         ) { backStackEntry ->
-            val email = backStackEntry.arguments?.getString("email") ?: ""
-            val otpCode = backStackEntry.arguments?.getString("otpCode") ?: ""
-
-            ResetPasswordScreen(
-                navController = navController,
-                authViewModel = authViewModel,
-                email = email,
-                otpCode = otpCode
+            val prescriptionId = backStackEntry.arguments?.getInt("prescriptionId") ?: 0
+            PrescriptionDetailScreen(
+                prescriptionId = prescriptionId,
+                navigateBack = { navController.popBackStack() },
+                viewModel = prescriptionViewModel
             )
         }
 
-        composable(Routes.HOME) {
-            HomePage(navController = navController)
+        composable(
+            PrescriptionDestinations.CREATE_PRESCRIPTION,
+            arguments = listOf(
+                navArgument("patientId") { type = NavType.IntType }
+            )
+        ) { backStackEntry ->
+            val patientId = backStackEntry.arguments?.getInt("patientId") ?: 33
+            CreatePrescriptionScreen(
+                patientId = patientId,
+                navigateBack = { navController.popBackStack() },
+                navigateToPrescriptionDetail = { prescriptionId ->
+                    navController.navigate(PrescriptionDestinations.prescriptionDetailRoute(prescriptionId)) {
+                        popUpTo(PrescriptionDestinations.PRESCRIPTION_LIST)
+                    }
+                },
+                prescriptionViewModel = prescriptionViewModel,
+                patientViewModel = patientViewModel,
+                medicationViewModel = medicationViewModel
+            )
         }
-        composable(Routes.DOCTOR_PARAMS) {
-            Doctorparams(navController = navController)
-        }
-        composable("doctor_profile/{doctorId}") { backStackEntry ->
-            val doctorId = backStackEntry.arguments?.getString("doctorId")?.toIntOrNull()
-            if (doctorId != null) {
-                DoctorProfileScreen(
-                    doctorId = doctorId,
-                    onBackClick = { navController.navigateUp() }
-                )
-            }
-        }
-
-
-        }}
+    }
+}

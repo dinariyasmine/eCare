@@ -4,8 +4,9 @@ import android.util.Log
 import com.example.data.model.Patient
 import com.example.data.network.ApiClient
 import com.example.data.network.UpdatePatientRequest
+import com.example.data.retrofit.ApiService
 
-class PatientRepository {
+class PatientRepository(apiService: ApiService) {
 
     // Fetch all patients from the API
     suspend fun getAllPatients(): List<Patient> {

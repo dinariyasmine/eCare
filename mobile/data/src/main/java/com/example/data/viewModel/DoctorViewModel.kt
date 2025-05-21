@@ -2,6 +2,7 @@ package com.example.data.viewModel
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.data.model.Doctor
 import com.example.data.network.UpdateDoctorRequest
@@ -12,7 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class DoctorViewModel : ViewModel() {
+class DoctorViewModel(private val repository: DoctorRepository) : ViewModel() {
 
     private val _selectedDoctor = MutableStateFlow<Doctor?>(null)
     val selectedDoctor: StateFlow<Doctor?> get() = _selectedDoctor
@@ -25,8 +26,6 @@ class DoctorViewModel : ViewModel() {
 
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> get() = _error
-
-    private val repository = DoctorRepository()
 
     // Original list of doctors (for reapplying filters)
     private var allDoctors = listOf<Doctor>()
@@ -64,10 +63,7 @@ class DoctorViewModel : ViewModel() {
                 val doctor = withContext(Dispatchers.IO) {
                     repository.getDoctorDetailsById(doctorId)
                 }
-                _selectedDoctor.value = doctor ?: run {
-                    _error.value = "Doctor not found"
-                    null
-                }
+                _selectedDoctor.value = doctor
             } catch (e: Exception) {
                 _error.value = "Error loading doctor: ${e.message}"
             } finally {
@@ -98,7 +94,6 @@ class DoctorViewModel : ViewModel() {
     }
 
     // Enhanced Filter and Search Functions
-
     fun searchDoctorsByName(name: String) {
         nameQuery = if (name.isNotBlank()) name else null
         applyFilters()
@@ -120,7 +115,7 @@ class DoctorViewModel : ViewModel() {
 
     fun updatePatientCountFilter(minPatients: Int, maxPatients: Int) {
         patientCountRange = if (minPatients > 0 || maxPatients < 1000) {
-            minPatients to maxPatients
+            Pair(minPatients, maxPatients)
         } else {
             null
         }
@@ -139,26 +134,25 @@ class DoctorViewModel : ViewModel() {
         val filtered = allDoctors.filter { doctor ->
             // Name filter
             val matchesName = nameQuery?.let {
-                doctor.name?.contains(it, ignoreCase = true) ?: false
+                doctor.name.contains(it, ignoreCase = true)
             } ?: true
 
             // Specialty filter - check if doctor's specialty is in our selected specialties set
             val matchesSpecialty = if (specialtyFilters.isEmpty()) {
                 true
             } else {
-                doctor.specialty?.let { specialty ->
-                    specialtyFilters.contains(specialty)
-                } ?: false
+                specialtyFilters.contains(doctor.specialty)
             }
 
-            // Rating filter
-            val matchesRating = minRatingFilter?.let {
-                (doctor.grade ?: 0f) >= it as Nothing
+            // Rating filter - Fixed the type mismatch error
+            val doctorGrade = doctor.grade.toFloat()
+            val matchesRating = minRatingFilter?.let { minRating ->
+                doctorGrade >= minRating
             } ?: true
 
             // Patient count filter
             val matchesPatientCount = patientCountRange?.let { (min, max) ->
-                val patientCount = doctor.nbr_patients ?: 0
+                val patientCount = doctor.nbr_patients
                 (min == null || patientCount >= min) &&
                         (max == null || patientCount <= max)
             } ?: true
@@ -186,5 +180,17 @@ class DoctorViewModel : ViewModel() {
                 "specialties=${specialtyFilters.joinToString()}, " +
                 "minRating=$minRatingFilter, " +
                 "patientRange=$patientCountRange")
+    }
+
+    companion object {
+        class Factory(private val repository: DoctorRepository) : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                if (modelClass.isAssignableFrom(DoctorViewModel::class.java)) {
+                    return DoctorViewModel(repository) as T
+                }
+                throw IllegalArgumentException("Unknown ViewModel class")
+            }
+        }
     }
 }

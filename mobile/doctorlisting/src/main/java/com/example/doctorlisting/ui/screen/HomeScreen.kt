@@ -41,7 +41,7 @@ fun HomeScreen(navController: NavController) {
                 val users = usersDeferred.await()
 
                 // Get the first patient (you can adjust this logic as per your app's flow)
-                currentUser = users.firstOrNull { it.role == com.example.data.model.Role.PATIENT }
+                currentUser = users.firstOrNull { it.role == "patient" }
 
                 currentUser?.let { user ->
                     // Fetch appointments for the current patient

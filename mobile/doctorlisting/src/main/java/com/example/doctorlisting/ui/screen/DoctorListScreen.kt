@@ -25,6 +25,7 @@ import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Regular
 import com.adamglin.phosphoricons.regular.*
 import com.example.data.model.Doctor
+import com.example.data.network.ApiClient
 import com.example.data.viewModel.DoctorViewModel
 import com.example.data.repository.DoctorRepository
 import com.example.data.repository.UserRepository
@@ -33,7 +34,9 @@ import com.example.data.repository.UserRepository
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun DoctorListScreen(navController: NavController) {
-    val doctorViewModel = remember { DoctorViewModel() }
+    val repository = remember { DoctorRepository(ApiClient.apiService) }
+    val doctorViewModel = remember { DoctorViewModel(repository) }
+
 
     val doctors by doctorViewModel.doctors.collectAsState()
     val loading by doctorViewModel.loading.collectAsState()

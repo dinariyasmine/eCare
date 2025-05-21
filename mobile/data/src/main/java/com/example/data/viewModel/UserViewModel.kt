@@ -3,7 +3,7 @@ package com.example.data.viewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.example.data.model.Role
+
 import com.example.data.model.User
 import com.example.data.repository.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -108,7 +108,7 @@ class UserViewModel(private val userRepository: UserRepository) : ViewModel() {
         }
     }
 
-    fun getUsersByRole(role: Role) {
+    fun getUsersByRole(role: String) {
         viewModelScope.launch {
             _loading.value = true
             _error.value = null
@@ -129,7 +129,7 @@ class UserViewModel(private val userRepository: UserRepository) : ViewModel() {
         password: String,
         phone: String,
         address: String,
-        role: Role,
+        role: String,
         birthDateString: String
     ) {
         viewModelScope.launch {
@@ -179,7 +179,7 @@ class UserViewModel(private val userRepository: UserRepository) : ViewModel() {
                         email = email,
                         password = password,
                         phone = phone,
-                        adress = address,
+                        address = address,
                         role = role,
                         birth_date = it
                     )
@@ -206,7 +206,7 @@ class UserViewModel(private val userRepository: UserRepository) : ViewModel() {
         password: String,
         phone: String,
         address: String,
-        role: Role,
+        role: String,
         birthDateString: String
     ) {
         viewModelScope.launch {
@@ -253,7 +253,7 @@ class UserViewModel(private val userRepository: UserRepository) : ViewModel() {
                         email = email,
                         password = password,
                         phone = phone,
-                        adress = address,
+                        address = address,
                         role = role,
                         birth_date = it
                     )
