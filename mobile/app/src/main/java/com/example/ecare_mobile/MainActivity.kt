@@ -125,7 +125,7 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                 }
-                // Add any other screens your app needs
+
             }
         }
     }
