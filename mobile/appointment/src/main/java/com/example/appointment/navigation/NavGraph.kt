@@ -90,17 +90,10 @@ fun AppointmentNavGraph(
                 ViewCompletedAppointmentScreen(appointmentViewModel, availabilityViewModel, navController, appointmentId)            }
         }
 
-        composable(
-            route = Screen.ViewConfirmedAppointment.route,
-            arguments = listOf(
-                navArgument("appointmentId") { type = NavType.StringType }
-            )
-        ) { backStackEntry ->
-            val appointmentId = backStackEntry.arguments?.getString("appointmentId") ?: ""
-            ViewConfirmedAppointmentScreen(
-                viewModel = appointmentViewModel,
-                availabilityViewModel = availabilityViewModel
-            )
+        composable(Screen.ViewConfirmedAppointment.route) { backStackEntry ->
+            val appointmentId = backStackEntry.arguments?.getString("appointmentId")?.toIntOrNull()
+            if (appointmentId != null) {
+                ViewConfirmedAppointmentScreen(appointmentViewModel, availabilityViewModel, navController, appointmentId)            }
         }
     }
 }
