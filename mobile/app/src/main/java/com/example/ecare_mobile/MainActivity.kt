@@ -55,7 +55,7 @@ fun MainAppContent(googleAuthHelper: googleAuthHelper) {
     // NavHost with SignIn as the start destination
     NavHost(
         navController = navController,
-        startDestination = Routes.SIGN_IN
+        startDestination = Routes.SIGN_UP
     ) {
         composable(Routes.SIGN_IN) {
             LoginScreen(googleAuthHelper = googleAuthHelper, navController = navController)
