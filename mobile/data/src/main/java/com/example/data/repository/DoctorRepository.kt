@@ -4,6 +4,9 @@ import android.util.Log
 import com.example.data.model.Doctor
 import com.example.data.network.ApiClient
 import com.example.data.network.UpdateDoctorRequest
+import com.example.data.retrofit.RetrofitInstance
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 //class DoctorRepository {
 //
@@ -68,7 +71,28 @@ import com.example.data.network.UpdateDoctorRequest
 //
 
     class DoctorRepository {
+        suspend fun getDoctorByUserId(userId: Int): Doctor? = withContext(Dispatchers.IO) {
+            try {
+                Log.d("DoctorRepository", "Getting doctor by user ID: $userId")
 
+                val response = RetrofitInstance.apiService.getDoctorByUserId(userId)
+
+                // Log the response
+                Log.d("API_RESPONSE", "Response code: ${response.code()}")
+
+                if (response.isSuccessful && response.body() != null) {
+                    val doctor = response.body()
+                    Log.d("DoctorRepository", "Found doctor: $doctor")
+                    return@withContext doctor
+                } else {
+                    Log.e("DoctorRepository", "Failed to get doctor: ${response.errorBody()?.string()}")
+                    return@withContext null
+                }
+            } catch (e: Exception) {
+                Log.e("DoctorRepository", "Error getting doctor by user ID", e)
+                return@withContext null
+            }
+        }
         suspend fun getAllDoctors(): List<Doctor> {
             val response =ApiClient.apiService.getDoctors()
             val doctors = response.doctors

@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.data.model.*
 import com.example.data.repository.AuthRepository
+import com.example.data.repository.GoogleAuthRepository
 import com.example.data.repository.SocialMediaRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -42,6 +43,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
     private val _passwordResetState = MutableStateFlow<MessageResponse?>(null)
     val passwordResetState: StateFlow<MessageResponse?> = _passwordResetState
 
+    private val googleAuthRepository: GoogleAuthRepository = GoogleAuthRepository()
     fun login(request: LoginRequest) {
         viewModelScope.launch {
             try {
@@ -214,6 +216,23 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         _passwordResetRequestState.value = null
         _otpVerificationState.value = null
         _passwordResetState.value = null
+    }
+
+    fun authenticateWithGoogle(idToken: String) {
+        viewModelScope.launch {
+            try {
+                Log.d("AuthViewModel", "Authenticating with Google ID token")
+                val response = googleAuthRepository.authenticateWithGoogle(idToken)
+                Log.d("AuthViewModel", "Google authentication successful")
+
+                // Update login state - this will trigger the UI to navigate to the next screen
+                _loginState.value = response
+                _currentUser.value = response.user
+            } catch (e: Exception) {
+                Log.e("AuthViewModel", "Google authentication failed", e)
+                _errorState.value = e.message ?: "Google authentication failed"
+            }
+        }
     }
 
     companion object {

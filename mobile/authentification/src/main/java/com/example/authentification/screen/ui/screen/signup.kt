@@ -82,9 +82,7 @@ import com.example.core.theme.Gray500
 import com.example.core.theme.Gray600
 import com.example.core.theme.Gray900
 import com.example.core.theme.Primary100
-import com.example.core.theme.Primary200
 import com.example.core.theme.Primary300
-import com.example.core.theme.Primary400
 import com.example.core.theme.Primary50
 import com.example.core.theme.Primary500
 import com.example.core.theme.White
@@ -103,9 +101,11 @@ import com.example.data.repository.ClinicRepository
 import com.example.data.model.SocialMedia
 import com.example.data.repository.SocialMediaRepository
 import com.example.data.util.TokenManager
+import com.example.authentification.screen.ui.screen.GoogleAuthHelper
+import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes
 
 @Composable
-fun SignUpScreen(googleAuthHelper: googleAuthHelper, navController: NavController) {
+fun SignUpScreen(googleAuthHelper: GoogleAuthHelper, navController: NavController) {
     /// Get ClinicViewModel instance
     val clinicViewModel: ClinicViewModel = viewModel(
         factory = ClinicViewModel.Factory(ClinicRepository())
@@ -211,7 +211,59 @@ fun SignUpScreen(googleAuthHelper: googleAuthHelper, navController: NavControlle
     }
 
 
+    //google auth
+    LaunchedEffect(key1 = Unit) {
+        authViewModel.loginState.collect { loginState ->
+            if (loginState != null) {
+                isLoading = false
 
+                // Log the successful response
+                Log.d("SignupScreen", "Google auth successful: ${loginState.access}")
+
+                // Save the tokens
+                loginState.access?.let {
+                    TokenManager.saveToken(it)
+                    Log.d("SignupScreen", "Access token saved: $it")
+                }
+
+                loginState.refresh?.let {
+                    TokenManager.saveRefreshToken(it)
+                    Log.d("SignupScreen", "Refresh token saved: $it")
+                }
+
+                // Save user data
+                loginState.user?.id?.let {
+                    TokenManager.saveUserId(it)
+                    Log.d("SignupScreen", "User ID saved: $it")
+                }
+
+                loginState.user?.role?.let {
+                    TokenManager.saveUserRole(it)
+                    Log.d("SignupScreen", "User role saved: $it")
+                }
+
+                Toast.makeText(context, "Google sign-in successful!", Toast.LENGTH_SHORT).show()
+
+                // Navigate to home screen
+                navController.navigate(Routes.HOME) {
+                    popUpTo(Routes.SIGN_UP) { inclusive = true }
+                }
+
+                authViewModel.clearState()
+            }
+        }
+    }
+
+// Add a separate LaunchedEffect for error state
+    LaunchedEffect(key1 = Unit) {
+        authViewModel.errorState.collect { errorState ->
+            if (errorState != null && isLoading) {
+                isLoading = false
+                Toast.makeText(context, errorState ?: "Google sign-in failed", Toast.LENGTH_LONG).show()
+                authViewModel.clearState()
+            }
+        }
+    }
     // Handle registration response
     LaunchedEffect(registrationState, errorState) {
         val reg = registrationState  // local variable to enable smart cast
@@ -220,16 +272,11 @@ fun SignUpScreen(googleAuthHelper: googleAuthHelper, navController: NavControlle
             reg != null && isLoading -> {
                 isLoading = false
 
-                // In your logs, we can see that AuthViewModel has received the full response
-                // but it's parsing it into the AuthResponse incorrectly
-                // The response actually has the structure with nested tokens
-                // We need to fix this in the AuthViewModel instead
 
                 // Check logs for debugging
                 Log.d("SignupScreen", "Full registration response: $reg")
                 Log.d("SignupScreen", "Access token raw: ${reg.access}")
 
-                // Use the AuthResponse structure directly like in login
                 reg.access?.let {
                     TokenManager.saveToken(it)
                     Log.d("SignupScreen", "Access token saved: $it")
@@ -301,18 +348,73 @@ fun SignUpScreen(googleAuthHelper: googleAuthHelper, navController: NavControlle
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-        try {
-            val account = task.getResult(ApiException::class.java)
-            // Handle the signed-in account (account.id, account.email, etc.)
-            Log.d("GoogleSignIn", "Success: ${account.email}")
+        Log.d("GoogleSignIn", "Activity result received: ${result.resultCode}")
 
-            email = account.email ?: ""
-            firstName = account.givenName ?: ""
-            lastName = account.familyName ?: ""
-            username = account.email?.substringBefore("@") ?: ""
-        } catch (e: ApiException) {
-            Log.e("GoogleSignIn", "Failed", e)
+        // Clear previous sign-in state to ensure a fresh token
+        googleAuthHelper.googleSignInClient.signOut().addOnCompleteListener {
+            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+            try {
+                val account = task.getResult(ApiException::class.java)
+                Log.d("GoogleSignIn", "Success: ${account.email}")
+                Log.d("GoogleSignIn", "ID Token (first 20 chars): ${account.idToken?.take(20)}")
+
+                account.idToken?.let { idToken ->
+                    // Use your ViewModel to handle authentication
+                    authViewModel.authenticateWithGoogle(idToken)
+                } ?: run {
+                    Log.e("GoogleSignIn", "ID token is null")
+                    Toast.makeText(context, "Failed to get ID token", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: ApiException) {
+                Log.e("GoogleSignIn", "Failed with status code: ${e.statusCode}", e)
+                val errorMessage = when (e.statusCode) {
+                    GoogleSignInStatusCodes.SIGN_IN_CANCELLED -> "Sign in was cancelled"
+                    GoogleSignInStatusCodes.NETWORK_ERROR -> "Network error occurred"
+                    else -> "Sign-in failed with code: ${e.statusCode}"
+                }
+                Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+// Google Sign-In
+    Button(
+        onClick = {
+            val signInIntent = googleAuthHelper.googleSignInClient.signInIntent
+            launcher.launch(signInIntent)
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(50.dp),
+        shape = RoundedCornerShape(5.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color.White
+        ),
+        elevation = ButtonDefaults.buttonElevation(
+            defaultElevation = 0.dp
+        ),
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            Primary300
+        ),
+        contentPadding = PaddingValues(0.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.google),
+                contentDescription = "Google Logo",
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Continue with Google",
+                color = Gray600,
+                fontWeight = FontWeight.Medium,
+                fontSize = 14.sp
+            )
         }
     }
 

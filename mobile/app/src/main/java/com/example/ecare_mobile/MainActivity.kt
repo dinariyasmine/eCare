@@ -16,16 +16,17 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.example.data.util.TokenManager
+import com.example.authentification.screen.ui.screen.GoogleAuthHelper
 
 class MainActivity : ComponentActivity() {
-    private lateinit var googleAuthHelper: googleAuthHelper
+    private lateinit var googleAuthHelper: GoogleAuthHelper
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         TokenManager.init(applicationContext)
 
         // Initialize Google Auth Helper
-        googleAuthHelper = googleAuthHelper(this)
+        googleAuthHelper = GoogleAuthHelper(this)
 
         setContent {
             ECareMobileTheme {
@@ -43,7 +44,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun MainAppContent(googleAuthHelper: googleAuthHelper) {
+fun MainAppContent(googleAuthHelper: GoogleAuthHelper) {
     val navController = rememberNavController()
 
     // Create repository and ViewModel at the app level to share between screens

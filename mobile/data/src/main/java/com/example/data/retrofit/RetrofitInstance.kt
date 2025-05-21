@@ -15,8 +15,9 @@ class AuthInterceptor : Interceptor {
         val url = request.url.toString()
 
         // Don't add token for login or registration
-        if (url.contains("login") || url.contains("register") || url.contains("clinics")){
+        if (url.contains("login") || url.contains("register") || url.contains("clinics") || url.contains("google-auth") || url.contains("social-media")){
             return chain.proceed(request)
+
         }
 
         val token = TokenManager.getToken()
@@ -26,6 +27,8 @@ class AuthInterceptor : Interceptor {
                 .build()
             chain.proceed(newRequest)
         } else {
+            println("Request URL: ${request.url}")
+
             chain.proceed(request)
         }
     }
@@ -33,7 +36,7 @@ class AuthInterceptor : Interceptor {
 
 
 object RetrofitInstance {
-    private const val BASE_URL = "https://2583-105-102-18-219.ngrok-free.app"
+    private const val BASE_URL = "https://9680-41-111-189-175.ngrok-free.app"
 
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
