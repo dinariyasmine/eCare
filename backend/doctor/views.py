@@ -3,11 +3,11 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 
-from core.models import Availability, User ,Doctor
+from core.models import Availability, SocialMedia, User ,Doctor
 from django.shortcuts import get_object_or_404
 from rest_framework.permissions import AllowAny
 
-from core.serializers import AvailabilitySerializer, DoctorSerializer
+from core.serializers import AvailabilitySerializer, DoctorSerializer, SocialMediaSerializer
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_profile(request):
@@ -380,3 +380,48 @@ def update_patient_by_id(request, patient_id):
     user.save()
 
     return Response({"message": "Patient updated successfully"}, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+def create_social_media(request):
+    """
+    Create a new social media profile for a doctor
+    Requires doctor_id, name, and link
+    """
+    try:
+        doctor_id = request.data.get('doctor_id')
+        name = request.data.get('name')
+        link = request.data.get('link')
+        
+        # Check if all required fields are provided
+        if not all([doctor_id, name, link]):
+            return Response(
+                {"error": "doctor_id, name, and link are required fields"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Check if the doctor exists
+        try:
+            doctor = Doctor.objects.get(id=doctor_id)
+        except Doctor.DoesNotExist:
+            return Response(
+                {"error": f"Doctor with ID {doctor_id} does not exist"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # Create the social media profile
+        social_media = SocialMedia.objects.create(
+            doctor_id=doctor,
+            name=name,
+            link=link
+        )
+        
+        # Serialize and return the created object
+        serializer = SocialMediaSerializer(social_media)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    except Exception as e:
+        return Response(
+            {"error": str(e)}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )

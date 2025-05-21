@@ -2,6 +2,7 @@ from django.urls import path
 from .views import (
   
    
+    create_social_media,
     get_doctor_by_id,
     get_doctors,
     get_patient_by_id,
@@ -25,5 +26,6 @@ urlpatterns = [
     # path('availability/delete/<int:availability_id>/', delete_availability, name='delete_availability'),
      path('patients/<int:patient_id>/', get_patient_by_id, name='get_patient_by_id'),
        path('doctors/<int:doctor_id>/update/', update_doctor_by_id),
-    path('patients/<int:patient_id>/update/', update_patient_by_id),  
+    path('patients/<int:patient_id>/update/', update_patient_by_id), 
+    path('social-media/', create_social_media, name='create_social_media'), 
 ]

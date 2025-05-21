@@ -2,18 +2,19 @@ from django.shortcuts import render
 
 # Create your views here.
 # Create your models here.
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 from core.models import Clinic
 from core.serializers import ClinicSerializer
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def list_clinics(request):
     clinics = Clinic.objects.all()
     serializer = ClinicSerializer(clinics, many=True)
     return Response(serializer.data)
-
 @api_view(['POST'])
 def create_clinic(request):
     serializer = ClinicSerializer(data=request.data)
