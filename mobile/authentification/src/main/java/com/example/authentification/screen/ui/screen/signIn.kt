@@ -144,7 +144,7 @@ fun LoginScreen(googleAuthHelper: googleAuthHelper, navController: NavController
 
             // Navigate to main screen or dashboard
 
-                navController.navigate(Routes.DOCTOR_PARAMS){
+                navController.navigate(Routes.PATIENT_PARAMS){
                 popUpTo(Routes.SIGN_IN) { inclusive = true }
             }
 

@@ -18,6 +18,7 @@ import androidx.navigation.NavController
 import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Regular
 import com.adamglin.phosphoricons.regular.Pill
+import com.example.data.network.TokenManager
 import com.example.data.viewModel.PatientViewModel
 import com.example.patientprofile.ui.theme.components.ProfileHeader
 import com.example.patientprofile.ui.theme.components.ProfileOption
@@ -26,8 +27,9 @@ import com.example.patientprofile.ui.theme.components.ProfileOption
 @Composable
 fun Patientparams(
     navController: NavController,
-    patientId: Int = 9 // Replace or pass this dynamically
+    // Replace or pass this dynamically
 ) {
+    val patientId = com.example.data.util.TokenManager.getUserId()
     val viewModel: PatientViewModel = viewModel()
     val patient by viewModel.selectedPatient.collectAsState()
     val scrollState = rememberScrollState()
@@ -81,7 +83,7 @@ fun Patientparams(
                     text = "Personal Information"
                 ) {
                     // navController.navigate("personal_info/${patient?.id}")
-                    val patientId = 9  // Replace with actual patientId
+                    // Replace with actual patientId
                     navController.navigate("patient_profile/$patientId")
                 }
 

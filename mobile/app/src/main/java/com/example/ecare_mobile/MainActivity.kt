@@ -123,6 +123,18 @@ fun MainAppContent(googleAuthHelper: googleAuthHelper) {
         composable(Routes.DOCTOR_PARAMS) {
             Doctorparams(navController = navController)
         }
+
+        composable(Routes.PATIENT_PARAMS) {
+            Patientparams(navController = navController)
+        }
+
+        composable("patient_profile/{patientId}") { backStackEntry ->
+            val patientId = backStackEntry.arguments?.getString("patientId")?.toIntOrNull()
+            if (patientId != null) {
+                PatientProfileScreen(patientId = patientId)
+            }
+        }
+
         composable("doctor_profile/{doctorId}") { backStackEntry ->
             val doctorId = backStackEntry.arguments?.getString("doctorId")?.toIntOrNull()
             if (doctorId != null) {
