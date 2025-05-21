@@ -41,20 +41,31 @@ fun CreatePrescriptionScreen(
     val patient by patientViewModel.selectedPatient.collectAsState()
     val medications by medicationViewModel.medications.collectAsState(initial = emptyList())
     val isLoading by prescriptionViewModel.isLoading.collectAsState()
+    val error by medicationViewModel.error.collectAsState()
 
     var prescriptionDate by remember { mutableStateOf(Date()) }
     var notes by remember { mutableStateOf("") }
     var showDatePicker by remember { mutableStateOf(false) }
     var showAddMedicationForm by remember { mutableStateOf(false) }
 
-    // Store medication details directly in a list of tuples
+    // Store medication details directly in a list
     var medicationDetails by remember {
         mutableStateOf(listOf<MedicationDetail>())
     }
 
-    LaunchedEffect(key1 = patientId) {
+    // Fetch medications and patient data when the screen is first displayed
+    LaunchedEffect(key1 = true) {
+        Log.d("CreatePrescription", "Fetching medications and patient data")
         patientViewModel.loadPatientById(patientId)
         medicationViewModel.fetchMedications()
+    }
+
+    // Log medications when they change
+    LaunchedEffect(medications) {
+        Log.d("CreatePrescription", "Medications loaded: ${medications.size}")
+        medications.forEach {
+            Log.d("CreatePrescription", "Medication: ${it.name}, ID: ${it.id}")
+        }
     }
 
     val dateFormatter = SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault())
@@ -121,6 +132,24 @@ fun CreatePrescriptionScreen(
                         .verticalScroll(rememberScrollState())
                         .padding(16.dp)
                 ) {
+                    // Display error if there is one
+                    if (error != null) {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = Color(0xFFFFEBEE)
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text(
+                                text = "Error: $error",
+                                color = Color.Red,
+                                modifier = Modifier.padding(16.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+
                     // Patient Information
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -228,7 +257,12 @@ fun CreatePrescriptionScreen(
                                 )
 
                                 Button(
-                                    onClick = { showAddMedicationForm = true },
+                                    onClick = {
+                                        if (medications.isEmpty()) {
+                                            Log.d("CreatePrescription", "No medications available")
+                                        }
+                                        showAddMedicationForm = true
+                                    },
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = Primary500
                                     )
@@ -267,15 +301,17 @@ fun CreatePrescriptionScreen(
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))
+
                     // Create Button
                     Button(
                         onClick = {
                             // Add debug logs
                             Log.d("CreatePrescription", "Generate button clicked")
                             Log.d("CreatePrescription", "Medication details count: ${medicationDetails.size}")
-                            val doctorId = 18
+
+                            val doctorId = 18 // You might want to get this from a logged-in user or other source
                             val dateString = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(prescriptionDate)
-                            Log.d("CreatePrescription", "Creating prescription for patient: $patientId, date: $dateString")
+                            Log.d("CreatePrescription", "Creating prescription for patient: $patientId, doctor: $doctorId, date: $dateString")
 
                             prescriptionViewModel.createPrescription(
                                 patientId = patientId,
@@ -287,10 +323,10 @@ fun CreatePrescriptionScreen(
 
                                     // Add medications to the prescription
                                     medicationDetails.forEach { detail ->
-                                        Log.d("CreatePrescription", "Adding medication: ${detail.medication.name}")
+                                        Log.d("CreatePrescription", "Adding medication: ${detail.medication.name}, ID: ${detail.medication.id}")
                                         prescriptionViewModel.addMedicationToPrescription(
                                             prescriptionId = prescriptionId,
-                                            medicationId = detail.medication.medication_id,
+                                            medicationId = detail.medication.id,
                                             dosage = detail.dosage,
                                             duration = detail.duration,
                                             frequency = detail.frequency,
@@ -316,8 +352,6 @@ fun CreatePrescriptionScreen(
                         Text("Generate Prescription")
                     }
 
-
-
                     Spacer(modifier = Modifier.height(16.dp))
                 }
             }
@@ -329,6 +363,7 @@ fun CreatePrescriptionScreen(
             medications = medications,
             onDismiss = { showAddMedicationForm = false },
             onAddMedication = { medication, dosage, duration, frequency, instructions ->
+                Log.d("CreatePrescription", "Adding medication to list: ${medication.name}, ID: ${medication.id}")
                 medicationDetails = medicationDetails + MedicationDetail(
                     medication = medication,
                     dosage = dosage,
@@ -341,7 +376,6 @@ fun CreatePrescriptionScreen(
         )
     }
 }
-
 
 data class MedicationDetail(
     val medication: Medication,
