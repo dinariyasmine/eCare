@@ -1,0 +1,126 @@
+package com.example.appointment.navigation
+
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.navigation.NavHostController
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
+import com.example.appointment.ui.screen.doctor.ListAppointmentsScreen
+import com.example.appointment.ui.screen.doctor.ListAvailabilitiesScreen
+import com.example.appointment.ui.screen.patient.ListAppointmentsScreen
+import com.example.appointment.ui.screen.patient.NewAppointmentScreen
+//import com.example.appointment.ui.screen.patient.RescheduleAppointmentScreen
+import com.example.appointment.ui.screen.patient.ViewConfirmedAppointmentScreen
+import com.example.appointment.ui.screen.patient.ViewCompletedAppointmentScreen
+import com.example.data.viewModel.AppointmentViewModel
+import com.example.data.viewModel.AvailabilityViewModel
+import kotlinx.coroutines.delay
+
+sealed class Screen(val route: String) {
+    object DoctorAppointments : Screen("doctor/appointments")
+    object DoctorAvailabilities : Screen("doctor/availabilities")
+    object NewAppointment : Screen("patient/new-appointment")
+    object ListAppointments : Screen("patient/appointments")
+    object RescheduleAppointment : Screen("patient/reschedule/{appointmentId}") {
+        fun createRoute(appointmentId: String) = "patient/reschedule/$appointmentId"
+    }
+    object ViewConfirmedAppointment : Screen("patient/view-confirmed/{appointmentId}") {
+        fun createRoute(appointmentId: String) = "patient/view-confirmed/$appointmentId"
+    }
+    object ViewCompletedAppointment : Screen("patient/view-completed/{appointmentId}") {
+        fun createRoute(appointmentId: String) = "patient/view-completed/$appointmentId"
+    }
+}
+
+@Composable
+fun AppointmentNavGraph(
+    navController: NavHostController,
+    appointmentViewModel: AppointmentViewModel,
+    availabilityViewModel: AvailabilityViewModel,
+    startDestination: String = Screen.DoctorAppointments.route
+) {
+    NavHost(
+        navController = navController,
+        startDestination = startDestination
+    ) {
+        composable(Screen.DoctorAppointments.route) {
+            ListAppointmentsScreen(viewModel = appointmentViewModel)
+        }
+
+        composable(Screen.DoctorAvailabilities.route) {
+            ListAvailabilitiesScreen(availabilityViewModel = availabilityViewModel)
+        }
+
+        composable(Screen.NewAppointment.route) {
+            NewAppointmentScreen(
+                viewModel = appointmentViewModel,
+                availabilityViewModel = availabilityViewModel
+            )
+        }
+
+        composable(Screen.ListAppointments.route) {
+            ListAppointmentsScreen(
+                viewModel = appointmentViewModel,
+                navController = navController
+            )
+        }
+
+        composable(
+            route = Screen.RescheduleAppointment.route,
+            arguments = listOf(
+                navArgument("appointmentId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val appointmentId = backStackEntry.arguments?.getString("appointmentId") ?: ""
+
+            // Get the appointment from the view model by ID and observe it as state
+            val appointment = appointmentViewModel.getAppointmentsByPatient(appointmentId.toInt())
+
+            if (appointment != null) {
+//                RescheduleAppointmentScreen(
+//                    appointment = appointment,
+//                    onBack = { navController.popBackStack() },
+//                    viewModel = appointmentViewModel,
+//                    availabilityViewModel = availabilityViewModel
+//                )
+            } else {
+                // Show loading or error state
+                Text("Loading appointment or appointment not found")
+                LaunchedEffect(Unit) {
+                    // If appointment not found, navigate back after a delay
+                    delay(1000)
+                    navController.popBackStack()
+                }
+            }
+        }
+
+        composable(
+            route = Screen.ViewConfirmedAppointment.route,
+            arguments = listOf(
+                navArgument("appointmentId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val appointmentId = backStackEntry.arguments?.getString("appointmentId") ?: ""
+            ViewConfirmedAppointmentScreen(
+                viewModel = appointmentViewModel,
+                availabilityViewModel = availabilityViewModel
+            )
+        }
+
+        composable(
+            route = Screen.ViewCompletedAppointment.route,
+            arguments = listOf(
+                navArgument("appointmentId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val appointmentId = backStackEntry.arguments?.getString("appointmentId") ?: ""
+            ViewCompletedAppointmentScreen(
+                viewModel = appointmentViewModel,
+                availabilityViewModel = availabilityViewModel
+            )
+        }
+    }
+}
