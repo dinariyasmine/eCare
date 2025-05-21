@@ -27,6 +27,7 @@ include(":doctorlisting")
 include(":patientprofile")
 include(":data")
 include(":core")
+include(":authentification")
 
 include(":pop-ups-confirmations-template")
 include(":notifications")

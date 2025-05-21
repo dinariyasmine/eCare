@@ -1,132 +1,116 @@
 package com.example.ecare_mobile
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.*
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.data.model.Appointment
-import com.example.data.model.AppointmentStatus
-import com.example.data.repository.DoctorRepository
-import com.example.data.repository.UserRepository
-import com.example.data.viewModel.DoctorViewModel
-import com.example.doctorlisting.ui.screen.DoctorDetailScreen
-import com.example.doctorlisting.ui.screen.DoctorFeedbackScreen
-//import com.example.doctorlisting.ui.screen.DoctorDetailScreen
-import com.example.doctorlisting.ui.screen.DoctorListScreen
-import com.example.doctorlisting.ui.screen.DoctorReviewsScreen
-//import com.example.doctorlisting.ui.screen.DoctorReviewsScreen
-import com.example.doctorlisting.ui.screen.HomeScreen
-import com.example.patientprofile.ui.theme.screens.DoctorProfileScreen
-import com.example.patientprofile.ui.theme.screens.Doctorparams
-import com.example.patientprofile.ui.theme.screens.PatientProfileScreen
-import com.example.patientprofile.ui.theme.screens.Patientparams
-
-import java.text.SimpleDateFormat
-import java.time.ZoneId
-import java.util.Calendar
-import java.util.TimeZone
+import com.example.authentification.screen.ui.screen.*
+import com.example.core.theme.ECareMobileTheme
+import com.example.data.repository.AuthRepository
+import com.example.data.retrofit.RetrofitInstance
+import com.example.data.viewModel.AuthViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import com.example.data.util.TokenManager
 
 class MainActivity : ComponentActivity() {
-    @SuppressLint("SimpleDateFormat")
+    private lateinit var googleAuthHelper: googleAuthHelper
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        TokenManager.init(applicationContext)
+
+        // Initialize Google Auth Helper
+        googleAuthHelper = googleAuthHelper(this)
+
         setContent {
-            val navController = rememberNavController()
-            val doctorViewModel: DoctorViewModel = viewModel()
+            ECareMobileTheme {
+                var showSplash by remember { mutableStateOf(true) }
 
-            // Set up date formatting for sample data
-            val zoneId = ZoneId.of("Africa/Algiers")
-            val dateFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm")
-            dateFormatter.timeZone = TimeZone.getTimeZone(zoneId)
-            val todayDate = Calendar.getInstance(TimeZone.getTimeZone(zoneId)).apply {
-                set(Calendar.HOUR_OF_DAY, 0)
-                set(Calendar.MINUTE, 0)
-                set(Calendar.SECOND, 0)
-                set(Calendar.MILLISECOND, 0)
-            }.time
-
-            // Sample appointment data
-            val appointments = listOf(
-                Appointment(
-                    id = 1,
-                    doctor_id = 101,
-                    patient_id = 201,
-                    start_time = dateFormatter.parse("2025-04-15 09:00")!!,
-                    end_time = dateFormatter.parse("2025-04-15 10:00")!!,
-                    status = AppointmentStatus.IN_PROGRESS,
-                    QR_code = "qr_001"
-                ),
-                // Other appointments...
-            )
-
-
-            // Configure NavHost with proper routes
-            NavHost(navController = navController, startDestination = "home") {
-                // Add the missing doctor_list composable route
-                composable("doctor_list") {
-                    DoctorListScreen(
-                        navController = navController,
-                    )
+                // Show splash screen first, then automatically transition to SignIn
+                if (showSplash) {
+                    SplashScreen(onSplashComplete = { showSplash = false })
+                } else {
+                    MainAppContent(googleAuthHelper)
                 }
-                composable("home") {
-                    HomeScreen(navController = navController)
-                }
-
-                // Doctor detail screen
-                composable("doctor/{doctorId}") { backStackEntry ->
-                    val doctorId = backStackEntry.arguments?.getString("doctorId")?.toInt()
-                    DoctorDetailScreen(doctorId = doctorId, navController = navController)
-                }
-                composable("doctor/{doctorId}/reviews") { backStackEntry ->
-                    val doctorId = backStackEntry.arguments?.getString("doctorId")?.toIntOrNull()
-                    if (doctorId != null) {
-                        DoctorReviewsScreen(doctorId = doctorId, navController = navController)
-                    }
-                }
-
-
-
-                composable("Docotrparams") {
-                    Doctorparams(
-                        navController = navController
-
-                    )
-                }
-                composable("patient_profile/{patientId}") { backStackEntry ->
-                    val patientId = backStackEntry.arguments?.getString("patientId")?.toIntOrNull()
-                    if (patientId != null) {
-                        PatientProfileScreen(patientId = patientId)
-                    }
-                }
-
-
-                composable("feedback") {
-                    DoctorFeedbackScreen(  doctorId = 11,navController = navController,
-
-
-                        )
-                }
-                composable("Patientparams") {
-                    Patientparams(
-                        navController = navController
-
-                    )
-                }
-                composable("doctor_profile/{doctorId}") { backStackEntry ->
-                    val doctorId = backStackEntry.arguments?.getString("doctorId")?.toIntOrNull()
-                    if (doctorId != null) {
-                        DoctorProfileScreen(
-                            doctorId = doctorId,
-                            onBackClick = { navController.navigateUp() }
-                        )
-                    }
-                }
-
             }
         }
+    }
+}
+
+@Composable
+fun MainAppContent(googleAuthHelper: googleAuthHelper) {
+    val navController = rememberNavController()
+
+    // Create repository and ViewModel at the app level to share between screens
+    val authRepository = remember { AuthRepository(RetrofitInstance.apiService) }
+    val authViewModel: AuthViewModel = viewModel(
+        factory = AuthViewModel.Companion.Factory(authRepository)
+    )
+
+    // NavHost with SignIn as the start destination
+    NavHost(
+        navController = navController,
+        startDestination = Routes.SIGN_IN
+    ) {
+        composable(Routes.SIGN_IN) {
+            LoginScreen(googleAuthHelper = googleAuthHelper, navController = navController)
+        }
+        composable(Routes.SIGN_UP) {
+            SignUpScreen(googleAuthHelper = googleAuthHelper, navController = navController)
+        }
+        composable(Routes.SIGN_UP2) {
+            SignUp2Screen(
+                googleAuthHelper = googleAuthHelper,
+                navController = navController,
+                authViewModel = authViewModel
+            )
+        }
+
+        // Forgot Password screen
+        composable(Routes.FORGOT_PASS) {
+            ForgotPass(navController = navController, viewModel = authViewModel)
+        }
+
+        // OTP Verification screen
+        composable(
+            "${Routes.OTP}/{email}",
+            arguments = listOf(navArgument("email") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val email = backStackEntry.arguments?.getString("email") ?: ""
+            OTPScreen(
+                navController = navController,
+                email = email,
+                authViewModel = authViewModel
+            )
+        }
+
+        // Reset Password screen - Modified to match the parameters in your code
+        composable(
+            "${Routes.RESET_PASS}/{email}/{otpCode}",
+            arguments = listOf(
+                navArgument("email") { type = NavType.StringType },
+                navArgument("otpCode") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val email = backStackEntry.arguments?.getString("email") ?: ""
+            val otpCode = backStackEntry.arguments?.getString("otpCode") ?: ""
+
+            ResetPasswordScreen(
+                navController = navController,
+                authViewModel = authViewModel,
+                email = email,
+                otpCode = otpCode
+            )
+        }
+
+        composable(Routes.HOME) {
+            HomePage(navController = navController)
+        }
+        // Add more routes as needed
     }
 }
