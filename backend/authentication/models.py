@@ -45,3 +45,10 @@ class PasswordResetOTP(models.Model):
     def is_valid(self):
         """Check if OTP is still valid"""
         return not self.is_used and timezone.now() < self.expires_at
+class GoogleUser(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='google_account')
+    google_id = models.CharField(max_length=255, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.user.email} - {self.google_id}"

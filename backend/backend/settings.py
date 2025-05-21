@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'doctor',
     'notifications',
     'fcm_django',
+    'rest_framework_simplejwt.token_blacklist',
 ]
 
 MIDDLEWARE = [
@@ -233,3 +234,6 @@ FCM_DJANGO_SETTINGS = {
     "ONE_DEVICE_PER_USER": False,
     "DELETE_INACTIVE_DEVICES": True,
 }
+
+
+GOOGLE_OAUTH2_CLIENT_ID = "453325312850-rr9fsgb9b85tq6trvmgj903okutdc48j.apps.googleusercontent.com"

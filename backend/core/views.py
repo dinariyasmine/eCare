@@ -16,3 +16,5 @@ def get_users(request):
 
     # Return the response data as JSON
     return JsonResponse(response.data, safe=False)
+
+

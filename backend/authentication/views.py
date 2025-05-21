@@ -1,5 +1,6 @@
 # authentication/views.py
 from rest_framework import status, generics, permissions
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -12,7 +13,15 @@ import logging
 from django.core.mail import EmailMultiAlternatives
 from email.mime.image import MIMEImage
 import os
-from core.models import User 
+from core.models import User, Patient
+from .models import GoogleUser
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.decorators import api_view, permission_classes
+from django.http import JsonResponse
+from google.oauth2 import id_token
+from google.auth.transport import requests
+from django.conf import settings
+import json
 
 from .serializers import (
     LoginSerializer, 
@@ -21,7 +30,9 @@ from .serializers import (
     UserSerializer,
     RequestPasswordResetSerializer,
     VerifyOTPSerializer,
-    ResetPasswordSerializer
+    ResetPasswordSerializer,
+    LogoutSerializer,
+    GoogleAuthSerializer  
 )
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
@@ -278,3 +289,87 @@ logger.debug(f"Verifying OTP {PasswordResetOTP.otp_code} for user {User.email}")
 
 # In ResetPasswordView
 logger.debug(f"Resetting password for user {User.email}")
+class LogoutView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    
+    @swagger_auto_schema(
+        request_body=LogoutSerializer,
+        responses={
+            205: openapi.Response(description="Logout successful"),
+            400: openapi.Response(description="Bad request")
+        },
+        operation_summary="Logout user",
+        operation_description="Blacklist the refresh token to prevent further use"
+    )
+    def post(self, request):
+        serializer = LogoutSerializer(data=request.data)
+        if serializer.is_valid():
+            try:
+                refresh_token = serializer.validated_data['refresh_token']
+                token = RefreshToken(refresh_token)
+                token.blacklist()
+                
+                logger.debug(f"User {request.user.username} logged out successfully")
+                return Response({'message': 'Logout successful'}, status=status.HTTP_205_RESET_CONTENT)
+            except Exception as e:
+                logger.error(f"Error during logout: {str(e)}")
+                return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def Google_auth_view(request):
+    serializer = GoogleAuthSerializer(data=request.data)
+    if serializer.is_valid():
+        token_value = serializer.validated_data['id_token']
+        client_id = serializer.validated_data.get('client_id', settings.GOOGLE_OAUTH2_CLIENT_ID)
+
+        try:
+            idinfo = id_token.verify_oauth2_token(token_value, requests.Request(), client_id)
+
+            if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
+                return Response({'error': 'Invalid token issuer'}, status=status.HTTP_401_UNAUTHORIZED)
+
+            google_id = idinfo['sub']
+            email = idinfo['email']
+            name = idinfo.get('name', '')
+
+            user_created = False
+            try:
+                google_user = GoogleUser.objects.get(google_id=google_id)
+                user = google_user.user
+            except GoogleUser.DoesNotExist:
+                try:
+                    user = User.objects.get(email=email)
+                    GoogleUser.objects.create(user=user, google_id=google_id)
+                except User.DoesNotExist:
+                    username = f"google_{google_id}"
+                    user = User.objects.create(
+                        username=username,
+                        email=email,
+                        name=name,
+                        role='patient'
+                    )
+                    Patient.objects.create(user=user)
+                    GoogleUser.objects.create(user=user, google_id=google_id)
+                    user_created = True
+
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                'access': str(refresh.access_token),
+                'refresh': str(refresh),
+                'user': {
+                    'id': user.id,
+                    'email': user.email,
+                    'name': user.name,
+                    'role': user.role
+                },
+                'created': user_created
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_401_UNAUTHORIZED)
+
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

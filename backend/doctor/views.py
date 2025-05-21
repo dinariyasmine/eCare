@@ -2,6 +2,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
+from core.models import SocialMedia, Doctor
+from core.serializers import SocialMediaSerializer
 
 from core.models import Availability, User ,Doctor
 from django.shortcuts import get_object_or_404
@@ -380,3 +382,66 @@ def update_patient_by_id(request, patient_id):
     user.save()
 
     return Response({"message": "Patient updated successfully"}, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def create_social_media(request):
+    """
+    Create a new social media profile for a doctor
+    Requires doctor_id, name, and link
+    """
+    try:
+        doctor_id = request.data.get('doctor_id')
+        name = request.data.get('name')
+        link = request.data.get('link')
+        
+        # Check if all required fields are provided
+        if not all([doctor_id, name, link]):
+            return Response(
+                {"error": "doctor_id, name, and link are required fields"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Check if the doctor exists
+        try:
+            doctor = Doctor.objects.get(id=doctor_id)
+        except Doctor.DoesNotExist:
+            return Response(
+                {"error": f"Doctor with ID {doctor_id} does not exist"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # Create the social media profile
+        social_media = SocialMedia.objects.create(
+            doctor_id=doctor,
+            name=name,
+            link=link
+        )
+        
+        # Serialize and return the created object
+        serializer = SocialMediaSerializer(social_media)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    except Exception as e:
+        return Response(
+            {"error": str(e)}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+    
+@api_view(['GET'])
+@permission_classes([AllowAny])  # Adjust as needed
+def get_doctor_by_user_id(request, user_id):
+    """
+    Retrieve a doctor by user ID.
+    """
+    try:
+        doctor = Doctor.objects.get(user_id=user_id)
+        serializer = DoctorSerializer(doctor)
+        return Response(serializer.data)
+    except Doctor.DoesNotExist:
+        return Response(
+            {"error": f"Doctor with user ID {user_id} does not exist"},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
