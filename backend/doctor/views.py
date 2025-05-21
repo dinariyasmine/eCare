@@ -264,7 +264,7 @@ def get_doctor_by_id(request, doctor_id):
     Get details of a single doctor by their ID.
     """
     try:
-        doctor = Doctor.objects.get(id=doctor_id)
+        doctor = Doctor.objects.get(user_id=doctor_id)
     except Doctor.DoesNotExist:
         return Response({"error": "Doctor not found"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -307,9 +307,10 @@ from rest_framework import status
 from core.models import Patient
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def get_patient_by_id(request, patient_id):
     try:
-        patient = Patient.objects.select_related('user').get(id=patient_id)
+        patient = Patient.objects.select_related('user').get(user_id=patient_id)
         user = patient.user
         data = {
             "id": patient.id,
@@ -334,7 +335,7 @@ from core.models import Doctor, User
 @permission_classes([AllowAny])
 def update_doctor_by_id(request, doctor_id):
     try:
-        doctor = Doctor.objects.select_related('user').get(id=doctor_id)
+        doctor = Doctor.objects.select_related('user').get(user_id=doctor_id)
     except Doctor.DoesNotExist:
         return Response({"error": "Doctor not found"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -366,7 +367,7 @@ from core.models import Patient, User
 @permission_classes([AllowAny])
 def update_patient_by_id(request, patient_id):
     try:
-        patient = Patient.objects.select_related('user').get(id=patient_id)
+        patient = Patient.objects.select_related('user').get(user_id=patient_id)
     except Patient.DoesNotExist:
         return Response({"error": "Patient not found"}, status=status.HTTP_404_NOT_FOUND)
 

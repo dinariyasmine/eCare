@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'fcm_django',
     'push_notifications',
     'rest_framework_simplejwt.token_blacklist',
+    
 
 ]
 

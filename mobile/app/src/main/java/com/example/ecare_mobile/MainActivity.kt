@@ -1,9 +1,19 @@
 package com.example.ecare_mobile
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.fillMaxSize
 
+import QRCodeFromBase64
+import QRCodeScreen
+import QrCodeReaderScreen
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -25,6 +35,10 @@ import com.example.patientprofile.ui.theme.screens.DoctorProfileScreen
 import com.example.patientprofile.ui.theme.screens.Doctorparams
 import com.example.patientprofile.ui.theme.screens.PatientProfileScreen
 import com.example.patientprofile.ui.theme.screens.Patientparams
+
+import com.example.patientprofile.ui.theme.screens.QrCodeScannerComposable
+import com.example.patientprofile.ui.theme.screens.QrScannerScreen
+
 
 class MainActivity : ComponentActivity() {
     private lateinit var googleAuthHelper: googleAuthHelper
@@ -64,14 +78,28 @@ fun MainAppContent(googleAuthHelper: googleAuthHelper) {
     // NavHost with SignIn as the start destination
     NavHost(
         navController = navController,
-        startDestination = Routes.SIGN_IN
+
+        startDestination = "qr_reader"
     ) {
         composable(Routes.SIGN_IN) {
             LoginScreen(googleAuthHelper = googleAuthHelper, navController = navController)
         }
+        composable("qr_reader") {
+            QrCodeReaderScreen(navController)
+        }
+
         composable(Routes.SIGN_UP) {
             SignUpScreen(googleAuthHelper = googleAuthHelper, navController = navController)
         }
+        composable("qr_code_display/{qrString}") { backStackEntry ->
+            val qrString = backStackEntry.arguments?.getString("qrString") ?: "No QR data"
+            QRCodeScreen(qrString = qrString)
+        }
+
+        composable("qr_scanner") {
+            QrScannerScreen(navController = navController)
+        }
+
         composable(Routes.SIGN_UP2) {
             SignUp2Screen(
                 googleAuthHelper = googleAuthHelper,
@@ -96,6 +124,13 @@ fun MainAppContent(googleAuthHelper: googleAuthHelper) {
                 email = email,
                 authViewModel = authViewModel
             )
+        }
+        composable("test_qr_base64") {
+            Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                    QRCodeFromBase64("iVBORw0KGgoAAAANSUhEUgAAAeoAAAHqAQAAAADjFjCXAAAEpklEQVR4nO1d...")
+                }
+            }
         }
 
         // Reset Password screen - Modified to match the parameters in your code

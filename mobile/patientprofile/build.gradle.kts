@@ -39,7 +39,14 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
     implementation("androidx.activity:activity-compose:1.10.1")
     implementation(project(":data"))
+    implementation ("com.google.mlkit:barcode-scanning:17.2.0")
 
+// CameraX for camera support
+    implementation ("androidx.camera:camera-camera2:1.3.0")
+    implementation ("androidx.camera:camera-lifecycle:1.3.0")
+    implementation( "androidx.camera:camera-view:1.3.0")
+    implementation("com.google.guava:guava:31.1-android")
+    implementation ("com.google.zxing:core:3.5.0")
     // Compose
     implementation(platform("androidx.compose:compose-bom:2024.04.01"))
     implementation("androidx.compose.ui:ui")
@@ -74,6 +81,7 @@ dependencies {
 
     // Networking
     implementation("com.android.volley:volley:1.2.1")
+    implementation(libs.androidx.appcompat)
 
     // Testing
     testImplementation("junit:junit:4.13.2")

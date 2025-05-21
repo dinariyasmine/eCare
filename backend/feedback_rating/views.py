@@ -6,7 +6,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from core.models import Doctor, DoctorRating
 from doctor.views import get_doctor_by_id
-
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
 # @api_view(['POST'])
 # def rate_doctor(request, doctor_id):
 #     try:
@@ -70,6 +71,7 @@ from core.models import Patient, Feedback, Doctor
 from datetime import date, datetime
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def submit_feedback(request, doctor_id):
     try:
         doctor = Doctor.objects.get(id=doctor_id)
@@ -107,7 +109,9 @@ from rest_framework.response import Response
 from rest_framework import status
 from core.models import Doctor, Feedback
 
+
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def get_doctor_feedback(request, doctor_id):
     try:
         doctor = Doctor.objects.get(id=doctor_id)
