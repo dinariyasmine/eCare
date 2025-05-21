@@ -29,7 +29,6 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun ListAvailabilitiesScreen(availabilityViewModel: AvailabilityViewModel) {
     val context = LocalContext.current
@@ -38,6 +37,16 @@ fun ListAvailabilitiesScreen(availabilityViewModel: AvailabilityViewModel) {
     val doctorId = 11
     val selectedDate = remember { mutableStateOf(LocalDate.now()) }
     val selectedSlots = remember { mutableStateOf<Set<LocalDateTime>>(emptySet()) }
+    val initialSlots = remember { mutableStateOf<Set<LocalDateTime>>(emptySet()) }
+
+    LaunchedEffect(selectedDate.value) {
+        val slots = availabilityViewModel.availabilities.value
+            .filter { it.start_time.toLocalDate() == selectedDate.value && it.doctor_id == doctorId && !it.booked }
+            .map { it.start_time }
+            .toSet()
+        initialSlots.value = slots
+        selectedSlots.value = slots // pre-select in UI
+    }
 
     val error by availabilityViewModel.error.collectAsState()
     LaunchedEffect(error) {
@@ -97,16 +106,19 @@ fun ListAvailabilitiesScreen(availabilityViewModel: AvailabilityViewModel) {
                         return@Button
                     }
 
-                    val slotsByStartTime = selectedSlots.value.sortedBy { it }.groupConsecutiveDateTime()
+                    val toAdd = selectedSlots.value - initialSlots.value
+                    val toDelete = initialSlots.value - selectedSlots.value
 
-                    // Delete all existing availabilities for this date and doctor
-                    availabilityViewModel.availabilities.value
-                        .filter { it.start_time.toLocalDate() == selectedDate.value && it.doctor_id == doctorId }
-                        .forEach { availability ->
-                            availabilityViewModel.deleteAvailability(availability.id)
+                    toDelete.forEach { slot ->
+                        val availability = availabilityViewModel.availabilities.value.find {
+                            it.start_time == slot && it.doctor_id == doctorId
                         }
+                        availability?.let {
+                            availabilityViewModel.deleteAvailability(it.id)
+                        }
+                    }
 
-                    // Create new availabilities
+                    val slotsByStartTime = toAdd.sortedBy { it }.groupConsecutiveDateTime()
                     slotsByStartTime.forEach { (start, end) ->
                         val startDate = Date.from(start.atZone(ZoneId.systemDefault()).toInstant())
                         val endDate = Date.from(end.atZone(ZoneId.systemDefault()).toInstant())

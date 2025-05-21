@@ -60,13 +60,11 @@ class AvailabilityRepository(private val availabilityEndpoint: AvailabilityEndpo
         }
     }
 
-    // Updates an availability (handles API + local DB)
+    // Updates an availability
     suspend fun updateAvailability(id: Int, availability: Availability): Boolean {
         return withContext(Dispatchers.IO) {
             try {
                 availabilityEndpoint.updateAvailability(id, availability)
-                // Optionally update local DB
-                // availabilityDao.update(availability)
                 true
             } catch (e: Exception) {
                 println("Error: $e")
@@ -75,13 +73,11 @@ class AvailabilityRepository(private val availabilityEndpoint: AvailabilityEndpo
         }
     }
 
-    // Deletes an availability (handles API + local DB)
+    // Deletes an availability
     suspend fun deleteAvailability(id: Int): Boolean {
         return withContext(Dispatchers.IO) {
             try {
                 availabilityEndpoint.deleteAvailability(id)
-                // Optionally delete from local DB
-                // availabilityDao.delete(id)
                 true
             } catch (e: Exception) {
                 println("Error: $e")

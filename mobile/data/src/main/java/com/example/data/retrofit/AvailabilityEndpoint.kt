@@ -24,7 +24,7 @@ interface AvailabilityEndpoint {
     @PATCH("availabilities/{id}/")
     suspend fun updateAvailability(@Path("id") id: Int, @Body data: Availability)
 
-    @DELETE("availabilties/{id}/")
+    @DELETE("availabilities/{id}/")
     suspend fun deleteAvailability(@Path("id") id: Int)
 
 

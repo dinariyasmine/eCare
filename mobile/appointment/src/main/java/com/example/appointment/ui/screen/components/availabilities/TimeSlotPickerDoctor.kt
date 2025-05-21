@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.data.model.Availability
 import com.example.data.viewModel.AvailabilityViewModel
 import java.time.LocalDate
 import java.time.LocalDateTime

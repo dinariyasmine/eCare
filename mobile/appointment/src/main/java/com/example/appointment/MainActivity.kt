@@ -23,11 +23,11 @@ class MainActivity : ComponentActivity() {
                 val app = applicationContext as MyApplication
                 val appointmentModel = AppointmentViewModel(app.appointmentRepository)
                 val availabilityViewModel = AvailabilityViewModel(app.availabilityRepository, 11)
-                //ListAppointmentsScreen(viewModel = appointmentModel)
+                ListAppointmentsScreen(viewModel = appointmentModel)
                 //NewAppointmentScreen(appointmentModel, availabilityViewModel = availabilityViewModel)
                 //ViewConfirmedAppointmentScreen(appointmentModel, availabilityViewModel)
                 //ListAppointmentsScreen(appointmentModel)
-                ListAvailabilitiesScreen(availabilityViewModel)
+                //ListAvailabilitiesScreen(availabilityViewModel)
 
             }
         }
