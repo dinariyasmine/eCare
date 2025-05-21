@@ -21,7 +21,12 @@ dependencyResolutionManagement {
 
 rootProject.name = "eCare-Mobile"
 include(":app")
+
+include(":OnboardingScreens")
+include(":doctorlisting")
+include(":patientprofile")
 include(":data")
 include(":core")
+
 include(":pop-ups-confirmations-template")
 include(":notifications")

@@ -1,8 +1,10 @@
 package com.example.data.model
 
+import java.io.Serializable
 import java.util.Date
 
-data class User(
+data class User
+    (
     val id: Int,
     val name: String,
     val email: String,
@@ -10,7 +12,7 @@ data class User(
     val phone: String,
     val adress: String,
     val role: Role,
-    val birth_date: Date?
+    val birth_date: Date
 )
 
 enum class Role {

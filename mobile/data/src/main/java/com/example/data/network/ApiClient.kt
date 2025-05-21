@@ -1,4 +1,3 @@
-// mobile/data/src/main/java/com/example/data/network/ApiClient.kt
 package com.example.data.network
 
 import com.google.gson.GsonBuilder
