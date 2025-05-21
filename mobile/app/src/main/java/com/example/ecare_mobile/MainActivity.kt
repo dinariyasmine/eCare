@@ -16,6 +16,15 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.example.data.util.TokenManager
+import com.example.doctorlisting.ui.screen.DoctorDetailScreen
+import com.example.doctorlisting.ui.screen.DoctorFeedbackScreen
+import com.example.doctorlisting.ui.screen.DoctorListScreen
+import com.example.doctorlisting.ui.screen.DoctorReviewsScreen
+import com.example.doctorlisting.ui.screen.HomeScreen
+import com.example.patientprofile.ui.theme.screens.DoctorProfileScreen
+import com.example.patientprofile.ui.theme.screens.Doctorparams
+import com.example.patientprofile.ui.theme.screens.PatientProfileScreen
+import com.example.patientprofile.ui.theme.screens.Patientparams
 
 class MainActivity : ComponentActivity() {
     private lateinit var googleAuthHelper: googleAuthHelper
@@ -55,7 +64,7 @@ fun MainAppContent(googleAuthHelper: googleAuthHelper) {
     // NavHost with SignIn as the start destination
     NavHost(
         navController = navController,
-        startDestination = Routes.SIGN_UP
+        startDestination = Routes.SIGN_IN
     ) {
         composable(Routes.SIGN_IN) {
             LoginScreen(googleAuthHelper = googleAuthHelper, navController = navController)
@@ -111,6 +120,18 @@ fun MainAppContent(googleAuthHelper: googleAuthHelper) {
         composable(Routes.HOME) {
             HomePage(navController = navController)
         }
-        // Add more routes as needed
-    }
-}
+        composable(Routes.DOCTOR_PARAMS) {
+            Doctorparams(navController = navController)
+        }
+        composable("doctor_profile/{doctorId}") { backStackEntry ->
+            val doctorId = backStackEntry.arguments?.getString("doctorId")?.toIntOrNull()
+            if (doctorId != null) {
+                DoctorProfileScreen(
+                    doctorId = doctorId,
+                    onBackClick = { navController.navigateUp() }
+                )
+            }
+        }
+
+
+        }}

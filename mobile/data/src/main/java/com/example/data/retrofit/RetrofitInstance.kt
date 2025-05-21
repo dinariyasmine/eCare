@@ -22,7 +22,7 @@ class AuthInterceptor : Interceptor {
         val token = TokenManager.getToken()
         return if (!token.isNullOrEmpty()) {
             val newRequest = request.newBuilder()
-                .header("Authorization", "Bearer $token")
+              //  .header("Authorization", "Bearer $token")
                 .build()
             chain.proceed(newRequest)
         } else {
@@ -33,7 +33,7 @@ class AuthInterceptor : Interceptor {
 
 
 object RetrofitInstance {
-    private const val BASE_URL = "https://2583-105-102-18-219.ngrok-free.app"
+    private const val BASE_URL = "https://6f35-41-104-172-163.ngrok-free.app"
 
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY

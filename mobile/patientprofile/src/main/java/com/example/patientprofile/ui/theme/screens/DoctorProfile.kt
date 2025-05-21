@@ -35,6 +35,8 @@ import java.time.format.DateTimeFormatter
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
+
+
 @Composable
 fun DoctorProfileScreen(
     doctorId: Int,
@@ -45,11 +47,7 @@ fun DoctorProfileScreen(
     val loading by viewModel.loading.collectAsState()
     val error by viewModel.error.collectAsState()
 
-    // Load data on first render
-    LaunchedEffect(doctorId) {
-        viewModel.loadDoctorDetails(doctorId)
-    }
-
+    // Initialize state with empty strings instead of null
     var firstName by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -60,6 +58,11 @@ fun DoctorProfileScreen(
     var clinic by remember { mutableStateOf("") }
     var clinicPos by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
+
+    // Load data on first render
+    LaunchedEffect(doctorId) {
+        viewModel.loadDoctorDetails(doctorId)
+    }
 
     // For date picker
     var showDatePicker by remember { mutableStateOf(false) }
@@ -78,22 +81,20 @@ fun DoctorProfileScreen(
         )
     }
 
+    // Safely update state from doctor data when it changes
     LaunchedEffect(doctor) {
         doctor?.let {
             firstName = it.name.split(" ").firstOrNull() ?: ""
             lastName = it.name.split(" ").drop(1).joinToString(" ")
-            email = it.email
-            phone = it.phone
-            address = it.address
-            birthDate = it.birth_date
-            specialty = it.specialty
-            clinic = it.clinic
-            clinicPos = it.clinic
-            description = it.description
+            email = it.email ?: ""
+            phone = it.phone ?: ""
+            address = it.address ?: ""
+            birthDate = it.birth_date ?: ""
+            specialty = it.specialty ?: ""
+            clinic = it.clinic ?: ""
+            clinicPos = it.clinic ?: ""
+            description = it.description ?: ""
         }
-    }
-    LaunchedEffect(doctor) {
-      Log.d("DoctorProfileScreen", "Doctor received: $doctor")
     }
 
     // Date picker dialog
@@ -223,7 +224,7 @@ fun DoctorProfileScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Form fields
+                // Form fields - Using fixed DoctorFormField component
                 DoctorFormField(
                     label = "First Name",
                     value = firstName,
@@ -274,7 +275,7 @@ fun DoctorProfileScreen(
                         modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
                     )
                     OutlinedTextField(
-                        value = phone,
+                        value = phone, // This is now guaranteed to be non-null
                         onValueChange = { phone = it },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp),
@@ -351,7 +352,7 @@ fun DoctorProfileScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Description with multiline support
+                // Description with multiline support - Handle null values
                 Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp)) {
                     Text(
                         "Description",
@@ -360,7 +361,7 @@ fun DoctorProfileScreen(
                         modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
                     )
                     OutlinedTextField(
-                        value = description,
+                        value = description, // This is now guaranteed to be non-null
                         onValueChange = { description = it },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -390,13 +391,11 @@ fun DoctorProfileScreen(
                             birth_date = birthDate,
                             specialty = specialty,
                             clinic = clinic,
-
                             description = description,
-
                             clinic_pos = clinicPos
                         )
 
-                        viewModel.updateDoctorOnServer(doctorId,updatedFields)
+                        viewModel.updateDoctorOnServer(doctorId, updatedFields)
                         Log.d("DoctorProfileScreen", "Updated doctor: $fullName")
                     },
                     modifier = Modifier
@@ -430,7 +429,7 @@ fun DoctorProfileScreen(
 @Composable
 fun DoctorFormField(
     label: String,
-    value: String?,  // rendu nullable ici
+    value: String,  // Accept non-nullable string now that we guarantee it's not null
     onValueChange: (String) -> Unit,
     trailingIcon: @Composable (() -> Unit)? = null
 ) {
@@ -446,7 +445,7 @@ fun DoctorFormField(
         )
 
         OutlinedTextField(
-            value = value ?: "",  // on fournit une valeur par défaut si null
+            value = value,
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(8.dp),

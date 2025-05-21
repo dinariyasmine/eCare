@@ -143,7 +143,8 @@ fun LoginScreen(googleAuthHelper: googleAuthHelper, navController: NavController
             Toast.makeText(context, "Login successful!", Toast.LENGTH_SHORT).show()
 
             // Navigate to main screen or dashboard
-            navController.navigate(Routes.HOME) {
+
+                navController.navigate(Routes.DOCTOR_PARAMS){
                 popUpTo(Routes.SIGN_IN) { inclusive = true }
             }
 

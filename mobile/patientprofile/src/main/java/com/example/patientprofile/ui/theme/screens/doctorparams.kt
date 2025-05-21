@@ -45,6 +45,7 @@ import com.adamglin.phosphoricons.regular.Pill
 import com.adamglin.phosphoricons.Regular
 import com.adamglin.phosphoricons.regular.CalendarBlank
 import com.adamglin.phosphoricons.regular.CarProfile
+import com.example.data.util.TokenManager
 import com.example.data.viewModel.DoctorViewModel
 import com.example.patientprofile.R
 
@@ -54,7 +55,7 @@ fun Doctorparams(
     navController: NavController,
     // Pass the doctor id as a parameter
 ) {
-    val doctorId = 11
+    val doctorId = TokenManager.getUserId()
     val viewModel: DoctorViewModel = viewModel()
     val doctor by viewModel.selectedDoctor.collectAsState()
     val scrollState = rememberScrollState()
@@ -67,6 +68,9 @@ fun Doctorparams(
             Log.d("DoctorInfo", "Doctor received: $it")
         }
         Log.d("DoctorInfo", "Doctor received: $doctor")
+    }
+    if (doctor != null) {
+        Log.d("DoctorkkkkInfo", "Doctor received: $doctor")
     }
 
     Scaffold(
@@ -119,7 +123,8 @@ fun Doctorparams(
                     icon = Icons.Default.Person,
                     text = "Personal Information"
                 ) {
-                    val docId = 11  // Replace with actual patientId
+                    val docId = TokenManager.getUserId()
+                    // Replace with actual patientId
                     navController.navigate("doctor_profile/$docId")
                    // navController.navigate("personal_info/${user?.id}")
                 }
