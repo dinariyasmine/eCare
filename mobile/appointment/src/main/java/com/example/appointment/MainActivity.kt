@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Modifier
 import com.example.appointment.ui.screen.doctor.ListAppointmentsScreen
+import com.example.appointment.ui.screen.doctor.ListAvailabilitiesScreen
 import com.example.appointment.ui.screen.patient.NewAppointmentScreen
 import com.example.appointment.ui.screen.patient.RescheduleAppointmentScreen
 import com.example.appointment.ui.screen.patient.ViewConfirmedAppointmentScreen
@@ -25,7 +26,8 @@ class MainActivity : ComponentActivity() {
                 //ListAppointmentsScreen(viewModel = appointmentModel)
                 //NewAppointmentScreen(appointmentModel, availabilityViewModel = availabilityViewModel)
                 //ViewConfirmedAppointmentScreen(appointmentModel, availabilityViewModel)
-                ListAppointmentsScreen(appointmentModel)
+                //ListAppointmentsScreen(appointmentModel)
+                ListAvailabilitiesScreen(availabilityViewModel)
 
             }
         }

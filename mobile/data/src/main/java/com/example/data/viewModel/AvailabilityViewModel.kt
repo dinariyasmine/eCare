@@ -1,5 +1,7 @@
 package com.example.data.viewModel
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.data.model.Availability
@@ -8,8 +10,10 @@ import com.example.data.repository.AvailabilityRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import java.time.ZoneId
 import java.util.Date
 
+@RequiresApi(Build.VERSION_CODES.O)
 class AvailabilityViewModel(private val availabilityRepository: AvailabilityRepository, private val doctorId: Int) : ViewModel() {
 
     private val _availabilities = MutableStateFlow<List<Availability>>(emptyList())
@@ -25,6 +29,7 @@ class AvailabilityViewModel(private val availabilityRepository: AvailabilityRepo
     init {
         fetchAllAvailabilities(doctorId)
     }
+
 
     fun fetchAllAvailabilities(id: Int) {
         viewModelScope.launch {
@@ -50,17 +55,18 @@ class AvailabilityViewModel(private val availabilityRepository: AvailabilityRepo
             _error.value = null
 
             try {
-                // Validate time range
-                if (startTime >= endTime) {
-                    _error.value = "Start time must be before end time"
-                    _loading.value = false
-                    return@launch
-                }
+
+                val startDateTime = startTime.toInstant()
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDateTime()
+                val endDateTime = endTime.toInstant()
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDateTime()
 
                 val newAvailability = AvailabilityRequest(
                     doctor_id = doctorId,
-                    start_time = startTime,
-                    end_time = endTime
+                    start_time = startDateTime.toString(),
+                    end_time = endDateTime.toString()
                 )
 
                 val success = availabilityRepository.createAvailability(newAvailability)

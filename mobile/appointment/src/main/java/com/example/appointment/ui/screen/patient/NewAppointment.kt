@@ -98,7 +98,7 @@ fun NewAppointmentScreen(
 
                 val date = Date.from(selectedDate.value.atStartOfDay(ZoneId.systemDefault()).toInstant())
                 TimeSlotPicker(
-                    selectedDate = date,
+                    selectedDate = selectedDate.value,
                     selectedSlot = selectedSlot.value,
                     doctorId = 11,
                     onSlotSelected = { slot -> selectedSlot.value = slot },

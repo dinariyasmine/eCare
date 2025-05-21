@@ -61,7 +61,7 @@ fun ListAppointmentsScreen(viewModel: AppointmentViewModel) {
                 viewModel = viewModel
             )
 
-            AppointmentsFilteredListBar(1, viewModel)
+            //AppointmentsFilteredListBar(1, viewModel)
 
         }
     }

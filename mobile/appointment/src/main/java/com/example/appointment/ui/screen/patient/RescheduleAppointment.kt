@@ -129,7 +129,7 @@ fun RescheduleAppointmentScreen(
                 val date = Date.from(selectedDate.value.atStartOfDay(ZoneId.systemDefault()).toInstant())
 
                 TimeSlotPicker(
-                    selectedDate = date,
+                    selectedDate = selectedDate.value,
                     selectedSlot = selectedSlot.value.format(DateTimeFormatter.ofPattern("HH:mm")),
                     doctorId = appointment.doctor_id ?: 101,
                     onSlotSelected = { slot ->

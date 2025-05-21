@@ -23,40 +23,25 @@ import androidx.compose.ui.unit.dp
 import com.example.appointment.ui.screen.components.appoint.DatePicker
 import com.example.appointment.ui.screen.components.availabilities.TimeSlotPickerDoctor
 import com.example.core.theme.ECareMobileTheme
-import com.example.data.model.Availability
 import com.example.data.viewModel.AvailabilityViewModel
-import java.text.SimpleDateFormat
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun NewAppointmentScreen(availabilityViewModel: AvailabilityViewModel) {
+fun ListAvailabilitiesScreen(availabilityViewModel: AvailabilityViewModel) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
 
-    // Doctor ID would typically come from authentication or navigation arguments
     val doctorId = 11
-
     val selectedDate = remember { mutableStateOf(LocalDate.now()) }
-    val selectedSlots = remember { mutableStateOf<Set<String>>(emptySet()) } // Track multiple selections
-    val existingAvailabilities = remember { mutableStateOf<List<Availability>>(emptyList()) }
+    val selectedSlots = remember { mutableStateOf<Set<LocalDateTime>>(emptySet()) }
 
-    // Fetch existing availabilities when date changes
-    LaunchedEffect(selectedDate.value) {
-        val date = Date.from(selectedDate.value.atStartOfDay(ZoneId.systemDefault()).toInstant())
-        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        existingAvailabilities.value = availabilityViewModel.availabilities.value
-            .filter { sdf.format(it.start_time) == sdf.format(date) }
-    }
-
-    // Error handling
     val error by availabilityViewModel.error.collectAsState()
     LaunchedEffect(error) {
-        error?.let {
-            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
-        }
+        error?.let { Toast.makeText(context, it, Toast.LENGTH_SHORT).show() }
     }
 
     ECareMobileTheme {
@@ -69,9 +54,15 @@ fun NewAppointmentScreen(availabilityViewModel: AvailabilityViewModel) {
                 title = { Text("Manage Availability") },
                 navigationIcon = {
                     IconButton(onClick = { /* Handle back navigation */ }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back",
-                            modifier = Modifier.border(width = 1.dp,
-                                color = Color(0xFF222B45), shape = RectangleShape))
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = "Back",
+                            modifier = Modifier.border(
+                                width = 1.dp,
+                                color = Color(0xFF222B45),
+                                shape = RectangleShape
+                            )
+                        )
                     }
                 }
             )
@@ -83,10 +74,9 @@ fun NewAppointmentScreen(availabilityViewModel: AvailabilityViewModel) {
                 )
 
                 Text("Available Time Slots", fontWeight = FontWeight.Medium)
-                val date = Date.from(selectedDate.value.atStartOfDay(ZoneId.systemDefault()).toInstant())
 
                 TimeSlotPickerDoctor(
-                    selectedDate = date,
+                    selectedDate = selectedDate.value,
                     selectedSlots = selectedSlots.value,
                     doctorId = doctorId,
                     onSlotSelected = { slot ->
@@ -107,19 +97,20 @@ fun NewAppointmentScreen(availabilityViewModel: AvailabilityViewModel) {
                         return@Button
                     }
 
-                    // Convert selected slots to time ranges
-                    val slotsByStartTime = selectedSlots.value.sorted().groupConsecutive()
+                    val slotsByStartTime = selectedSlots.value.sortedBy { it }.groupConsecutiveDateTime()
 
-                    // First delete all existing availabilities for this date
-                    existingAvailabilities.value.forEach { availability ->
-                        availabilityViewModel.deleteAvailability(availability.id)
-                    }
+                    // Delete all existing availabilities for this date and doctor
+                    availabilityViewModel.availabilities.value
+                        .filter { it.start_time.toLocalDate() == selectedDate.value && it.doctor_id == doctorId }
+                        .forEach { availability ->
+                            availabilityViewModel.deleteAvailability(availability.id)
+                        }
 
-                    // Then create new availabilities for the selected slots
+                    // Create new availabilities
                     slotsByStartTime.forEach { (start, end) ->
-                        val startTime = parseTimeStringToDate(selectedDate.value, start)
-                        val endTime = parseTimeStringToDate(selectedDate.value, end)
-                        availabilityViewModel.createAvailability(startTime, endTime)
+                        val startDate = Date.from(start.atZone(ZoneId.systemDefault()).toInstant())
+                        val endDate = Date.from(end.atZone(ZoneId.systemDefault()).toInstant())
+                        availabilityViewModel.createAvailability(startDate, endDate)
                     }
 
                     Toast.makeText(context, "Availability updated successfully!", Toast.LENGTH_SHORT).show()
@@ -144,21 +135,11 @@ fun NewAppointmentScreen(availabilityViewModel: AvailabilityViewModel) {
     }
 }
 
-// Helper function to parse time string to Date
-@RequiresApi(Build.VERSION_CODES.O)
-private fun parseTimeStringToDate(date: LocalDate, timeString: String): Date {
-    val timeParts = timeString.split(":")
-    val hour = timeParts[0].toInt()
-    val minute = timeParts[1].split(" ")[0].toInt()
-    return Date.from(date.atTime(hour, minute).atZone(ZoneId.systemDefault()).toInstant())
-}
-
-// Helper function to group consecutive time slots
-private fun List<String>.groupConsecutive(): List<Pair<String, String>> {
+private fun List<LocalDateTime>.groupConsecutiveDateTime(): List<Pair<LocalDateTime, LocalDateTime>> {
     if (isEmpty()) return emptyList()
 
     val sorted = this.sorted()
-    val result = mutableListOf<Pair<String, String>>()
+    val result = mutableListOf<Pair<LocalDateTime, LocalDateTime>>()
     var currentStart = sorted.first()
     var currentEnd = sorted.first()
 
@@ -166,31 +147,14 @@ private fun List<String>.groupConsecutive(): List<Pair<String, String>> {
         val currentTime = sorted[i]
         val prevTime = sorted[i - 1]
 
-        // Check if current time is 30 minutes after previous time
-        if (areTimesConsecutive(prevTime, currentTime)) {
+        if (prevTime.plusMinutes(30) == currentTime) {
             currentEnd = currentTime
         } else {
-            result.add(currentStart to currentEnd)
+            result.add(currentStart to currentEnd.plusMinutes(30))
             currentStart = currentTime
             currentEnd = currentTime
         }
     }
-
-    result.add(currentStart to currentEnd)
+    result.add(currentStart to currentEnd.plusMinutes(30))
     return result
-}
-
-// Helper function to check if two time strings are consecutive (30 min apart)
-private fun areTimesConsecutive(time1: String, time2: String): Boolean {
-    val parts1 = time1.split(":")
-    val parts2 = time2.split(":")
-
-    val hour1 = parts1[0].toInt()
-    val min1 = parts1[1].split(" ")[0].toInt()
-
-    val hour2 = parts2[0].toInt()
-    val min2 = parts2[1].split(" ")[0].toInt()
-
-    return (hour1 == hour2 && min2 - min1 == 30) ||
-            (hour2 - hour1 == 1 && min1 == 30 && min2 == 0)
 }

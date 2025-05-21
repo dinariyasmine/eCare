@@ -34,10 +34,10 @@ class AppointmentRepository(
             patient_id = dto.patient,
             start_time = LocalDateTime.parse(dto.start_time, formatter),
             end_time = LocalDateTime.parse(dto.end_time, formatter),
-            name = "", // Adjust if backend provides these
-            gender = "",
-            age = "",
-            problem_description = "",
+            name = dto.name,
+            gender = dto.gender,
+            age = dto.age,
+            problem_description = dto.problem_description,
             status = AppointmentStatus.valueOf(dto.status.uppercase()),
             QR_code = dto.qr_Code
         )

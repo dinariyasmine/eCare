@@ -16,6 +16,10 @@ data class AppointmentDto(
     val patient: Int,
     val start_time: String,
     val end_time: String,
+    val name: String,
+    val gender: String,
+    val age: String,
+    val problem_description: String,
     val status: String,
     val qr_Code: String
 )

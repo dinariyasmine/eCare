@@ -144,7 +144,7 @@ fun ViewCompletedAppointmentScreen(viewModel: AppointmentViewModel, availability
                         // Disabled TimeSlotPicker
                         Box(modifier = Modifier.clickable(enabled = false) {}) {
                             TimeSlotPicker(
-                                selectedDate = date,
+                                selectedDate = selectedDate.value,
                                 selectedSlot = selectedSlot.value,
                                 doctorId = 11,
                                 onSlotSelected = { /* Disabled */ },

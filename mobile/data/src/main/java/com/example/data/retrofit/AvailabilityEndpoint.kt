@@ -2,6 +2,7 @@ package com.example.data.retrofit
 
 import com.example.data.baseUrl
 import com.example.data.model.Availability
+import com.example.data.model.AvailabilityDto
 import com.example.data.model.AvailabilityRequest
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -15,7 +16,7 @@ import retrofit2.http.Path
 interface AvailabilityEndpoint {
 
     @GET("availabilities/doctor/{id}/")
-    suspend fun getAvailabilitiesByDoctor(@Path("id") id: Int): List<Availability>
+    suspend fun getAvailabilitiesByDoctor(@Path("id") id: Int): List<AvailabilityDto>
 
     @POST("availabilities/")
     suspend fun addAvailability(@Body data: AvailabilityRequest)

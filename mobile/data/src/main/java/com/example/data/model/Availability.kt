@@ -1,18 +1,25 @@
 package com.example.data.model
 
-import java.util.Date
+import java.time.LocalDateTime
+
+data class AvailabilityDto(
+    val id: Int,
+    val booked: Boolean,
+    val doctor_id: Int,
+    val start_time: String,
+    val end_time: String
+)
 
 data class Availability(
     val id: Int,
-    val booked: Boolean=false,
+    val booked: Boolean,
     val doctor_id: Int,
-    val start_time: Date,
-    val end_time: Date
+    val start_time: LocalDateTime,
+    val end_time: LocalDateTime
 )
 
 data class AvailabilityRequest(
-    val booked: Boolean=false,
     val doctor_id: Int,
-    val start_time: Date,
-    val end_time: Date
+    val start_time: String,
+    val end_time: String
 )
