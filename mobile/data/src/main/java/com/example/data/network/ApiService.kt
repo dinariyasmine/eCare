@@ -1,6 +1,7 @@
 package com.example.data.network
 
 import com.example.data.model.Doctor
+import com.example.data.model.Notification
 import com.example.data.model.Patient
 import retrofit2.Response
 import retrofit2.http.Body

@@ -1,7 +1,7 @@
 plugins {
-    id ("com.android.library")
-    alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
+    id("com.android.library")
+    id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.compose")
 }
 
 android {
@@ -9,8 +9,6 @@ android {
     compileSdk = 35
 
     defaultConfig {
-
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -36,40 +34,55 @@ android {
 }
 
 dependencies {
+    // Core
+    implementation("androidx.core:core-ktx:1.15.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
+    implementation("androidx.activity:activity-compose:1.10.1")
+    implementation(project(":data"))
 
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.activity.compose)
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.material3)
-    implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
-    implementation ("androidx.compose.runtime:runtime-livedata:1.7.8")
-    implementation("com.adamglin:phosphor-icon:1.0.0")
+    // Compose
+    implementation(platform("androidx.compose:compose-bom:2024.04.01"))
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.ui:ui-graphics")
+    implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material3:material3:1.3.2")
-    // For the date picker
+    implementation("androidx.compose.foundation:foundation-android:1.7.8")
+    implementation("androidx.compose.foundation:foundation-layout-android:1.7.8")
+    implementation("androidx.compose.runtime:runtime-android:1.7.8")
+    implementation("androidx.compose.runtime:runtime-livedata:1.7.8")
+
+    // Lifecycle
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
+
+    // Navigation
+    implementation("androidx.navigation:navigation-runtime-android:2.9.0")
+
+    // UI Components
+    implementation("com.adamglin:phosphor-icon:1.0.0")
+    implementation("io.coil-kt:coil-compose:2.4.0")
+
+    // Dialog Sheets
     implementation("com.maxkeppeler.sheets-compose-dialogs:calendar:1.2.0")
     implementation("com.maxkeppeler.sheets-compose-dialogs:core:1.2.0")
-    // In your build.gradle file
 
-// or
-   // implementation "androidx.compose.material3:material3:1.2.0-alpha12" // if using alpha
-    implementation("io.coil-kt:coil-compose:2.4.0") // Use the latest version
-    implementation(libs.firebase.firestore.ktx)
-    implementation(libs.foundation.layout.android)
-    implementation(libs.androidx.storage)
-    implementation(project(":data"))
-    implementation(libs.navigation.runtime.android)
-    implementation(libs.volley)
-    implementation(libs.androidx.foundation.android)
-    implementation(libs.androidx.runtime.android)
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.ui.test.junit4)
-    debugImplementation(libs.androidx.ui.tooling)
-    debugImplementation(libs.androidx.ui.test.manifest)
+    // Firebase
+    implementation("com.google.firebase:firebase-firestore-ktx:25.1.3")
+
+    // Storage
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
+
+    // Networking
+    implementation("com.android.volley:volley:1.2.1")
+
+    // Testing
+    testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test.ext:junit:1.2.1")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
+    androidTestImplementation(platform("androidx.compose:compose-bom:2024.04.01"))
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+
+    // Debug
+    debugImplementation("androidx.compose.ui:ui-tooling")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
 }

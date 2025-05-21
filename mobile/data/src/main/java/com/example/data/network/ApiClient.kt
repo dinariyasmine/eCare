@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit
 
 // In mobile/data/src/main/java/com/example/data/network/ApiClient.kt
 object ApiClient {
-    private const val BASE_URL = "https://bb7f-105-102-18-219.ngrok-free.app"
+    private const val BASE_URL = "https://2583-105-102-18-219.ngrok-free.app"
 
     private val gson = GsonBuilder()
         .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
@@ -24,7 +24,7 @@ object ApiClient {
         val original = chain.request()
         val requestBuilder = original.newBuilder()
             .header("Content-Type", "application/json")
-            .header("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ3Nzc4NTYzLCJpYXQiOjE3NDc3NzQ5NjMsImp0aSI6ImQzMzk3MjU4MjAyMzRkYjE5YjJkMjM5NjhjZjg2ODIxIiwidXNlcl9pZCI6NDR9.lFn4YDD-ZnUT_5fr8ckli_82LA-WfEKimEaWgZKCvvM")
+            .header("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ3Nzk2ODE3LCJpYXQiOjE3NDc3OTMyMTcsImp0aSI6IjcyYWMyOTliYjE5YzRkYTM5NTE2ZGM4MmJhN2RkNjRjIiwidXNlcl9pZCI6NDR9.ukgl1JrfyaXHc0_PuUHhAUkudIOJfKV3AmyYKPJNtko")
             .method(original.method, original.body)
 
         chain.proceed(requestBuilder.build())

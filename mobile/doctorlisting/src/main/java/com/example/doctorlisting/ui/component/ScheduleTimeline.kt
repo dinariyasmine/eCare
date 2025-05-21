@@ -36,11 +36,7 @@ fun ScheduleCard(appointments: List<Appointment>) {
     val now = ZonedDateTime.now(zoneId).withSecond(0).withNano(0)
 
     val todayAppointments = appointments
-        .filter {
-            it.date.toInstant()
-                .atZone(zoneId)
-                .toLocalDate() == today
-        }
+
 
         .sortedBy { it.start_time}
 

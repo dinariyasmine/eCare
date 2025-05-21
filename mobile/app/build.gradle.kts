@@ -63,11 +63,10 @@ dependencies {
 
 
     implementation(libs.androidx.navigation.compose.android)
-    implementation(libs.firebase.messaging.ktx)
+
     implementation(project(":notifications"))
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
     implementation("com.adamglin:phosphor-icon:1.0.0")
-    implementation(project(":OnboardingScreens"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.material:material")
     implementation("androidx.compose.ui:ui-tooling-preview")
@@ -84,7 +83,7 @@ dependencies {
     implementation(project(":patientprofile"))
     implementation(project(":data"))
     implementation(libs.androidx.material3.android)
-    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.navigation.compose.android)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

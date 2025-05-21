@@ -62,6 +62,7 @@ dependencies {
     implementation(libs.androidx.material3)
 
     implementation ("androidx.work:work-runtime-ktx:2.9.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
