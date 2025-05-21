@@ -55,6 +55,7 @@ import com.adamglin.phosphoricons.Light
 import com.example.appointment.R
 import com.example.data.viewModel.AppointmentViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.data.model.Appointment
 import com.example.data.model.AppointmentStatus
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -62,7 +63,7 @@ import java.util.Locale
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun AppointmentsFilteredListBar(patientId: Int, viewModel: AppointmentViewModel) {
+fun AppointmentsFilteredListBar(patientId: Int, viewModel: AppointmentViewModel, onReschedule: (Appointment) -> Unit) {
     val context = LocalContext.current
     val selectedTab = remember { mutableStateOf("Current") }
     val interactionSource = remember { MutableInteractionSource() }
@@ -107,8 +108,8 @@ fun AppointmentsFilteredListBar(patientId: Int, viewModel: AppointmentViewModel)
     val filteredAppointments = remember(allAppointments, selectedTab.value) {
         allAppointments.groupBy { appointment ->
             when {
-                appointment.date.isBefore(LocalDate.now()) -> "Past"
-                appointment.date.isAfter(LocalDate.now()) -> "Upcoming"
+                appointment.start_time.toLocalDate().isBefore(LocalDate.now()) -> "Past"
+                appointment.start_time.toLocalDate().isAfter(LocalDate.now()) -> "Upcoming"
                 else -> "Current"
             }
         }[selectedTab.value] ?: emptyList()
@@ -167,9 +168,8 @@ fun AppointmentsFilteredListBar(patientId: Int, viewModel: AppointmentViewModel)
                         onCancel = {
                             viewModel.deleteAppointment(appointment.id, patientId, true)
                         },
-                        onReschedule = {
-                            // Handle reschedule
-                        }
+                        onReschedule = onReschedule
+
                     )
                 }
             }
@@ -182,7 +182,7 @@ fun AppointmentsFilteredListBar(patientId: Int, viewModel: AppointmentViewModel)
 fun AppointmentCard(
     appointment: com.example.data.model.Appointment,
     onCancel: () -> Unit,
-    onReschedule: () -> Unit
+    onReschedule: (Appointment) -> Unit
 ) {
     val formatter = DateTimeFormatter.ofPattern("EEEE, MMM d", Locale.getDefault())
     val interactionSource = remember { MutableInteractionSource() }
@@ -285,7 +285,7 @@ fun AppointmentCard(
                         imageVector = PhosphorIcons.Light.CalendarCheck,
                         contentDescription = null,
                     )
-                    Text(formatter.format(appointment.date))
+                    Text(formatter.format(appointment.start_time.toLocalDate()))
                 }
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(5.dp),
@@ -327,7 +327,7 @@ fun AppointmentCard(
                     }
 
                     Button(
-                        onClick = onReschedule,
+                        onClick = { onReschedule(appointment) },
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(5.dp),
                         colors = ButtonDefaults.buttonColors(

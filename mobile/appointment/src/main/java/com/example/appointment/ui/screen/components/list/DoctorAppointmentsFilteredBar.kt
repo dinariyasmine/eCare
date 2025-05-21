@@ -93,8 +93,8 @@ fun DoctorAppointmentsFilteredBar(doctorId: Int, viewModel: AppointmentViewModel
     val filteredAppointments = remember(allAppointments, selectedTab.value) {
         allAppointments.groupBy { appointment ->
             when {
-                appointment.date.isBefore(LocalDate.now()) -> "Past"
-                appointment.date.isAfter(LocalDate.now()) -> "Upcoming"
+                appointment.start_time.toLocalDate().isBefore(LocalDate.now()) -> "Past"
+                appointment.start_time.toLocalDate().isAfter(LocalDate.now()) -> "Upcoming"
                 else -> "Current"
             }
         }[selectedTab.value] ?: emptyList()
@@ -299,7 +299,7 @@ fun DoctorAppointmentCard(
                         imageVector = PhosphorIcons.Light.CalendarCheck,
                         contentDescription = null,
                     )
-                    Text(formatter.format(appointment.date))
+                    Text(formatter.format(appointment.start_time.toLocalDate()))
                 }
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(5.dp),

@@ -2,35 +2,18 @@
 
 package com.example.appointment.ui.screen.patient
 
-import PatientForm
-import PatientFormState
 import android.os.Build
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
@@ -39,6 +22,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.livedata.observeAsState
 import com.example.appointment.ui.screen.components.appoint.DatePicker
+import com.example.appointment.ui.screen.components.appoint.PatientForm
+import com.example.appointment.ui.screen.components.appoint.PatientFormState
 import com.example.appointment.ui.screen.components.appoint.TimeSlotPicker
 import com.example.core.theme.ECareMobileTheme
 import com.example.data.model.AppointmentRequest
@@ -47,17 +32,23 @@ import com.example.data.viewModel.AvailabilityViewModel
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.Date
+import java.util.Locale
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun NewAppointmentScreen(viewModel: AppointmentViewModel, availabilityViewModel: AvailabilityViewModel) {
+fun NewAppointmentScreen(
+    viewModel: AppointmentViewModel,
+    availabilityViewModel: AvailabilityViewModel,
+    //onBackClick: () -> Unit
+) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
 
     val selectedDate = remember { mutableStateOf(LocalDate.now()) }
     val selectedSlot = remember { mutableStateOf<String?>(null) }
-    var formData = remember { mutableStateOf<PatientFormState?>(null) }
+    val formState = remember { mutableStateOf(PatientFormState()) }
 
     // Error handling
     val error by viewModel.error.observeAsState()
@@ -76,12 +67,17 @@ fun NewAppointmentScreen(viewModel: AppointmentViewModel, availabilityViewModel:
             TopAppBar(
                 title = { Text("New Appointment") },
                 navigationIcon = {
-                    IconButton(onClick = {
-
-                    }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back",
-                            modifier = Modifier.border(width = 1.dp,
-                                color = Color(0xFF222B45), shape = RectangleShape))
+                    IconButton(onClick = {} //onBackClick
+                     ) {
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = "Back",
+                            modifier = Modifier.border(
+                                width = 1.dp,
+                                color = Color(0xFF222B45),
+                                shape = RectangleShape
+                            )
+                        )
                     }
                 }
             )
@@ -92,9 +88,15 @@ fun NewAppointmentScreen(viewModel: AppointmentViewModel, availabilityViewModel:
                     onDateSelected = { newDate -> selectedDate.value = newDate }
                 )
 
-                Text("Available Time", fontWeight = FontWeight.Medium)
-                val date = Date.from(selectedDate.value.atStartOfDay(ZoneId.systemDefault()).toInstant())
+                Spacer(modifier = Modifier.height(16.dp))
 
+                Text(
+                    "Available Time",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Medium
+                )
+
+                val date = Date.from(selectedDate.value.atStartOfDay(ZoneId.systemDefault()).toInstant())
                 TimeSlotPicker(
                     selectedDate = date,
                     selectedSlot = selectedSlot.value,
@@ -104,48 +106,66 @@ fun NewAppointmentScreen(viewModel: AppointmentViewModel, availabilityViewModel:
                 )
             }
 
-            Text("Patient Details", fontWeight = FontWeight.Medium)
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                "Patient Details",
+                modifier = Modifier.padding(horizontal = 16.dp),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Medium
+            )
+
             PatientForm(
-                onFormSubmit = { submittedData ->
-                    formData.value = submittedData
-                }
+                formState = formState.value,
+                onValueChange = { newState -> formState.value = newState }
             )
 
             Button(
                 onClick = {
-                    // Validation
                     if (selectedSlot.value == null) {
                         Toast.makeText(context, "Please select a time slot", Toast.LENGTH_SHORT).show()
                         return@Button
                     }
 
-                    formData.value?.let { data ->
-                        // Parse time
-                        val timeParts = selectedSlot.value!!.split(":")
-                        val startTime = LocalTime.of(timeParts[0].toInt(), timeParts[1].toInt())
+                    with(formState.value) {
+                        if (fullName.isBlank() || age.isBlank() || gender.isBlank() || problemDescription.isBlank()) {
+                            Toast.makeText(context, "Please fill all patient details", Toast.LENGTH_SHORT).show()
+                            return@Button
+                        }
 
-                        // Create request
+                        // Create formatter for "hh:mm a" format (e.g., "09:00 AM")
+                        val timeFormatter = DateTimeFormatter.ofPattern("hh:mm a", Locale.US)
+
+                        // Parse the time
+                        val parsedTime = LocalTime.parse(selectedSlot.value!!, timeFormatter)
+                        val startDateTime = selectedDate.value.atTime(parsedTime)
+                        val endDateTime = startDateTime.plusMinutes(30)
+
+                        val formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME
+                        val zoneId = ZoneId.systemDefault()
+
+                        val startZoned = startDateTime.atZone(zoneId)
+                        val endZoned = endDateTime.atZone(zoneId)
+
                         val request = AppointmentRequest(
-                            doctor_id = 11,
-                            patient_id = 1,
-                            date = selectedDate.value,
-                            start_time = startTime,
-                            end_time = startTime.plusMinutes(30),
-                            name = data.fullName,
-                            gender = data.gender,
-                            age = data.age,
-                            problem_description = data.problemDescription
+                            doctor = 11,
+                            patient = 1,
+                            start_time = startZoned.format(formatter),
+                            end_time = endZoned.format(formatter),
+                            name = formState.value.fullName,
+                            gender = formState.value.gender,
+                            age = formState.value.age,
+                            problem_description = formState.value.problemDescription
                         )
+                        println("Request: $request")
 
                         viewModel.createAppointment(request)
                         Toast.makeText(context, "Appointment created!", Toast.LENGTH_SHORT).show()
-                    } ?: run {
-                        Toast.makeText(context, "Please fill all patient details", Toast.LENGTH_SHORT).show()
                     }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(5.dp)
+                    .padding(16.dp)
                     .height(50.dp),
                 shape = RoundedCornerShape(5.dp),
                 colors = ButtonDefaults.buttonColors(

@@ -10,6 +10,16 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
+data class AppointmentDto(
+    val id: Int,
+    val doctor: Int,
+    val patient: Int,
+    val start_time: String,
+    val end_time: String,
+    val status: String,
+    val qr_Code: String
+)
+
 @Entity
 data class Appointment(
     @PrimaryKey val id: Int=0,
@@ -32,10 +42,10 @@ enum class AppointmentStatus {
 }
 
 data class AppointmentRequest(
-    val doctor_id: Int,
-    val patient_id: Int,
-    val start_time: LocalDateTime,
-    val end_time: LocalDateTime,
+    val doctor: Int,
+    val patient: Int,
+    val start_time: String,
+    val end_time: String,
     val name: String,
     val gender: String,
     val age: String,

@@ -2,6 +2,7 @@ package com.example.data.retrofit
 
 import com.example.data.baseUrl
 import com.example.data.model.Appointment
+import com.example.data.model.AppointmentDto
 import com.example.data.model.AppointmentRequest
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -15,10 +16,10 @@ import retrofit2.http.Path
 interface AppointmentEndpoint {
 
     @GET("appointments/doctor/{id}/")
-    suspend fun getAppointsByDoctor(@Path("id") id: Int): List<Appointment>
+    suspend fun getAppointsByDoctor(@Path("id") id: Int): List<AppointmentDto>
 
     @GET("appointments/patient/{id}/")
-    suspend fun getAppointsByPatient(@Path("id") id: Int): List<Appointment>
+    suspend fun getAppointsByPatient(@Path("id") id: Int): List<AppointmentDto>
 
     @POST("appointments/")
     suspend fun addAppointment(@Body data: AppointmentRequest)

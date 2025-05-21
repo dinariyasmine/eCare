@@ -34,7 +34,13 @@ class AppointmentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Appointment
-        fields = ['id', 'doctor', 'patient', 'start_time', 'end_time', 'status', 'qr_Code']
+        fields = ['id', 'doctor', 'patient', 'start_time', 'end_time', 'status','name', 'gender',
+            'age', 'problem_description', 'qr_Code']
+
+    def validate(self, data):
+        if data['start_time'] >= data['end_time']:
+            raise serializers.ValidationError("End time must be after start time")
+        return data
 
 
 class NotificationSerializer(serializers.ModelSerializer):
@@ -85,6 +91,11 @@ class AvailabilitySerializer(serializers.ModelSerializer):
     class Meta:
         model = Availability
         fields = ['id', 'doctor_id', 'start_time', 'end_time', 'booked']
+
+    def validate(self, data):
+        if data['start_time'] >= data['end_time']:
+            raise serializers.ValidationError("End time must be after start time")
+        return data
 
 
 class SocialMediaSerializer(serializers.ModelSerializer):

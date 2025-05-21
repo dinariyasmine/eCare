@@ -79,6 +79,13 @@ class Appointment(models.Model):
         ('completed', 'Completed'),
         ('in_progress', 'In Progress'),
     ], default='scheduled')
+    name = models.CharField(max_length=255, null=True, blank=True)
+    gender = models.CharField(max_length=6, choices=[
+        ('MALE', 'MALE'),
+        ('FEMALE', 'FEMALE'),
+    ], default=None, null=True)
+    age = models.CharField(max_length=10, null=True, blank=True)
+    problem_description = models.TextField(blank=True, null=True)
     qr_Code = models.TextField(blank=True, null=True)
     
     def __str__(self):

@@ -32,8 +32,11 @@ class AvailabilityViewModel(private val availabilityRepository: AvailabilityRepo
             _error.value = null
 
             try {
+                println("Fetching availabilities for doctor ID: $id")
                 _availabilities.value = availabilityRepository.getAvailabilitiesByDoctor(id)
+                println("Fetched: ${availabilities.value.size} availabilities")
             } catch (e: Exception) {
+                println("Error: ${e.message}")
                 _error.value = "Failed to load availabilities: ${e.message}"
             } finally {
                 _loading.value = false

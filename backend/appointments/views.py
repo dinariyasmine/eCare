@@ -45,7 +45,7 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         appointment = serializer.save()
 
         # generating the QR code based on appointment info
-        qr_content = f"Appointment ID: {appointment.id}, Patient ID: {appointment.id} Doctor ID: {appointment.doctor.id}, Start: {appointment.start_time}, End: {appointment.end_time}"
+        qr_content = f"Appointment ID: {appointment.id}, Patient ID: {appointment.patient.id} Doctor ID: {appointment.doctor.id}, Start: {appointment.start_time}, End: {appointment.end_time}"
         qr_base64 = generate_qr_code(qr_content)
 
         appointment.qr_Code = qr_base64

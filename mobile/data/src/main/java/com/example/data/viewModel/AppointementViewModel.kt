@@ -1,5 +1,7 @@
 package com.example.data.viewModel
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -11,6 +13,7 @@ import com.example.data.repository.AppointmentRepository
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
+@RequiresApi(Build.VERSION_CODES.O)
 class AppointmentViewModel(
     private val repository: AppointmentRepository
 ) : ViewModel() {
@@ -44,10 +47,11 @@ class AppointmentViewModel(
     }
 
     fun getAppointmentsForDate(date: LocalDate): List<Appointment> {
-        return appointments.value?.filter { it.date == date }
+        return appointments.value?.filter { it.start_time.toLocalDate() == date }
             ?.sortedBy { it.start_time }
             ?: emptyList()
     }
+
 
     fun getAppointmentsByPatient(patientId: Int) {
         _isLoading.value = true
@@ -74,11 +78,7 @@ class AppointmentViewModel(
             try {
                 repository.createAppointment(request)
                 // Refresh the list after creation
-                if (request.patient_id != null) {
-                    getAppointmentsByPatient(request.patient_id)
-                } else if (request.doctor_id != null) {
-                    getAppointmentsByDoctor(request.doctor_id)
-                }
+                getAppointmentsByPatient(request.patient)
                 _operationSuccess.value = true
             } catch (e: Exception) {
                 _error.value = "Failed to create appointment: ${e.message}"

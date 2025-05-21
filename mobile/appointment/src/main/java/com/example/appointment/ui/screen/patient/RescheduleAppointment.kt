@@ -2,7 +2,6 @@
 
 package com.example.appointment.ui.screen.patient
 
-import PatientFormState
 import android.os.Build
 import android.widget.Toast
 import androidx.annotation.RequiresApi
@@ -37,16 +36,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.appointment.ui.screen.components.appoint.DatePicker
+import com.example.appointment.ui.screen.components.appoint.PatientFormState
 import com.example.appointment.ui.screen.components.appoint.TimeSlotPicker
 import com.example.core.theme.ECareMobileTheme
 import com.example.data.model.Appointment
-import com.example.data.repository.AvailabilityRepository
-import com.example.data.retrofit.AvailabilityEndpoint
 import com.example.data.viewModel.AppointmentViewModel
 import com.example.data.viewModel.AvailabilityViewModel
-import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -65,11 +61,11 @@ fun RescheduleAppointmentScreen(
 
     // Date and Time states initialized with existing appointment values
     val selectedDate = remember {
-        mutableStateOf(appointment.date ?: LocalDate.now())
+        mutableStateOf(appointment.start_time.toLocalDate())
     }
 
     val selectedSlot = remember {
-        mutableStateOf(appointment.start_time ?: LocalTime.now())
+        mutableStateOf(appointment.start_time.toLocalTime())
     }
 
     val formData = remember {
@@ -152,10 +148,12 @@ fun RescheduleAppointmentScreen(
 
             Button(
                 onClick = {
+                    val startDateTime = selectedDate.value.atTime(selectedSlot.value)
+                    val endDateTime = startDateTime.plusMinutes(30)
+
                     val updatedAppointment = appointment.copy(
-                        date = selectedDate.value,
-                        start_time = selectedSlot.value,
-                        end_time = selectedSlot.value.plusMinutes(30),
+                        start_time = startDateTime,
+                        end_time = endDateTime,
                         name = formData.value.fullName,
                         gender = formData.value.gender,
                         age = formData.value.age,

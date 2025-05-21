@@ -1,3 +1,3 @@
 package com.example.data
 
-const val baseUrl = "https://3ca8-41-111-189-175.ngrok-free.app"
+const val baseUrl = "https://3e7a-105-99-67-221.ngrok-free.app"

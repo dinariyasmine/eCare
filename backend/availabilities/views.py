@@ -12,6 +12,6 @@ class AvailabilityViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='doctor/(?P<pk>[^/.]+)')
     def availaibilitiesPerDoctor(self, request, pk=None):
-        queryset = Availability.objects.filter(doctor=pk)
+        queryset = Availability.objects.filter(doctor_id=pk)
         serializer = self.get_serializer(instance=queryset, many=True)
         return Response(serializer.data)

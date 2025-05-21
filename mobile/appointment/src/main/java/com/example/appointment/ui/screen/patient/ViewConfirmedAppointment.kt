@@ -2,7 +2,6 @@
 
 package com.example.appointment.ui.screen.patient
 
-import PatientForm
 import android.os.Build
 import android.widget.Toast
 import androidx.annotation.RequiresApi
@@ -46,15 +45,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.alpha
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Bold
 import com.adamglin.phosphoricons.bold.QrCode
 import com.example.appointment.ui.screen.components.appoint.DatePicker
+import com.example.appointment.ui.screen.components.appoint.PatientForm
+import com.example.appointment.ui.screen.components.appoint.PatientFormState
 import com.example.appointment.ui.screen.components.appoint.TimeSlotPicker
 import com.example.core.theme.ECareMobileTheme
-import com.example.data.repository.AvailabilityRepository
-import com.example.data.retrofit.AvailabilityEndpoint
 import com.example.data.viewModel.AppointmentViewModel
 import com.example.data.viewModel.AvailabilityViewModel
 import java.time.LocalDate
@@ -158,7 +156,8 @@ fun ViewConfirmedAppointmentScreen(viewModel: AppointmentViewModel, availability
                         // Disabled PatientForm
                         Box(modifier = Modifier.clickable(enabled = false) {}) {
                             PatientForm(
-                                onFormSubmit = { /* Disabled */ }
+                                formState = PatientFormState(),
+                                onValueChange = {  }
                             )
                         }
 

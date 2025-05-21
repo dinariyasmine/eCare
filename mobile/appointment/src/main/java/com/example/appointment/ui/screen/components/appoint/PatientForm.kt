@@ -1,12 +1,13 @@
+package com.example.appointment.ui.screen.components.appoint
+
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 
@@ -20,17 +21,14 @@ data class PatientFormState(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PatientForm(
-    onFormSubmit: (PatientFormState) -> Unit,
+    formState: PatientFormState,
+    onValueChange: (PatientFormState) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var formState by remember { mutableStateOf(PatientFormState()) }
-    var ageExpanded by remember { mutableStateOf(false) }
-    val ageRanges = listOf("18-25", "26-30", "31-40", "41-50", "51+")
-
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Full Name Field
@@ -40,48 +38,27 @@ fun PatientForm(
         )
         OutlinedTextField(
             value = formState.fullName,
-            onValueChange = { formState = formState.copy(fullName = it) },
+            onValueChange = { onValueChange(formState.copy(fullName = it)) },
             modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text("John Doe") }
+            placeholder = { Text("John Doe") },
+            singleLine = true
         )
 
-        // Age Dropdown
+        // Age Field
         Text(
             text = "Age",
             style = MaterialTheme.typography.titleMedium
         )
-        ExposedDropdownMenuBox(
-            expanded = ageExpanded,
-            onExpandedChange = { ageExpanded = !ageExpanded }
-        ) {
-            OutlinedTextField(
-                value = formState.age,
-                onValueChange = {},
-                readOnly = true,
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = ageExpanded) },
-                placeholder = { Text("Select age range") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .menuAnchor()
-            )
+        OutlinedTextField(
+            value = formState.age,
+            onValueChange = { onValueChange(formState.copy(age = it)) },
+            modifier = Modifier.fillMaxWidth(),
+            placeholder = { Text("Enter your age") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            singleLine = true
+        )
 
-            ExposedDropdownMenu(
-                expanded = ageExpanded,
-                onDismissRequest = { ageExpanded = false }
-            ) {
-                ageRanges.forEach { range ->
-                    DropdownMenuItem(
-                        text = { Text(range) },
-                        onClick = {
-                            formState = formState.copy(age = range)
-                            ageExpanded = false
-                        }
-                    )
-                }
-            }
-        }
-
-        // Gender Selection (Styled Buttons)
+        // Gender Selection
         Text(
             text = "Gender",
             style = MaterialTheme.typography.titleMedium
@@ -92,42 +69,36 @@ fun PatientForm(
         ) {
             // Male Button
             Button(
-                onClick = { formState = formState.copy(gender = "Male") },
+                onClick = { onValueChange(formState.copy(gender = "MALE")) },
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(5.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (formState.gender == "Male") Color(0xFF3B82F6) else Color.White,
-                    contentColor = if (formState.gender == "Male") Color.White else Color(0xFF6D7280)
+                    containerColor = if (formState.gender == "MALE") Color(0xFF3B82F6) else Color.White,
+                    contentColor = if (formState.gender == "MALE") Color.White else Color(0xFF6D7280)
                 ),
                 border = BorderStroke(
                     width = 1.dp,
                     color = Color(0xFFE5E7EB)
                 )
             ) {
-                Text(
-                    "Male",
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                Text("Male")
             }
 
             // Female Button
             Button(
-                onClick = { formState = formState.copy(gender = "Female") },
+                onClick = { onValueChange(formState.copy(gender = "FEMALE")) },
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(5.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (formState.gender == "Female") Color(0xFF3B82F6) else Color.White,
-                    contentColor = if (formState.gender == "Female") Color.White else Color(0xFF6D7280)
+                    containerColor = if (formState.gender == "FEMALE") Color(0xFF3B82F6) else Color.White,
+                    contentColor = if (formState.gender == "FEMALE") Color.White else Color(0xFF6D7280)
                 ),
                 border = BorderStroke(
                     width = 1.dp,
                     color = Color(0xFFE5E7EB)
                 )
             ) {
-                Text(
-                    "Female",
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                Text("Female")
             }
         }
 
@@ -138,17 +109,15 @@ fun PatientForm(
         )
         OutlinedTextField(
             value = formState.problemDescription,
-            onValueChange = { formState = formState.copy(problemDescription = it) },
+            onValueChange = { onValueChange(formState.copy(problemDescription = it)) },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(120.dp),
-            placeholder = { Text("Write your problem") },
+            placeholder = { Text("Describe your symptoms or concerns") },
             keyboardOptions = KeyboardOptions.Default.copy(
                 keyboardType = KeyboardType.Text
             ),
             singleLine = false
         )
-
-
     }
 }
