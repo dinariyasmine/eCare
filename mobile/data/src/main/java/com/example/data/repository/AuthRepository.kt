@@ -8,16 +8,24 @@ import kotlinx.coroutines.withContext
 class AuthRepository(private val apiService: ApiService) {
     suspend fun registerPatient(request: RegistrationRequest): AuthResponse {
         return withContext(Dispatchers.IO) {
-            apiService.registerPatient(
-                request.copy(role = "patient")
+            val response = apiService.registerPatient(request.copy(role = "patient"))
+            // Convert RegistrationResponse to AuthResponse
+            AuthResponse(
+                access = response.tokens.access,
+                refresh = response.tokens.refresh,
+                user = response.user
             )
         }
     }
 
     suspend fun registerDoctor(request: RegistrationRequest): AuthResponse {
         return withContext(Dispatchers.IO) {
-            apiService.registerDoctor(
-                request.copy(role = "doctor")
+            val response = apiService.registerDoctor(request.copy(role = "doctor"))
+            // Convert RegistrationResponse to AuthResponse
+            AuthResponse(
+                access = response.tokens.access,
+                refresh = response.tokens.refresh,
+                user = response.user
             )
         }
     }

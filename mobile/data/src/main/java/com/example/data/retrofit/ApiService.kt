@@ -8,6 +8,7 @@ import com.example.data.model.OtpVerificationModel
 import com.example.data.model.PasswordResetModel
 import com.example.data.model.PasswordResetRequestModel
 import com.example.data.model.RegistrationRequest
+import com.example.data.model.RegistrationResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -15,10 +16,10 @@ import retrofit2.http.Path
 
 interface ApiService {
     @POST("api/auth/register/patient/")
-    suspend fun registerPatient(@Body request: RegistrationRequest): AuthResponse
+    suspend fun registerPatient(@Body request: RegistrationRequest): RegistrationResponse
 
     @POST("api/auth/register/doctor/")
-    suspend fun registerDoctor(@Body request: RegistrationRequest): AuthResponse
+    suspend fun registerDoctor(@Body request: RegistrationRequest): RegistrationResponse
 
     @POST("api/auth/login/")
     suspend fun login(@Body request: LoginRequest): AuthResponse

@@ -219,8 +219,17 @@ fun SignUpScreen(googleAuthHelper: googleAuthHelper, navController: NavControlle
         when {
             reg != null && isLoading -> {
                 isLoading = false
-                Log.d("LoginScreen", "Access token raw: ${reg.access}")
-                // Save tokens and user info
+
+                // In your logs, we can see that AuthViewModel has received the full response
+                // but it's parsing it into the AuthResponse incorrectly
+                // The response actually has the structure with nested tokens
+                // We need to fix this in the AuthViewModel instead
+
+                // Check logs for debugging
+                Log.d("SignupScreen", "Full registration response: $reg")
+                Log.d("SignupScreen", "Access token raw: ${reg.access}")
+
+                // Use the AuthResponse structure directly like in login
                 reg.access?.let {
                     TokenManager.saveToken(it)
                     Log.d("SignupScreen", "Access token saved: $it")

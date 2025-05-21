@@ -15,7 +15,7 @@ class AuthInterceptor : Interceptor {
         val url = request.url.toString()
 
         // Don't add token for login or registration
-        if (url.contains("login") || url.contains("register")) {
+        if (url.contains("login") || url.contains("register") || url.contains("clinics")){
             return chain.proceed(request)
         }
 
