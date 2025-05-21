@@ -51,7 +51,7 @@ fun ListAvailabilitiesScreen(availabilityViewModel: AvailabilityViewModel) {
                 .fillMaxSize()
         ) {
             TopAppBar(
-                title = { Text("Manage Availability") },
+                title = { Text("Set your working hours") },
                 navigationIcon = {
                     IconButton(onClick = { /* Handle back navigation */ }) {
                         Icon(

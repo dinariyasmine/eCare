@@ -56,6 +56,26 @@ class AppointmentViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+    def destroy(self, request, *args, **kwargs):
+        appointment = self.get_object()
+
+        # Find the associated availability and set booked to False
+        availability = Availability.objects.filter(
+            doctor_id=appointment.doctor.id,
+            start_time__lte=appointment.start_time,
+            end_time__gte=appointment.end_time,
+            booked=True
+        ).first()
+
+        if availability:
+            availability.booked = False
+            availability.save()
+
+        # Proceed with the standard deletion
+        self.perform_destroy(appointment)
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
     @action(detail=False, methods=['get'], url_path='doctor/(?P<pk>[^/.]+)')
     def appoints_by_doctor(self, request, pk=None):
         appointments = Appointment.objects.filter(doctor_id=pk)

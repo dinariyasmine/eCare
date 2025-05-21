@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
 
-package com.example.appointment.ui.screen.patient
+package com.example.appointment.ui.screen.doctor
 
 import android.os.Build
 import android.widget.Toast
@@ -83,7 +83,7 @@ fun ViewCompletedAppointmentScreen(viewModel: AppointmentViewModel, availability
                 .fillMaxSize()
         ) {
             TopAppBar(
-                title = { Text("Your appointment is completed!") },
+                title = { Text("Appointment Completed") },
                 navigationIcon = {
                     IconButton(onClick = { /* Keep back arrow clickable */ }) {
                         Icon(

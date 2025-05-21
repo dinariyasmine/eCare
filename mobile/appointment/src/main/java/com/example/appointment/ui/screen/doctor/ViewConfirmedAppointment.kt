@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
 
-package com.example.appointment.ui.screen.patient
+package com.example.appointment.ui.screen.doctor
 
 import android.os.Build
 import android.widget.Toast
@@ -47,12 +47,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.alpha
 import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Bold
+import com.adamglin.phosphoricons.bold.Article
+import com.adamglin.phosphoricons.bold.FilePdf
 import com.adamglin.phosphoricons.bold.QrCode
 import com.example.appointment.ui.screen.components.appoint.DatePicker
 import com.example.appointment.ui.screen.components.appoint.PatientForm
 import com.example.appointment.ui.screen.components.appoint.PatientFormState
 import com.example.appointment.ui.screen.components.appoint.TimeSlotPicker
 import com.example.core.theme.ECareMobileTheme
+import com.example.data.model.AppointmentStatus
 import com.example.data.viewModel.AppointmentViewModel
 import com.example.data.viewModel.AvailabilityViewModel
 import java.time.LocalDate
@@ -118,7 +121,24 @@ fun ViewConfirmedAppointmentScreen(viewModel: AppointmentViewModel, availability
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Check In with QR Code",
+                                text = "Scan QR",
+                                color = Color(0xFF4B5563),
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                        }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .padding(vertical = 8.dp)
+                        ) {
+                            Icon(
+                                imageVector = PhosphorIcons.Bold.Article,
+                                contentDescription = null,
+                                Modifier.background(Color(0xFFF3F4F6), RoundedCornerShape(5.dp)),
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Write Prescription",
                                 color = Color(0xFF4B5563),
                                 style = MaterialTheme.typography.bodySmall,
                             )
