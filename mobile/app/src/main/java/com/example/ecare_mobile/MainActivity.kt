@@ -1,8 +1,15 @@
 package com.example.ecare_mobile
 
+import QRCodeFromBase64
+import QrCodeReaderScreen
 import android.os.Bundle
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -17,6 +24,15 @@ import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.example.data.util.TokenManager
 import com.example.authentification.screen.ui.screen.GoogleAuthHelper
+import com.example.doctorlisting.ui.screen.DoctorDetailScreen
+import com.example.doctorlisting.ui.screen.DoctorListScreen
+import com.example.doctorlisting.ui.screen.DoctorReviewsScreen
+import com.example.patientprofile.ui.theme.screens.DoctorProfileScreen
+import com.example.patientprofile.ui.theme.screens.Doctorparams
+import com.example.patientprofile.ui.theme.screens.PatientProfileScreen
+import com.example.patientprofile.ui.theme.screens.Patientparams
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 
 class MainActivity : ComponentActivity() {
     private lateinit var googleAuthHelper: GoogleAuthHelper

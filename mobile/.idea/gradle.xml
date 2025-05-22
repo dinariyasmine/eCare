@@ -15,6 +15,7 @@
             <option value="$PROJECT_DIR$/core" />
             <option value="$PROJECT_DIR$/data" />
             <option value="$PROJECT_DIR$/doctorlisting" />
+            <option value="$PROJECT_DIR$/notifications" />
             <option value="$PROJECT_DIR$/patientprofile" />
             <option value="$PROJECT_DIR$/pop-ups-confirmations-template" />
           </set>
