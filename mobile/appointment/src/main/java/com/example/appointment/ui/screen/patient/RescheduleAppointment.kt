@@ -1,11 +1,15 @@
 
-/*package com.example.appointment.ui.screen.patient
+package com.example.appointment.ui.screen.patient
 
 import android.os.Build
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -17,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -25,6 +30,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,52 +41,49 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment
+import androidx.navigation.NavHostController
 import com.example.appointment.ui.screen.components.appoint.DatePicker
 import com.example.appointment.ui.screen.components.appoint.PatientFormState
 import com.example.appointment.ui.screen.components.appoint.TimeSlotPicker
 import com.example.core.theme.ECareMobileTheme
 import com.example.data.viewModel.AppointmentViewModel
 import com.example.data.viewModel.AvailabilityViewModel
+import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun RescheduleAppointmentScreen(
-    appointment: Unit,
-    onBack: () -> Unit,
     viewModel: AppointmentViewModel,
-    availabilityViewModel: AvailabilityViewModel
+    availabilityViewModel: AvailabilityViewModel,
+    navController: NavHostController,
+    appointmentId: String
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
 
-    // Date and Time states initialized with existing appointment values
-//    val selectedDate = remember {
-//        mutableStateOf(appointment.start_time.toLocalDate())
-//    }
-
-//    val selectedSlot = remember {
-//        mutableStateOf(appointment.start_time.toLocalTime())
-//    }
-
-    val formData = remember {
-        mutableStateOf(
-            PatientFormState(
-                fullName = appointment.name ,
-                gender = appointment.gender,
-                age = appointment.age,
-                problemDescription = appointment.problem_description
-            )
-        )
+    // Fetch the specific appointment
+    LaunchedEffect(appointmentId) {
+        viewModel.getAppointmentById(appointmentId.toInt())
+        availabilityViewModel.availabilities // Load availabilities
     }
 
-    // Error and success handling
+    // Observe the appointment details
+    val appointment by viewModel.currentAppointment.observeAsState()
+
+    // State for selected date and time slot
+    val selectedDate = remember { mutableStateOf(LocalDate.now()) }
+    val selectedSlot = remember { mutableStateOf<String?>(null) }
+
+    // Error handling
     val error by viewModel.error.observeAsState()
-    val success by viewModel.operationSuccess.observeAsState()
+    val availabilityError by availabilityViewModel.error.collectAsState()
 
     LaunchedEffect(error) {
         error?.let {
@@ -88,10 +91,9 @@ fun RescheduleAppointmentScreen(
         }
     }
 
-    LaunchedEffect(success) {
-        if (success == true) {
-            Toast.makeText(context, "Appointment rescheduled successfully!", Toast.LENGTH_SHORT).show()
-            onBack()
+    LaunchedEffect(availabilityError) {
+        availabilityError?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -104,7 +106,7 @@ fun RescheduleAppointmentScreen(
             TopAppBar(
                 title = { Text("Reschedule Appointment") },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             Icons.Default.ArrowBack,
                             contentDescription = "Back",
@@ -118,64 +120,148 @@ fun RescheduleAppointmentScreen(
                 }
             )
 
-            Column(modifier = Modifier.padding(16.dp)) {
-                DatePicker(
-                    selectedDate = selectedDate.value,
-                    onDateSelected = { newDate -> selectedDate.value = newDate }
-                )
-
-                Text("Available Time", fontWeight = FontWeight.Medium, modifier = Modifier.padding(top = 16.dp))
-                val date = Date.from(selectedDate.value.atStartOfDay(ZoneId.systemDefault()).toInstant())
-
-                TimeSlotPicker(
-                    selectedDate = selectedDate.value,
-                    selectedSlot = selectedSlot.value.format(DateTimeFormatter.ofPattern("HH:mm")),
-                    doctorId = appointment.doctor_id ?: 101,
-                    onSlotSelected = { slot ->
-                        selectedSlot.value = LocalTime.parse(slot)
-                    },
-                    availabilityViewModel= availabilityViewModel
-                )
-            }
-
-            Text(
-                "Patient Details",
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.padding(start = 16.dp, top = 8.dp)
-            )
-
-
-            Button(
-                onClick = {
-                    val startDateTime = selectedDate.value.atTime(selectedSlot.value)
-                    val endDateTime = startDateTime.plusMinutes(30)
-
-                    val updatedAppointment = appointment.copy(
-                        start_time = startDateTime,
-                        end_time = endDateTime,
-                        name = formData.value.fullName,
-                        gender = formData.value.gender,
-                        age = formData.value.age,
-                        problem_description = formData.value.problemDescription
+            appointment?.let { appt ->
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp)
+                ) {
+                    // Original appointment details
+                    Text(
+                        text = "Original Appointment",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(bottom = 8.dp)
                     )
-                    viewModel.updateAppointment(appointment.id, updatedAppointment)
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-                    .height(50.dp),
-                shape = RoundedCornerShape(5.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF3B82F6),
-                    contentColor = Color.White
-                )
-            ) {
-                Text(
-                    "Reschedule Appointment",
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold
-                )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Date:",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.Gray
+                        )
+                        Text(
+                            text = appt.start_time.toLocalDate().toString(),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Time:",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.Gray
+                        )
+                        Text(
+                            text = "${appt.start_time.toLocalTime()} - ${appt.end_time.toLocalTime()}",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // New appointment selection
+                    Text(
+                        text = "Select New Time Slot",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+
+                    DatePicker(
+                        selectedDate = selectedDate.value,
+                        onDateSelected = { date ->
+                            selectedDate.value = date
+                            selectedSlot.value = null // Reset time slot when date changes
+                        }
+                    )
+
+                    TimeSlotPicker(
+                        selectedDate = selectedDate.value,
+                        selectedSlot = selectedSlot.value,
+                        doctorId = appt.doctor_id,
+                        onSlotSelected = { slot ->
+                            selectedSlot.value = slot
+                        },
+                        availabilityViewModel = availabilityViewModel
+                    )
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    // Reschedule button
+                    Button(
+                        onClick = {
+                            selectedSlot.value?.let { slot ->
+                                // Parse the selected time slot (format: "hh:mm a")
+                                val timeFormatter = DateTimeFormatter.ofPattern("hh:mm a", Locale.US)
+                                val startTime = LocalTime.parse(slot, timeFormatter)
+                                val endTime = startTime.plusMinutes(30) // Assuming 30-minute slots
+
+                                val newStartDateTime = LocalDateTime.of(
+                                    selectedDate.value,
+                                    startTime
+                                )
+                                val newEndDateTime = LocalDateTime.of(
+                                    selectedDate.value,
+                                    endTime
+                                )
+
+                                // Update the appointment
+                                viewModel.updateAppointment(
+                                    id = appt.id,
+                                    appointment = appt.copy(
+                                        start_time = newStartDateTime,
+                                        end_time = newEndDateTime
+                                    )
+                                )
+
+                                // Show success message and navigate back
+                                Toast.makeText(
+                                    context,
+                                    "Appointment rescheduled successfully",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                navController.popBackStack()
+                            } ?: run {
+                                Toast.makeText(
+                                    context,
+                                    "Please select a time slot",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 16.dp)
+                            .height(50.dp),
+                        shape = RoundedCornerShape(5.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF3B82F6),
+                            contentColor = Color.White,
+                        ),
+                        enabled = selectedSlot.value != null
+                    ) {
+                        Text(
+                            "Confirm Reschedule",
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            } ?: run {
+                // Loading or error state
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    if (error != null) {
+                        Text("Failed to load appointment details")
+                    } else {
+                        CircularProgressIndicator()
+                    }
+                }
             }
         }
     }
-}*/
+}

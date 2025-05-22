@@ -26,7 +26,7 @@ class MainActivity : ComponentActivity() {
                     navController = navController,
                     appointmentViewModel = appointmentModel,
                     availabilityViewModel = availabilityViewModel,
-                    startDestination = Screen.DoctorAppointments.route
+                    startDestination = Screen.ListAppointments.route
                 )
             }
         }

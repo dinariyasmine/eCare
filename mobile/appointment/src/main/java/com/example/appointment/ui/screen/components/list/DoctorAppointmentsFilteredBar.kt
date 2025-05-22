@@ -215,65 +215,108 @@ fun DoctorAppointmentCard(
             containerColor = Color.White
         )
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(16.dp)){
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .fillMaxSize()
                     .padding(bottom = 10.dp),
                 horizontalArrangement = Arrangement.SpaceAround,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(
-                    modifier = Modifier
-                        .weight(2f)
+                    modifier = Modifier.weight(2f)
                         .fillMaxHeight(),
                     verticalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = appointment.name,
+                        text = "Patient: ${appointment.name}",
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Bold
                     )
-                    Text(
-                        text = "Patient",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF4B5563)
-                    )
-
-                    Box(
-                        modifier = Modifier
-                            .padding(top = 8.dp)
-                            .clickable(
-                                interactionSource = interactionSource,
-                                indication = null,
-                                onClick = onViewAppointment
-                            )
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
+                    Column (
+                        modifier = Modifier.weight(2f)
+                            .fillMaxHeight(),
+                        verticalArrangement = Arrangement.SpaceBetween
+                    ){
+                        Box(
                             modifier = Modifier
-                                .padding(vertical = 8.dp)
+                                .padding(top = 8.dp)
+                                .clickable(
+                                    interactionSource = interactionSource,
+                                    indication = null,
+                                    onClick = {
+                                        when (appointment.status) {
+                                            AppointmentStatus.COMPLETED -> {
+                                                // Handle prescription view
+                                            }
+                                            else -> {
+                                                // Handle check-in
+                                            }
+                                        }
+                                    }
+                                )
                         ) {
-                            Icon(
-                                imageVector = if (appointment.status == AppointmentStatus.COMPLETED)
-                                    PhosphorIcons.Bold.FilePdf
-                                else
-                                    PhosphorIcons.Bold.QrCode,
-                                contentDescription = null,
-                                modifier = Modifier.background(Color(0xFFF3F4F6), RoundedCornerShape(5.dp)),
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = if (appointment.status == AppointmentStatus.COMPLETED)
-                                    "Prescription"
-                                else
-                                    "Check In",
-                                color = Color(0xFF4B5563),
-                                style = MaterialTheme.typography.bodySmall,
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .padding(vertical = 8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = if (appointment.status == AppointmentStatus.COMPLETED)
+                                        PhosphorIcons.Bold.FilePdf
+                                    else
+                                        PhosphorIcons.Bold.QrCode,
+                                    contentDescription = null,
+                                    Modifier.background(Color(0xFFF3F4F6), RoundedCornerShape(5.dp)),
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = if (appointment.status == AppointmentStatus.COMPLETED)
+                                        "Prescription"
+                                    else
+                                        "Scan QR",
+                                    color = Color(0xFF4B5563),
+                                    style = MaterialTheme.typography.bodySmall,
+                                )
+                            }
+                        }
+
+                        if (appointment.status != AppointmentStatus.COMPLETED) {
+                            Box(
+                                modifier = Modifier
+                                    .padding(top = 8.dp)
+                                    .clickable(
+                                        interactionSource = interactionSource,
+                                        indication = null,
+                                        onClick = {
+                                            // Handle writing prescription
+                                        }
+                                    )
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .padding(vertical = 8.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = PhosphorIcons.Bold.Article,
+                                        contentDescription = null,
+                                        Modifier.background(Color(0xFFF3F4F6), RoundedCornerShape(5.dp)),
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "Write Prescription",
+                                        color = Color(0xFF4B5563),
+                                        style = MaterialTheme.typography.bodySmall,
+                                    )
+                                }
+                            }
                         }
                     }
+
+
                 }
+
             }
             Row(
                 modifier = Modifier
@@ -309,49 +352,6 @@ fun DoctorAppointmentCard(
                         text = "$startTimeFormatted - $endTimeFormatted",
                         style = MaterialTheme.typography.bodyMedium
                     )
-                }
-            }
-
-            if (appointment.status == AppointmentStatus.CONFIRMED) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Button(
-                        onClick = onCancel,
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(5.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.White,
-                            contentColor = Color(0xFF3B82F6),
-                        ),
-                        border = BorderStroke(1.dp, Color(0xFF3B82F6)),
-                        elevation = ButtonDefaults.buttonElevation(0.dp)
-                    ) {
-                        Text(
-                            "Cancel",
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-
-                    Button(
-                        onClick = onReschedule,
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(5.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF3B82F6),
-                            contentColor = Color.White
-                        )
-                    ) {
-                        Text(
-                            "Reschedule",
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
                 }
             }
         }

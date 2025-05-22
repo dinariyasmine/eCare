@@ -68,7 +68,7 @@ import java.util.Locale
 fun AppointmentsFilteredListBar(
     patientId: Int,
     viewModel: AppointmentViewModel,
-    onReschedule: (Appointment) -> Unit,
+    onReschedule: (Int) -> Unit,
     onViewCompleted: (Int) -> Unit,
     onViewConfirmed: (Int) -> Unit
 ) {
@@ -185,7 +185,7 @@ fun AppointmentsFilteredListBar(
                             },
                             onReschedule = { 
                                 // Navigate to reschedule screen
-                                onReschedule(appointment)
+                                onReschedule(appointment.id)
                             },
                             onViewAppointment = {
                                 // Navigate based on appointment status

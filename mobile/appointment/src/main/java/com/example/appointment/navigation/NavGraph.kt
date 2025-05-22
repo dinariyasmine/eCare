@@ -14,6 +14,7 @@ import com.example.appointment.ui.screen.doctor.ViewCompletedAppointmentDoctorSc
 import com.example.appointment.ui.screen.doctor.ViewConfirmedAppointmentDoctorScreen
 import com.example.appointment.ui.screen.patient.ListAppointmentsScreen
 import com.example.appointment.ui.screen.patient.NewAppointmentScreen
+import com.example.appointment.ui.screen.patient.RescheduleAppointmentScreen
 //import com.example.appointment.ui.screen.patient.RescheduleAppointmentScreen
 import com.example.appointment.ui.screen.patient.ViewConfirmedAppointmentScreen
 import com.example.appointment.ui.screen.patient.ViewCompletedAppointmentScreen
@@ -65,13 +66,25 @@ fun AppointmentNavGraph(
         composable(Screen.DoctorCompletedAppointment.route) { backStackEntry ->
             val appointmentId = backStackEntry.arguments?.getString("appointmentId")?.toIntOrNull()
             if (appointmentId != null) {
-                ViewCompletedAppointmentDoctorScreen(appointmentViewModel, availabilityViewModel, navController, appointmentId)            }
+                ViewCompletedAppointmentDoctorScreen(
+                    appointmentViewModel,
+                    availabilityViewModel,
+                    navController,
+                    appointmentId
+                )
+            }
         }
 
         composable(Screen.DoctorConfirmedAppointment.route) { backStackEntry ->
             val appointmentId = backStackEntry.arguments?.getString("appointmentId")?.toIntOrNull()
             if (appointmentId != null) {
-                ViewConfirmedAppointmentDoctorScreen(appointmentViewModel, availabilityViewModel, navController, appointmentId)            }
+                ViewConfirmedAppointmentDoctorScreen(
+                    appointmentViewModel,
+                    availabilityViewModel,
+                    navController,
+                    appointmentId
+                )
+            }
         }
 
         composable(Screen.NewAppointment.route) {
@@ -91,13 +104,37 @@ fun AppointmentNavGraph(
         composable(Screen.ViewCompletedAppointment.route) { backStackEntry ->
             val appointmentId = backStackEntry.arguments?.getString("appointmentId")?.toIntOrNull()
             if (appointmentId != null) {
-                ViewCompletedAppointmentScreen(appointmentViewModel, availabilityViewModel, navController, appointmentId)            }
+                ViewCompletedAppointmentScreen(
+                    appointmentViewModel,
+                    availabilityViewModel,
+                    navController,
+                    appointmentId
+                )
+            }
         }
 
         composable(Screen.ViewConfirmedAppointment.route) { backStackEntry ->
             val appointmentId = backStackEntry.arguments?.getString("appointmentId")?.toIntOrNull()
             if (appointmentId != null) {
-                ViewConfirmedAppointmentScreen(appointmentViewModel, availabilityViewModel, navController, appointmentId)            }
+                ViewConfirmedAppointmentScreen(
+                    appointmentViewModel,
+                    availabilityViewModel,
+                    navController,
+                    appointmentId
+                )
+            }
+        }
+
+        composable(Screen.RescheduleAppointment.route) { backStackEntry ->
+            val appointmentId = backStackEntry.arguments?.getString("appointmentId")
+            if (appointmentId != null) {
+                RescheduleAppointmentScreen(
+                    appointmentViewModel,
+                    availabilityViewModel,
+                    navController,
+                    appointmentId
+                )
+            }
         }
     }
 }
