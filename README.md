@@ -58,188 +58,29 @@ Check out the conception: [Lucidchart Diagram](https://lucid.app/lucidchart/0b9f
 1. Open the `mobile/` folder in **Android Studio**  
 2. Build & Run the app on an emulator or physical device  
 
-### **3. Backend (Kotlin - Ktor)**  
-1. Open the `backend/` folder in **IntelliJ IDEA**  
-2. Install dependencies:  
+## 3. Backend (Python - Django)
+
+1. Open the `backend/` folder in your code editor (e.g., VS Code, PyCharm)
+
+2. Create and activate a virtual environment (optional but recommended):
    ```sh
-   ./gradlew build
-   ```  
-3. Start the server:  
-   ```sh
-   ./gradlew run
-   ```  
-
-## 🏗️ Development Guidelines
-
-### 🏷️ Branch Naming Convention
-**Format for Branch Names:**
-- Use the exact task/ticket name from your backlog
-- Convert to lowercase
-- Replace spaces with hyphens
-- Prefix with category
-
-**Branch Category Prefixes:**
-- `feature/` - For new features
-- `bugfix/` - For bug fixes
-- `refactor/` - For code refactoring
-- `hotfix/` - For urgent production fixes
-
-**Examples:**
-- `feature/user-authentication-flow`
-- `bugfix/login-page-crash`
-- `refactor/optimize-doctor-search`
-- `hotfix/critical-firebase-authentication-issue`
-
-### 🧩 Code Style and Naming Conventions
-**Kotlin Naming Conventions:**
-
-1. **Classes and Interfaces**
-   - PascalCase
-   - Descriptive and clear
-   - Examples:
-     ```kotlin
-     class UserProfile
-     interface AppointmentRepository
-     ```
-
-2. **Functions**
-   - camelCase
-   - Verb-first naming
-   - Describe the action
-   - Examples:
-     ```kotlin
-     fun validateUserCredentials()
-     fun fetchDoctorAvailability()
-     ```
-
-3. **Variables**
-   - camelCase
-   - Descriptive and meaningful
-   - Avoid single-letter variables
-   - Examples:
-     ```kotlin
-     val userEmail: String
-     val totalAppointments: Int
-     ```
-
-4. **Constants**
-   - UPPER_SNAKE_CASE
-   - Examples:
-     ```kotlin
-     const val MAX_APPOINTMENT_DURATION = 60
-     const val API_BASE_URL = "https://ecare.com/api"
-     ```
-
-5. **Composable Functions**
-   - PascalCase
-   - Describe the UI component
-   - Examples:
-     ```kotlin
-     @Composable
-     fun UserProfileScreen()
-     fun DoctorAppointmentCard()
-     ```
-
-### 💬 Commenting Guidelines
-**Code Comments:**
-1. **Purpose of Comments**
-   - Explain *why*, not *what*
-   - Clarify complex logic
-   - Provide context for non-obvious implementations
-
-2. **Comment Styles**
-   ```kotlin
-   // Single-line comment for brief explanations
-
-   /**
-    * Multi-line documentation comment
-    * Use for function and class descriptions
-    * @param email User's email address
-    * @return Boolean indicating login success
-    */
-   fun loginUser(email: String, password: String): Boolean {
-       // Inline comment for specific code block explanation
-       val isValidEmail = validateEmail(email)
-   }
+   python -m venv env
+   source env/bin/activate  # On Windows: env\Scripts\activate
    ```
 
-3. **When to Comment**
-   - Complex algorithms
-   - Workarounds
-   - Performance-critical sections
-   - Business logic nuances
+3. Install dependencies:
+   ```sh
+   pip install -r requirements.txt
+   ```
 
-### 🎨 Design Consistency
-**Color and Typography Usage:**
-- Always import and use predefined colors and typography from your design system
-- Never hardcode colors or text styles
-- Use Jetpack Compose's custom theme
+4. Run database migrations:
+   ```sh
+   python manage.py migrate
+   ```
 
-**Example:**
-```kotlin
-@Composable
-fun UserProfileScreen() {
-    Text(
-        text = "Profile",
-        color = AppColors.primary, // Use predefined color
-        style = AppTypography.heading // Use predefined typography
-    )
-}
-```
+5. Start the development server:
+   ```sh
+   python manage.py runserver
+   ```
 
-### 📝 Commit Message Guidelines
-**Commit Message Format:**
-```
-<type>(<scope>): <description>
 
-[optional body]
-
-[optional footer]
-```
-
-**Commit Types:**
-- `feat`: New feature
-- `fix`: Bug fix
-- `docs`: Documentation changes
-- `style`: Formatting, missing semicolons
-- `refactor`: Code restructuring without behavior change
-- `test`: Adding or modifying tests
-- `chore`: Maintenance tasks
-
-**Examples:**
-```
-feat(authentication): Implement Google Sign-In
-
-- Add Google OAuth login button
-- Integrate Firebase Authentication
-- Handle login state management
-
-Closes #123
-```
-
-```
-fix(doctor-search): Resolve filter performance issue
-
-- Optimize search algorithm
-- Reduce unnecessary re-compositions
-- Improve search result loading time
-```
-
-### 🚨 Best Practices
-- Keep commits small and focused
-- One logical change per commit
-- Write clear, descriptive commit messages
-- Use present tense in commit descriptions
-
-### 📋 Code Review Checklist
-- Follows naming conventions
-- Uses predefined colors and typography
-- Meaningful comments
-- Clear commit messages
-- Passes all local tests
-
-## 📌 Contributing  
-We welcome contributions! Feel free to submit pull requests or report issues.  
-
-## 📄 License  
-This project is licensed under the MIT License.
