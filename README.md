@@ -20,7 +20,7 @@ eCare is a mobile application that simplifies doctor appointment booking. Patien
 | Authentication (Backend)            | `backend-aisha`                          |
 | Authentication (Frontend)           | `v4-aisha`                               |
 | QR Code Check-in                     | `qr_code`                                |
-| Doctor Profiles, Listings, Feedback | `feature/backend/doctor-feedback_rating-clinic` |
+| Doctor Profiles, Listings, Feedback, User Profile, Home Page | `feature/backend/doctor-feedback_rating-clinic` |
 
 To test or work with a specific feature, switch to the appropriate branch using: git checkout <branch-name>
 
