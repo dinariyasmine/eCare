@@ -21,3 +21,4 @@ google-services.json
 firebase-credentials.json
 **/firebase-credentials.json
 .firebase/
+**/build/
