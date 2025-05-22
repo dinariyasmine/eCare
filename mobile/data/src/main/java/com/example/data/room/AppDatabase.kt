@@ -9,24 +9,32 @@ import androidx.room.TypeConverters
 import com.example.data.model.Converters
 
 // to be added all the classes of the app
-@Database(entities = [Appointment::class], version = 2)
+@Database(
+    entities = [Appointment::class], // Add all your entities here
+    version = 2, // Increment this number from previous version
+    exportSchema = false
+)
 @TypeConverters(Converters::class)
-abstract class AppDatabase: RoomDatabase() {
+abstract class AppDatabase : RoomDatabase() {
     abstract fun getAppointmentDao(): AppointmentDao
 
     companion object {
-        var INSTANCE: AppDatabase? = null
+        @Volatile
+        private var INSTANCE: AppDatabase? = null
 
-        fun createDataBase(context: Context): AppDatabase {
-            var instance = INSTANCE
-            if(instance == null) {
-                instance = Room.databaseBuilder(context,
-                    AppDatabase::class.java,"dbTeams")
-                    .fallbackToDestructiveMigration() // to remove old data
+        fun createDatabase(context: Context): AppDatabase {
+            return INSTANCE ?: synchronized(this) {
+                val instance = Room.databaseBuilder(
+                    context.applicationContext,
+                    AppDatabase::class.java,
+                    "app_database"
+                )
+                    .fallbackToDestructiveMigration() // This clears the database on version change
+                    .addTypeConverter(Converters())
                     .build()
                 INSTANCE = instance
+                instance
             }
-            return instance
         }
     }
 }

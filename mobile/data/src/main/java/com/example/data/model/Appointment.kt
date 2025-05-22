@@ -4,6 +4,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import androidx.room.ProvidedTypeConverter
 import androidx.room.TypeConverter
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -40,7 +41,7 @@ data class Appointment(
     val status: AppointmentStatus,
     val QR_code: String,
     val doctor_name: String?,
-    val doctor_specialty: String?
+    val doctor_specialty: String?,
 )
 
 enum class AppointmentStatus {
@@ -60,8 +61,8 @@ data class AppointmentRequest(
     val problem_description: String
 )
 
+@ProvidedTypeConverter
 class Converters {
-
     @TypeConverter
     fun fromLocalDateTime(dateTime: LocalDateTime): String = dateTime.toString()
 
@@ -71,23 +72,10 @@ class Converters {
         LocalDateTime.parse(dateTimeString, DateTimeFormatter.ISO_DATE_TIME)
 
     @TypeConverter
-    fun fromLocalDate(date: LocalDate): String = date.toString()
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    @TypeConverter
-    fun toLocalDate(date: String): LocalDate = LocalDate.parse(date)
-
-    @TypeConverter
-    fun fromLocalTime(time: LocalTime): String = time.toString()
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    @TypeConverter
-    fun toLocalTime(time: String): LocalTime = LocalTime.parse(time)
-
-    @TypeConverter
     fun fromStatus(status: AppointmentStatus): String = status.name
 
     @TypeConverter
     fun toStatus(value: String): AppointmentStatus = AppointmentStatus.valueOf(value)
+
 }
 

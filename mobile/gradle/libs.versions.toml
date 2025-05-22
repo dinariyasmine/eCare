@@ -18,6 +18,7 @@ lifecycleViewmodelAndroid = "2.8.7"
 places = "4.2.0"
 runtimeLivedata = "1.8.1"
 playServicesMaps = "19.2.0"
+hiltCommon = "1.2.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -44,6 +45,7 @@ androidx-lifecycle-viewmodel-android = { group = "androidx.lifecycle", name = "l
 places = { group = "com.google.android.libraries.places", name = "places", version.ref = "places" }
 androidx-runtime-livedata = { group = "androidx.compose.runtime", name = "runtime-livedata", version.ref = "runtimeLivedata" }
 play-services-maps = { group = "com.google.android.gms", name = "play-services-maps", version.ref = "playServicesMaps" }
+androidx-hilt-common = { group = "androidx.hilt", name = "hilt-common", version.ref = "hiltCommon" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

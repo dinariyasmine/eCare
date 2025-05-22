@@ -35,6 +35,14 @@ android {
 }
 
 dependencies {
+    implementation ("com.google.dagger:hilt-android:2.44")
+    implementation(libs.androidx.hilt.common)
+    ksp ("com.google.dagger:hilt-compiler:2.44")
+
+    val work_version = "2.10.1"
+    //WorkManager
+    implementation("androidx.work:work-runtime-ktx:$work_version")
+
     val room_version = "2.6.0"
     implementation ("androidx.room:room-runtime:$room_version")
     ksp("androidx.room:room-compiler:$room_version")

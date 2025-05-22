@@ -25,7 +25,7 @@ interface AppointmentEndpoint {
     suspend fun getAppointById(@Path("id") id: Int): AppointmentDto
 
     @POST("appointments/")
-    suspend fun addAppointment(@Body data: AppointmentRequest)
+    suspend fun addAppointment(@Body data: AppointmentRequest): AppointmentDto
 
     @PATCH("appointments/{id}/")
     suspend fun updateAppointment(@Path("id") id: Int, @Body data: AppointmentRequest)
