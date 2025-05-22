@@ -9,15 +9,15 @@ class GoogleAuthHelper(private val activity: Activity) {
     val googleSignInClient: GoogleSignInClient
 
     companion object {
-
-        const val WEB_CLIENT_ID = "453325312850-rr9fsgb9b85tq6trvmgj903okutdc48j.apps.googleusercontent.com"
+        // Replace this with your Android client ID from Google Cloud Console
+        const val ANDROID_CLIENT_ID = "453325312850-uenml1flter962eus18bke2betc91u94.apps.googleusercontent.com"
     }
 
     init {
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestEmail()
-            .requestProfile()  // Request profile information
-            .requestIdToken(WEB_CLIENT_ID)  // Request ID token using Web client ID
+            .requestProfile()
+            .requestIdToken(ANDROID_CLIENT_ID)
             .build()
         googleSignInClient = GoogleSignIn.getClient(activity, gso)
     }

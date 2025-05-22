@@ -35,7 +35,7 @@ class AuthInterceptor : Interceptor {
 
 
 object RetrofitInstance {
-    private const val BASE_URL = "https://2583-105-102-18-219.ngrok-free.app"
+    private const val BASE_URL = "https://e735-105-235-130-125.ngrok-free.app"
 
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
