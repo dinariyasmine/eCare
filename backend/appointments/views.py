@@ -60,6 +60,7 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         qr_base64 = generate_qr_code(qr_content)
 
         appointment.qr_Code = qr_base64
+        appointment.status = "confirmed"
         appointment.save()
 
         availability.booked = True

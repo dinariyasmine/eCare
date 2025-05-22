@@ -36,12 +36,10 @@ import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun NewAppointmentScreen(
     viewModel: AppointmentViewModel,
     availabilityViewModel: AvailabilityViewModel,
-    //onBackClick: () -> Unit
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
@@ -62,7 +60,6 @@ fun NewAppointmentScreen(
         Column(
             modifier = Modifier
                 .verticalScroll(scrollState)
-                .fillMaxSize()
         ) {
             TopAppBar(
                 title = { Text("New Appointment") },
@@ -96,7 +93,6 @@ fun NewAppointmentScreen(
                     fontWeight = FontWeight.Medium
                 )
 
-                val date = Date.from(selectedDate.value.atStartOfDay(ZoneId.systemDefault()).toInstant())
                 TimeSlotPicker(
                     selectedDate = selectedDate.value,
                     selectedSlot = selectedSlot.value,

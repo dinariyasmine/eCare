@@ -102,7 +102,6 @@ fun RescheduleAppointmentScreen(
         Column(
             modifier = Modifier
                 .verticalScroll(scrollState)
-                .fillMaxSize()
         ) {
             TopAppBar(
                 title = { Text("Reschedule Appointment") },

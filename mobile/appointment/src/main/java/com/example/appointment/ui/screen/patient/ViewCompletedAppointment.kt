@@ -93,7 +93,6 @@ fun ViewCompletedAppointmentScreen(
         Column(
             modifier = Modifier
                 .verticalScroll(scrollState)
-                .fillMaxSize()
         ) {
             TopAppBar(
                 title = { Text("Consultation completed!") },

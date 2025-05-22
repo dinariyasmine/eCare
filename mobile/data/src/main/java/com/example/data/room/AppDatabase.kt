@@ -10,7 +10,7 @@ import com.example.data.model.Converters
 
 // to be added all the classes of the app
 @Database(
-    entities = [Appointment::class], // Add all your entities here
+    entities = [Appointment::class],
     version = 2, // Increment this number from previous version
     exportSchema = false
 )

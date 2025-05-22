@@ -1,13 +1,10 @@
 package com.example.appointment.navigation
 
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
 import com.example.appointment.ui.screen.doctor.ListAppointmentsDoctorScreen
 import com.example.appointment.ui.screen.doctor.ListAvailabilitiesScreen
 import com.example.appointment.ui.screen.doctor.ViewCompletedAppointmentDoctorScreen
@@ -20,7 +17,6 @@ import com.example.appointment.ui.screen.patient.ViewConfirmedAppointmentScreen
 import com.example.appointment.ui.screen.patient.ViewCompletedAppointmentScreen
 import com.example.data.viewModel.AppointmentViewModel
 import com.example.data.viewModel.AvailabilityViewModel
-import kotlinx.coroutines.delay
 
 sealed class Screen(val route: String) {
     object DoctorAppointments : Screen("doctor/appointments")
@@ -49,11 +45,13 @@ fun AppointmentNavGraph(
     navController: NavHostController,
     appointmentViewModel: AppointmentViewModel,
     availabilityViewModel: AvailabilityViewModel,
-    startDestination: String = Screen.DoctorAppointments.route
+    startDestination: String = Screen.DoctorAppointments.route,
+    modifier: Modifier
 ) {
     NavHost(
         navController = navController,
-        startDestination = startDestination
+        startDestination = startDestination,
+        modifier =  modifier
     ) {
         composable(Screen.DoctorAppointments.route) {
             ListAppointmentsDoctorScreen(appointmentViewModel, navController)

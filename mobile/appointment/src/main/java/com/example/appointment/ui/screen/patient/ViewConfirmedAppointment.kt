@@ -92,7 +92,6 @@ fun ViewConfirmedAppointmentScreen(
         Column(
             modifier = Modifier
                 .verticalScroll(scrollState)
-                .fillMaxSize()
                 .padding(10.dp)
         ) {
             TopAppBar(

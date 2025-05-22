@@ -71,11 +71,6 @@ fun TimeSlotPicker(
                 Text("No available slots for this date", style = MaterialTheme.typography.bodyMedium)
             }
         } else {
-            Text(
-                text = "Available Time Slots",
-                style = MaterialTheme.typography.labelMedium,
-                modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
-            )
 
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
