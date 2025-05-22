@@ -30,4 +30,4 @@ include(":core")
 include(":authentification")
 
 include(":pop-ups-confirmations-template")
-
+include(":app")

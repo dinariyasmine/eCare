@@ -14,6 +14,7 @@ import androidx.compose.ui.*
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -124,6 +125,9 @@ fun DoctorCard(doctor: Doctor, navController: NavController) {
     val description = doctor.description ?: "No description available"
     val nbrPatients = doctor.nbr_patients ?: 0
 
+    // Assuming your Doctor model has a profileImageUrl field
+    val profileImageUrl = doctor.profileImageUrl ?: ""
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -137,15 +141,25 @@ fun DoctorCard(doctor: Doctor, navController: NavController) {
                 .padding(16.dp)
                 .fillMaxWidth()
         ) {
-            // Doctor image (using doctorId or fallback)
+            // Doctor image with proper URL handling
             Image(
-                painter = rememberImagePainter(data = doctorId),
-                contentDescription = "Doctor Image",
+                painter = rememberImagePainter(
+                    data = if (profileImageUrl.isNotEmpty()) {
+                        profileImageUrl
+                    } else {
+                        // Fallback to a default image or placeholder
+                        "https://via.placeholder.com/72x72/CCCCCC/FFFFFF?text=Dr"
+                    }
+                ),
+                contentDescription = "Doctor Profile Picture",
                 modifier = Modifier
                     .size(72.dp)
-                    .clip(RoundedCornerShape(10.dp))
+                    .clip(RoundedCornerShape(10.dp)),
+                contentScale = ContentScale.Crop
             )
+
             Spacer(modifier = Modifier.width(16.dp))
+
             // Doctor info
             Column(
                 modifier = Modifier.weight(1f)
@@ -191,7 +205,6 @@ fun DoctorCard(doctor: Doctor, navController: NavController) {
         }
     }
 }
-
 
 @Composable
 fun SearchBarWithFilter(

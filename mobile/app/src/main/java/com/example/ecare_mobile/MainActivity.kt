@@ -79,7 +79,7 @@ fun MainAppContent(googleAuthHelper: googleAuthHelper) {
     NavHost(
         navController = navController,
 
-        startDestination = "qr_reader"
+        startDestination = "doctorlist"
     ) {
         composable(Routes.SIGN_IN) {
             LoginScreen(googleAuthHelper = googleAuthHelper, navController = navController)
@@ -154,6 +154,9 @@ fun MainAppContent(googleAuthHelper: googleAuthHelper) {
 
         composable(Routes.HOME) {
             HomePage(navController = navController)
+        }
+        composable("doctorlist") {
+            DoctorListScreen(navController = navController)
         }
         composable(Routes.DOCTOR_PARAMS) {
             Doctorparams(navController = navController)

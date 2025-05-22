@@ -22,6 +22,13 @@ def get_profile(request):
         "role": user.role,
         "birth_date": user.birth_date,
     }
+    # If user is a doctor, add photo from doctor profile
+    if user.role == 'doctor':
+        try:
+            doctor = Doctor.objects.get(user=user)
+            data['photo'] = doctor.photo
+        except Doctor.DoesNotExist:
+            pass
     return Response(data)
 
 @api_view(['PUT'])
@@ -36,6 +43,15 @@ def update_profile(request):
     user.address = data.get('address', user.address)
     user.birth_date = data.get('birth_date', user.birth_date)
     user.save()
+
+    # If user is a doctor, update photo in doctor profile
+    if user.role == 'doctor' and 'photo' in data:
+        try:
+            doctor = Doctor.objects.get(user=user)
+            doctor.photo = data['photo']
+            doctor.save()
+        except Doctor.DoesNotExist:
+            pass
 
     return Response({"message": "Profile updated successfully"}, status=status.HTTP_200_OK)
  
@@ -196,7 +212,6 @@ def get_doctors(request):
     Fetch a list of all doctors along with their user fields.
     """
     try:
-        # Get all doctors and prefetch related user data
         doctors = Doctor.objects.select_related('user', 'clinic').all()
         print(f"Total doctors found: {doctors.count()}")
         
@@ -204,7 +219,8 @@ def get_doctors(request):
         invalid_doctors = []
 
         for doctor in doctors:
-            # Detailed validation of doctor and user data
+            print(f"Processing doctor {doctor.id} - Photo URL: {doctor.photo}")  # Debug log
+            
             if not doctor.user:
                 print(f"Doctor {doctor.id} has no user record")
                 invalid_doctors.append(doctor.id)
@@ -215,7 +231,6 @@ def get_doctors(request):
                 invalid_doctors.append(doctor.id)
                 continue
 
-            # Verify user data exists
             try:
                 user = User.objects.get(id=doctor.user.id)
                 if not user:
@@ -235,6 +250,7 @@ def get_doctors(request):
                 "address": doctor.user.address,
                 "role": doctor.user.role,
                 "birth_date": doctor.user.birth_date,
+                "photo": doctor.photo,
                 "specialty": doctor.specialty,
                 "clinic": doctor.clinic.name if doctor.clinic else None,
                 "clinic_pos" : doctor.clinic.map_location if doctor.clinic else None,
@@ -242,6 +258,7 @@ def get_doctors(request):
                 "description": doctor.description,
                 "nbr_patients": doctor.nbr_patients,
             }
+            print(f"Doctor info being sent: {doctor_info}")  # Debug log
             doctor_data.append(doctor_info)
 
         if invalid_doctors:
@@ -265,6 +282,7 @@ def get_doctor_by_id(request, doctor_id):
     """
     try:
         doctor = Doctor.objects.get(user_id=doctor_id)
+        print(f"Getting doctor {doctor.id} - Photo URL: {doctor.photo}")  # Debug log
     except Doctor.DoesNotExist:
         return Response({"error": "Doctor not found"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -292,6 +310,7 @@ def get_doctor_by_id(request, doctor_id):
         "address": doctor.user.address,
         "role": doctor.user.role,
         "birth_date": doctor.user.birth_date,
+        "photo": doctor.photo,
         "specialty": doctor.specialty,
         "clinic": doctor.clinic.name if doctor.clinic else None,
         "grade": doctor.grade,
@@ -299,6 +318,7 @@ def get_doctor_by_id(request, doctor_id):
         "nbr_patients": doctor.nbr_patients,
         "social_links": social_links  
     }
+    print(f"Doctor info being sent: {doctor_info}")  # Debug log
     return Response({"doctor": doctor_info}, status=status.HTTP_200_OK)
 
 from rest_framework.decorators import api_view
@@ -319,7 +339,7 @@ def get_patient_by_id(request, patient_id):
             "phone": user.phone,
             "address": user.address,
             "role": user.role,
-            "birth_date": user.birth_date.strftime('%Y-%m-%d') if user.birth_date else None
+            "birth_date": user.birth_date.strftime('%Y-%m-%d') if user.birth_date else None,
         }
         return Response(data, status=status.HTTP_200_OK)
     except Patient.DoesNotExist:
@@ -336,6 +356,8 @@ from core.models import Doctor, User
 def update_doctor_by_id(request, doctor_id):
     try:
         doctor = Doctor.objects.select_related('user').get(user_id=doctor_id)
+        print(f"Updating doctor {doctor.id} - Current photo: {doctor.photo}")  # Debug log
+        print(f"Request data: {request.data}")  # Debug log
     except Doctor.DoesNotExist:
         return Response({"error": "Doctor not found"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -349,12 +371,38 @@ def update_doctor_by_id(request, doctor_id):
     user.save()
 
     # Update doctor-specific fields
+    if 'photo' in data:
+        doctor.photo = data['photo']
+        print(f"Setting photo to: {data['photo']}")  # Debug log
+    
     for field in ['specialty', 'grade', 'description', 'nbr_patients']:
         if field in data:
             setattr(doctor, field, data[field])
+    
     doctor.save()
+    print(f"Updated doctor photo: {doctor.photo}")  # Debug log
 
-    return Response({"message": "Doctor updated successfully"}, status=status.HTTP_200_OK)
+    # Return the updated doctor data
+    doctor_info = {
+        "id": doctor.id,
+        "name": doctor.user.name,
+        "email": doctor.user.email,
+        "phone": doctor.user.phone,
+        "address": doctor.user.address,
+        "role": doctor.user.role,
+        "birth_date": doctor.user.birth_date,
+        "photo": doctor.photo,
+        "specialty": doctor.specialty,
+        "clinic": doctor.clinic.name if doctor.clinic else None,
+        "grade": doctor.grade,
+        "description": doctor.description,
+        "nbr_patients": doctor.nbr_patients,
+    }
+    
+    return Response({
+        "message": "Doctor updated successfully",
+        "doctor": doctor_info
+    }, status=status.HTTP_200_OK)
 
 
 from rest_framework.decorators import api_view, permission_classes
