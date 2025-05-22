@@ -4,8 +4,26 @@
 
 <h1 align="center">eCare - Book, Track, Heal – Anytime, Anywhere!</h1>
 
-
 eCare is a mobile application that simplifies doctor appointment booking. Patients can find doctors, schedule appointments, and manage prescriptions, while doctors can list availability and handle appointments efficiently.  
+
+⚠️ **Note:** Feature development is currently happening in separate branches and **not merged into `main` yet**. Please refer to the section below for relevant branches.
+
+---
+
+## 🌿 Active Feature Branches
+
+| Feature                              | Branch Name                              |
+|--------------------------------------|------------------------------------------|
+| Appointment Management               | `appointments_V3`                        |
+| Prescription Handling                | `prescription`                           |
+| Notification System                  | `notifications`                          |
+| Authentication (Backend)            | `backend-aisha`                          |
+| Authentication (Frontend)           | `v4-aisha`                               |
+| QR Code Check-in                     | `qr_code`                                |
+| Doctor Profiles, Listings, Feedback | `feature/backend/doctor-feedback_rating-clinic` |
+
+To test or work with a specific feature, switch to the appropriate branch using: git checkout <branch-name>
+
 
 ## 🚀 Features  
 - **User Authentication** (Email & Google Sign-in)  
