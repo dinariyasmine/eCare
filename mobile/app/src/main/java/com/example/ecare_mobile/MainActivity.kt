@@ -79,7 +79,7 @@ fun MainAppContent(googleAuthHelper: googleAuthHelper) {
     NavHost(
         navController = navController,
 
-        startDestination = "doctorlist"
+        startDestination = Routes.SIGN_IN
     ) {
         composable(Routes.SIGN_IN) {
             LoginScreen(googleAuthHelper = googleAuthHelper, navController = navController)
