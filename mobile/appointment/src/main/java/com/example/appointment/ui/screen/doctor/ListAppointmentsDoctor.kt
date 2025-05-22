@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,6 +30,13 @@ fun ListAppointmentsDoctorScreen(
     navController: NavController
 ) {
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
+    val doctorId = 11 // You might want to get this from your user session or pass it as a parameter
+
+    // Fetch appointments when the screen loads
+    LaunchedEffect(doctorId) {
+        viewModel.getAppointmentsByDoctor(doctorId)
+    }
+
     ECareMobileTheme {
         Column(
             modifier = Modifier.padding(10.dp)
@@ -64,15 +72,15 @@ fun ListAppointmentsDoctorScreen(
             )
 
             DoctorAppointmentsFilteredBar(
-                11,
-                viewModel,
-                onViewCompleted = { appointment ->
-                navController.navigate(Screen.DoctorCompletedAppointment.createRoute(appointment.id.toString())
-                ) },
-                onViewConfirmed = { appointment ->
-                    navController.navigate(Screen.DoctorConfirmedAppointment.createRoute(appointment.id.toString()))
-                })
+                doctorId = doctorId,
+                viewModel = viewModel,
+                onViewCompleted = { id ->
+                    navController.navigate(Screen.DoctorCompletedAppointment.createRoute(id.toString()))
+                },
+                onViewConfirmed = { id ->
+                    navController.navigate(Screen.DoctorConfirmedAppointment.createRoute(id.toString()))
+                }
+            )
         }
     }
-
 }

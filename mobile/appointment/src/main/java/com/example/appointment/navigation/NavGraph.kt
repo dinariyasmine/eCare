@@ -62,12 +62,16 @@ fun AppointmentNavGraph(
             ListAvailabilitiesScreen(availabilityViewModel = availabilityViewModel)
         }
 
-        composable(Screen.DoctorCompletedAppointment.route) {
-            ViewCompletedAppointmentDoctorScreen(appointmentViewModel, availabilityViewModel)
+        composable(Screen.DoctorCompletedAppointment.route) { backStackEntry ->
+            val appointmentId = backStackEntry.arguments?.getString("appointmentId")?.toIntOrNull()
+            if (appointmentId != null) {
+                ViewCompletedAppointmentDoctorScreen(appointmentViewModel, availabilityViewModel, navController, appointmentId)            }
         }
 
-        composable(Screen.DoctorCompletedAppointment.route) {
-            ViewConfirmedAppointmentDoctorScreen(appointmentViewModel, availabilityViewModel)
+        composable(Screen.DoctorConfirmedAppointment.route) { backStackEntry ->
+            val appointmentId = backStackEntry.arguments?.getString("appointmentId")?.toIntOrNull()
+            if (appointmentId != null) {
+                ViewConfirmedAppointmentDoctorScreen(appointmentViewModel, availabilityViewModel, navController, appointmentId)            }
         }
 
         composable(Screen.NewAppointment.route) {

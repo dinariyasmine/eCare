@@ -3,10 +3,12 @@
 package com.example.appointment.ui.screen.doctor
 
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,6 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -43,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.alpha
+import androidx.navigation.NavHostController
 import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Bold
 import com.adamglin.phosphoricons.bold.Article
@@ -59,12 +63,22 @@ import java.time.ZoneId
 import java.util.Date
 
 @Composable
-fun ViewConfirmedAppointmentDoctorScreen(viewModel: AppointmentViewModel, availabilityViewModel: AvailabilityViewModel) {
+fun ViewConfirmedAppointmentDoctorScreen(
+    viewModel: AppointmentViewModel,
+    availabilityViewModel: AvailabilityViewModel,
+    navController: NavHostController,
+    appointmentId: Int
+) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
 
-    val selectedDate = remember { mutableStateOf(LocalDate.now()) }
-    val selectedSlot = remember { mutableStateOf<String?>(null) }
+    // Fetch the specific appointment
+    LaunchedEffect(appointmentId) {
+        viewModel.getAppointmentById(appointmentId)
+    }
+
+    // Observe the appointment details
+    val appointment by viewModel.currentAppointment.observeAsState()
 
     // Error handling
     val error by viewModel.error.observeAsState()
@@ -75,45 +89,55 @@ fun ViewConfirmedAppointmentDoctorScreen(viewModel: AppointmentViewModel, availa
     }
 
     ECareMobileTheme {
-            Column(
-                modifier = Modifier
-                    .verticalScroll(scrollState)
-                    .fillMaxSize()
-            ) {
-                TopAppBar(
-                    title = { Text("Your appointment is confirmed!") },
-                    navigationIcon = {
-                        IconButton(onClick = { /* Keep back arrow clickable */ }) {
-                            Icon(
-                                Icons.Default.ArrowBack, contentDescription = "Back",
-                                modifier = Modifier.border(
-                                    width = 1.dp,
-                                    color = Color(0xFF222B45), shape = RectangleShape
-                                )
+        Column(
+            modifier = Modifier
+                .verticalScroll(scrollState)
+                .fillMaxSize()
+                .padding(10.dp)
+        ) {
+            TopAppBar(
+                title = { Text("Confirmed Appointment") },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = "Back",
+                            modifier = Modifier.border(
+                                width = 1.dp,
+                                color = Color(0xFF222B45),
+                                shape = RectangleShape
                             )
-                        }
+                        )
                     }
-                )
+                }
+            )
 
-                // Disabled overlay for all content
-                Box(
+            appointment?.let { appt ->
+                Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null
-                        ) { /* Disabled */ }
                 ) {
-                    Column(modifier = Modifier.alpha(0.6f)) {
+                    // Action buttons row
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        // QR Code button
                         Row(
-                            verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
-                                .padding(vertical = 8.dp)
+                                .weight(1f)
+                                .clickable {
+                                //handle scan QR
+                                }
+                                .padding(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
                                 imageVector = PhosphorIcons.Bold.QrCode,
                                 contentDescription = null,
-                                Modifier.background(Color(0xFFF3F4F6), RoundedCornerShape(5.dp)),
+                                modifier = Modifier.background(Color(0xFFF3F4F6), RoundedCornerShape(5.dp)),
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
@@ -122,84 +146,102 @@ fun ViewConfirmedAppointmentDoctorScreen(viewModel: AppointmentViewModel, availa
                                 style = MaterialTheme.typography.bodySmall,
                             )
                         }
+
+                        // Prescription button
                         Row(
-                            verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
-                                .padding(vertical = 8.dp)
+                                .weight(1f)
+                                .clickable {
+                                    // handle write prescription
+                                }
+                                .padding(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
                                 imageVector = PhosphorIcons.Bold.Article,
                                 contentDescription = null,
-                                Modifier.background(Color(0xFFF3F4F6), RoundedCornerShape(5.dp)),
+                                modifier = Modifier.background(Color(0xFFF3F4F6), RoundedCornerShape(5.dp)),
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Write Prescription",
+                                text = "Prescription",
                                 color = Color(0xFF4B5563),
                                 style = MaterialTheme.typography.bodySmall,
                             )
                         }
+                    }
 
-                Column(modifier = Modifier.padding(16.dp)) {
+                    // Appointment details section
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        // Appointment date and time
+                        Text(
+                            text = "Appointment Date",
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        )
+                        Text(
+                            text = "${appt.start_time.toLocalDate()}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
 
-                            // Disabled DatePicker
-                            Box(modifier = Modifier.clickable(enabled = false) {}) {
-                                DatePicker(
-                                    selectedDate = selectedDate.value,
-                                    onDateSelected = { /* Disabled */ }
-                                )
-                            }
+                        Text(
+                            text = "Appointment Time",
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        )
+                        Text(
+                            text = "${appt.start_time.toLocalTime()} - ${appt.end_time.toLocalTime()}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
 
-                            Text("Available Time", fontWeight = FontWeight.Medium)
-                            val date = Date.from(
-                                selectedDate.value.atStartOfDay(ZoneId.systemDefault()).toInstant()
-                            )
+                        // Patient information
+                        Text(
+                            text = "Patient Information",
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        )
+                        Text(
+                            text = appt.name,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        )
+                        Text(
+                            text = "Age: ${appt.age} | Gender: ${appt.gender}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
+                    }
 
-                            // Disabled TimeSlotPicker
-                            Box(modifier = Modifier.clickable(enabled = false) {}) {
-                                TimeSlotPicker(
-                                    selectedDate = selectedDate.value,
-                                    selectedSlot = selectedSlot.value,
-                                    doctorId = 11,
-                                    onSlotSelected = { /* Disabled */ },
-                                    availabilityViewModel = availabilityViewModel
-                                )
-                            }
-                        }
+                    // Patient details form (read-only)
+                    Text(
+                        text = "Patient Details",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                    )
 
-                        Text("Patient Details", fontWeight = FontWeight.Medium)
-                        // Disabled PatientForm
-                        Box(modifier = Modifier.clickable(enabled = false) {}) {
-                            PatientForm(
-                                formState = PatientFormState(),
-                                onValueChange = {  }
-                            )
-                        }
-
-                        // Disabled Button
-                        Button(
-                            onClick = { /* Disabled */ },
-                            enabled = false,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(5.dp)
-                                .height(50.dp),
-                            shape = RoundedCornerShape(5.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF60A5FA), // Gray color
-                                contentColor = Color.White,
-                                disabledContainerColor = Color(0xFF60A5FA),
-                                disabledContentColor = Color.White
-                            )
-                        ) {
-                            Text(
-                                "Set the Appointment",
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
+                    PatientForm(
+                        formState = PatientFormState(
+                            fullName = appt.name,
+                            age = appt.age,
+                            gender = appt.gender,
+                            problemDescription = appt.problem_description
+                        ),
+                        onValueChange = { /* Disabled - no action */ },
+                        modifier = Modifier.alpha(0.6f)
+                    )
+                }
+            } ?: run {
+                // Loading or error state
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    if (error != null) {
+                        Text("Failed to load appointment details")
+                    } else {
+                        CircularProgressIndicator()
                     }
                 }
             }
+        }
     }
 }
