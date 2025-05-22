@@ -1,6 +1,8 @@
 package com.example.data.repository
 
+import android.util.Log
 import com.example.data.model.SocialMedia
+import com.example.data.retrofit.RetrofitInstance
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -46,12 +48,26 @@ class SocialMediaRepository {
         return simulateDatabaseCall().filter { it.doctor_id == doctorId }
     }
 
-    suspend fun createSocialMedia(socialMedia: SocialMedia): Boolean {
-        delay(500) // Simulate delay
-        // In a real implementation, this would insert into a database
-        // For now, we'll just simulate success or failure
-        return !simulateDatabaseCall().any { it.id == socialMedia.id }
+    suspend fun createSocialMedia(socialMedia: SocialMedia): Boolean = withContext(Dispatchers.IO) {
+        try {
+            // Log the request for debugging
+            Log.d("API_REQUEST", "Creating social media: $socialMedia")
+
+            val response = RetrofitInstance.apiService.createSocialMedia(socialMedia)
+
+            // Log the response
+            Log.d("API_RESPONSE", "Response code: ${response.code()}")
+            Log.d("API_RESPONSE", "Response body: ${response.body()}")
+            Log.d("API_RESPONSE", "Error body: ${response.errorBody()?.string()}")
+
+            return@withContext response.isSuccessful
+        } catch (e: Exception) {
+            Log.e("API_ERROR", "Error creating social media", e)
+            return@withContext false
+        }
     }
+
+
 
     suspend fun updateSocialMedia(socialMedia: SocialMedia): Boolean {
         delay(500) // Simulate delay

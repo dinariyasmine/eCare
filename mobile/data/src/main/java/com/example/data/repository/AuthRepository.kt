@@ -9,7 +9,7 @@ class AuthRepository(private val apiService: ApiService) {
     suspend fun registerPatient(request: RegistrationRequest): AuthResponse {
         return withContext(Dispatchers.IO) {
             val response = apiService.registerPatient(request.copy(role = "patient"))
-            // Convert RegistrationResponse to AuthResponse
+
             AuthResponse(
                 access = response.tokens.access,
                 refresh = response.tokens.refresh,
@@ -21,7 +21,7 @@ class AuthRepository(private val apiService: ApiService) {
     suspend fun registerDoctor(request: RegistrationRequest): AuthResponse {
         return withContext(Dispatchers.IO) {
             val response = apiService.registerDoctor(request.copy(role = "doctor"))
-            // Convert RegistrationResponse to AuthResponse
+
             AuthResponse(
                 access = response.tokens.access,
                 refresh = response.tokens.refresh,

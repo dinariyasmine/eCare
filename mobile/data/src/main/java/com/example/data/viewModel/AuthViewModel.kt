@@ -6,16 +6,21 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.data.model.*
 import com.example.data.repository.AuthRepository
+import com.example.data.repository.DoctorRepository
+import com.example.data.repository.GoogleAuthRepository
 import com.example.data.repository.SocialMediaRepository
+//import com.google.firebase.crashlytics.buildtools.reloc.org.apache.http.HttpException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
 
 class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
     // Login state
     private val _loginState = MutableStateFlow<AuthResponse?>(null)
     val loginState: StateFlow<AuthResponse?> = _loginState
-
+    private val socialMediaRepository: SocialMediaRepository = SocialMediaRepository()
+    private val doctorRepository: DoctorRepository = DoctorRepository()
     // Registration state
     private val _registrationState = MutableStateFlow<AuthResponse?>(null)
     val registrationState: StateFlow<AuthResponse?> = _registrationState
@@ -42,6 +47,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
     private val _passwordResetState = MutableStateFlow<MessageResponse?>(null)
     val passwordResetState: StateFlow<MessageResponse?> = _passwordResetState
 
+    private val googleAuthRepository: GoogleAuthRepository = GoogleAuthRepository()
     fun login(request: LoginRequest) {
         viewModelScope.launch {
             try {
@@ -73,8 +79,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
                     val response = authRepository.registerPatient(request)
                     _registrationState.value = response
                 } else {
-                    // For doctors, store the basic info for the second screen
-                    // In production, this would use a more secure approach
+
                     storeUserData(request)
                 }
             } catch (e: Exception) {
@@ -82,7 +87,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
             }
         }
     }
-
+//was used when we had two screens
     fun storeUserData(request: RegistrationRequest) {
         Log.d("AuthViewModel", "Storing user data: ${request.username}, ${request.email}")
 
@@ -102,11 +107,11 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         Log.d("AuthViewModel", "User data stored: ${_currentUser.value?.name}, ${_currentUser.value?.email}")
         Log.d("AuthViewModel", "Password stored: ${_currentPassword.value?.substring(0, 1)}****")
 
-        // For better diagnosis, add a debug method to check if data is available
+
         checkStoredData()
     }
 
-    // Debug method to verify data is stored
+    // verify data is stored
     private fun checkStoredData() {
         Log.d("AuthViewModel", "Current stored user data:")
         Log.d("AuthViewModel", "User is null? ${_currentUser.value == null}")
@@ -129,25 +134,52 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
                 _registrationState.value = response
 
                 // If doctor registration is successful and we have social media links to save
-                // Updated to check access token directly (not nested in tokens)
                 if (response.access != null && socialMediaLinks.isNotEmpty()) {
-                    // Create social media repository
-                    val socialMediaRepository = SocialMediaRepository()
+                    // Get userId from the response
+                    val userId = response.user?.id ?: return@launch
 
-                    // Add each social media link with the doctor's ID
-                    val doctorId = response.user?.id ?: return@launch
+                    Log.d("AuthViewModel", "User registered successfully with ID: $userId, retrieving doctor profile")
 
-                    socialMediaLinks.forEach { socialMedia ->
-                        socialMediaRepository.createSocialMedia(
-                            socialMedia.copy(doctor_id = doctorId)
-                        )
+                    // Fetch the doctor ID using userId - with a small delay to ensure backend is ready
+                    kotlinx.coroutines.delay(1000)
+
+                    try {
+                        val doctorId = doctorRepository.getDoctorByUserId(userId)
+
+                        if (doctorId != null) {
+                            Log.d("AuthViewModel", "Retrieved doctor ID: $doctorId from user ID: $userId")
+
+                            // Add each social media link with the doctor's ID
+                            for (socialMedia in socialMediaLinks) {
+                                // Create a new social media object with the correct doctor_id
+                                val updatedSocialMedia = socialMedia.copy(doctor_id = doctorId)
+                                Log.d("AuthViewModel", "Creating social media: $updatedSocialMedia")
+
+                                val success = socialMediaRepository.createSocialMedia(updatedSocialMedia)
+                                if (success) {
+                                    Log.d("AuthViewModel", "Successfully created social media entry")
+                                } else {
+                                    Log.e("AuthViewModel", "Failed to create social media entry")
+                                }
+                            }
+
+                            Log.d("AuthViewModel", "Finished processing ${socialMediaLinks.size} social media links")
+                        } else {
+                            Log.e("AuthViewModel", "Could not retrieve doctor ID for user ID: $userId")
+                            _errorState.value = "Registration successful but failed to retrieve doctor profile"
+                        }
+                    } catch (e: Exception) {
+                        Log.e("AuthViewModel", "Failed to get doctor profile or add social media", e)
+                        _errorState.value = "Registration successful but failed to add social media: ${e.message}"
                     }
                 }
             } catch (e: Exception) {
+                Log.e("AuthViewModel", "Doctor registration failed", e)
                 _errorState.value = e.message ?: "An error occurred during registration"
             }
         }
     }
+
 
     // Password Reset Functions
     fun requestPasswordReset(email: String) {
@@ -186,11 +218,26 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
                 Log.d("AuthViewModel", "Password reset successful: ${response.message}")
                 _passwordResetState.value = response
             } catch (e: Exception) {
+                val errorMessage = when (e) {
+                    is HttpException -> {
+                        try {
+                            // Get raw error body as string
+                            val errorBody = e.response()?.errorBody()?.string()
+                            Log.e("AuthViewModel", "HTTP Error Body: $errorBody")
+                            errorBody ?: "HTTP ${e.code()} error"
+                        } catch (ex: Exception) {
+                            "Failed to parse error response"
+                        }
+                    }
+                    else -> e.message ?: "Password reset failed"
+                }
+
                 Log.e("AuthViewModel", "Password reset failed", e)
-                _errorState.value = e.message ?: "Password reset failed"
+                _errorState.value = errorMessage
             }
         }
     }
+
 
     fun clearState() {
         Log.d("AuthViewModel", "Clearing registration and error state")
@@ -214,6 +261,23 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         _passwordResetRequestState.value = null
         _otpVerificationState.value = null
         _passwordResetState.value = null
+    }
+
+    fun authenticateWithGoogle(idToken: String) {
+        viewModelScope.launch {
+            try {
+                Log.d("AuthViewModel", "Authenticating with Google ID token")
+                val response = googleAuthRepository.authenticateWithGoogle(idToken)
+                Log.d("AuthViewModel", "Google authentication successful")
+
+                // Update login state - this will trigger the UI to navigate to the next screen
+                _loginState.value = response
+                _currentUser.value = response.user
+            } catch (e: Exception) {
+                Log.e("AuthViewModel", "Google authentication failed", e)
+                _errorState.value = e.message ?: "Google authentication failed"
+            }
+        }
     }
 
     companion object {

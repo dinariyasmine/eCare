@@ -2,6 +2,8 @@ package com.example.data.retrofit
 
 import com.example.data.model.AuthResponse
 import com.example.data.model.Clinic
+import com.example.data.model.Doctor
+import com.example.data.model.GoogleAuthRequest
 import com.example.data.model.LoginRequest
 import com.example.data.model.MessageResponse
 import com.example.data.model.OtpVerificationModel
@@ -9,6 +11,9 @@ import com.example.data.model.PasswordResetModel
 import com.example.data.model.PasswordResetRequestModel
 import com.example.data.model.RegistrationRequest
 import com.example.data.model.RegistrationResponse
+import com.example.data.model.SocialMedia
+import okhttp3.ResponseBody
+import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -42,8 +47,19 @@ interface ApiService {
     @GET("api/clinics/{id}/")
     suspend fun getClinicById(@Path("id") id: Int): Clinic
 
-
+    @POST("api/auth/google-auth/")
+    suspend fun googleAuth(@Body googleAuthRequest: GoogleAuthRequest): AuthResponse
     // The same for other methods that return List:
     suspend fun searchClinicsByName(query: String): List<Clinic>
     suspend fun searchClinicsByAddress(query: String): List<Clinic>
+
+    @POST("api/social-media/")
+    suspend fun createSocialMedia(@Body socialMedia: SocialMedia): Response<ResponseBody>
+
+    @GET("api/doctors/user/{userId}/")
+    suspend fun getDoctorByUserId(@Path("userId") userId: Int): Response<ResponseBody>
+
+    @GET("api/doctors/{doctorId}/")
+    suspend fun getDoctorById(@Path("doctorId") doctorId: Int): Response<Doctor>
+
 }

@@ -2,7 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-  //  id("com.google.gms.google-services")
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -46,9 +46,6 @@ dependencies {
     implementation(project(":data"))
     implementation(project(":authentification"))
     implementation(libs.androidx.navigation.compose)
-    implementation(libs.foundation.layout.android)
-    implementation(libs.foundation.layout.android)
-    implementation(libs.foundation.layout.android)
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
     implementation("com.adamglin:phosphor-icon:1.0.0")
     implementation("androidx.compose.ui:ui")

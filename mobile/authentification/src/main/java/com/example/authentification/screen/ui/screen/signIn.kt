@@ -65,6 +65,7 @@ import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Bold
 import com.adamglin.phosphoricons.bold.Eye
 import com.adamglin.phosphoricons.bold.EyeSlash
+import com.example.authentification.screen.ui.screen.GoogleAuthHelper
 import com.example.core.theme.Gray50
 import com.example.core.theme.Gray500
 import com.example.core.theme.Gray600
@@ -82,12 +83,16 @@ import com.example.splashscreen.R
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.common.api.ApiException
 import com.example.data.repository.AuthRepository
+import com.example.data.repository.GoogleAuthRepository
 import com.example.data.retrofit.RetrofitInstance
 import com.example.data.util.TokenManager
 import com.example.data.viewModel.AuthViewModel
+import com.google.android.gms.auth.api.Auth
+import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes
+
 
 @Composable
-fun LoginScreen(googleAuthHelper: googleAuthHelper, navController: NavController) {
+fun LoginScreen(googleAuthHelper: GoogleAuthHelper, navController: NavController) {
     val authRepository = remember { AuthRepository(RetrofitInstance.apiService) }
     val authViewModel: AuthViewModel = viewModel(
         factory = AuthViewModel.Companion.Factory(authRepository)
@@ -142,9 +147,8 @@ fun LoginScreen(googleAuthHelper: googleAuthHelper, navController: NavController
 
             Toast.makeText(context, "Login successful!", Toast.LENGTH_SHORT).show()
 
-            // Navigate to main screen or dashboard
-
-                navController.navigate(Routes.PATIENT_PARAMS){
+            // Navigate to home
+            navController.navigate(Routes.HOME) {
                 popUpTo(Routes.SIGN_IN) { inclusive = true }
             }
 
@@ -162,24 +166,42 @@ fun LoginScreen(googleAuthHelper: googleAuthHelper, navController: NavController
         }
     }
 
-    // Creating the launcher using rememberLauncherForActivityResult
+
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-        try {
-            val account = task.getResult(ApiException::class.java)
+        Log.d("GoogleSignIn", "Activity result received: ${result.resultCode}")
 
-            Log.d("GoogleSignIn", "Success: ${account.email}")
+        // Clear previous sign-in state to ensure a fresh token
+        googleAuthHelper.googleSignInClient.signOut().addOnCompleteListener {
+            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+            try {
+                val account = task.getResult(ApiException::class.java)
+                Log.d("GoogleSignIn", "Success: ${account.email}")
+                Log.d("GoogleSignIn", "ID Token (first 20 chars): ${account.idToken?.take(20)}")
 
-            // Here you might want to extract username from email or make a separate API call
-            username = account.email?.substringBefore("@") ?: ""
-        } catch (e: ApiException) {
-            Log.e("GoogleSignIn", "Failed", e)
+                account.idToken?.let { idToken ->
+                    //  handle authentication
+                    authViewModel.authenticateWithGoogle(idToken)
+
+                } ?: run {
+                    Log.e("GoogleSignIn", "ID token is null")
+                    Toast.makeText(context, "Failed to get ID token", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: ApiException) {
+                Log.e("GoogleSignIn", "Failed with status code: ${e.statusCode}", e)
+                val errorMessage = when (e.statusCode) {
+                    GoogleSignInStatusCodes.SIGN_IN_CANCELLED -> "Sign in was cancelled"
+                    GoogleSignInStatusCodes.NETWORK_ERROR -> "Network error occurred"
+                    else -> "Sign-in failed with code: ${e.statusCode}"
+                }
+                Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
-    // Background with glass effect
+
+    // Background with glass effect -redo
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -263,7 +285,7 @@ fun LoginScreen(googleAuthHelper: googleAuthHelper, navController: NavController
                 )
             }
 
-            // Main Content Card with improved Glassmorphism effect
+            // Main Content Card
             Card(
                 modifier = Modifier
                     .fillMaxWidth()

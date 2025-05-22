@@ -1,5 +1,5 @@
 package com.example.authentification.screen.ui.screen
-
+import com.example.authentification.screen.ui.screen.GoogleAuthHelper
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -50,7 +50,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Bold
@@ -60,20 +59,19 @@ import com.example.core.theme.Gray500
 import com.example.core.theme.Gray600
 import com.example.core.theme.Gray900
 import com.example.core.theme.Primary100
-import com.example.core.theme.Primary200
-import com.example.core.theme.Primary300
-import com.example.core.theme.Primary400
 import com.example.core.theme.Primary50
 import com.example.core.theme.Primary500
 import com.example.data.model.RegistrationRequest
-import com.example.data.repository.AuthRepository
-import com.example.data.retrofit.RetrofitInstance
 import com.example.data.viewModel.AuthViewModel
 import com.example.splashscreen.R
-import kotlinx.coroutines.flow.firstOrNull
+
+
+//THIS PAGE IS NOT USED
+
+
 
 @Composable
-fun SignUp2Screen(googleAuthHelper: googleAuthHelper, navController: NavController, authViewModel: AuthViewModel) {
+fun SignUp2Screen(googleAuthHelper: GoogleAuthHelper, navController: NavController, authViewModel: AuthViewModel) {
     // Create repository and ViewModel
 
     val registrationState by authViewModel.registrationState.collectAsState()
