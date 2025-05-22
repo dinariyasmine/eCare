@@ -2,6 +2,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
+from core.models import SocialMedia, Doctor
+from core.serializers import SocialMediaSerializer
 
 from core.models import Availability, SocialMedia, User ,Doctor
 from django.shortcuts import get_object_or_404
@@ -212,6 +214,7 @@ def get_doctors(request):
     Fetch a list of all doctors along with their user fields.
     """
     try:
+        # Get all doctors and prefetch related user data
         doctors = Doctor.objects.select_related('user', 'clinic').all()
         print(f"Total doctors found: {doctors.count()}")
         
@@ -220,7 +223,7 @@ def get_doctors(request):
 
         for doctor in doctors:
             print(f"Processing doctor {doctor.id} - Photo URL: {doctor.photo}")  # Debug log
-            
+
             if not doctor.user:
                 print(f"Doctor {doctor.id} has no user record")
                 invalid_doctors.append(doctor.id)
@@ -231,6 +234,7 @@ def get_doctors(request):
                 invalid_doctors.append(doctor.id)
                 continue
 
+            # Verify user data exists
             try:
                 user = User.objects.get(id=doctor.user.id)
                 if not user:
@@ -310,16 +314,16 @@ def get_doctor_by_id(request, doctor_id):
         "address": doctor.user.address,
         "role": doctor.user.role,
         "birth_date": doctor.user.birth_date,
-        "photo": doctor.photo,
         "specialty": doctor.specialty,
         "clinic": doctor.clinic.name if doctor.clinic else None,
         "grade": doctor.grade,
         "description": doctor.description,
         "nbr_patients": doctor.nbr_patients,
-        "social_links": social_links  
+        "social_links": social_links
     }
     print(f"Doctor info being sent: {doctor_info}")  # Debug log
     return Response({"doctor": doctor_info}, status=status.HTTP_200_OK)
+
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -374,11 +378,11 @@ def update_doctor_by_id(request, doctor_id):
     if 'photo' in data:
         doctor.photo = data['photo']
         print(f"Setting photo to: {data['photo']}")  # Debug log
-    
+
     for field in ['specialty', 'grade', 'description', 'nbr_patients']:
         if field in data:
             setattr(doctor, field, data[field])
-    
+
     doctor.save()
     print(f"Updated doctor photo: {doctor.photo}")  # Debug log
 
@@ -398,7 +402,7 @@ def update_doctor_by_id(request, doctor_id):
         "description": doctor.description,
         "nbr_patients": doctor.nbr_patients,
     }
-    
+
     return Response({
         "message": "Doctor updated successfully",
         "doctor": doctor_info
@@ -432,6 +436,7 @@ def update_patient_by_id(request, patient_id):
 
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def create_social_media(request):
     """
     Create a new social media profile for a doctor
@@ -441,36 +446,53 @@ def create_social_media(request):
         doctor_id = request.data.get('doctor_id')
         name = request.data.get('name')
         link = request.data.get('link')
-        
+
         # Check if all required fields are provided
         if not all([doctor_id, name, link]):
             return Response(
-                {"error": "doctor_id, name, and link are required fields"}, 
+                {"error": "doctor_id, name, and link are required fields"},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
         # Check if the doctor exists
         try:
             doctor = Doctor.objects.get(id=doctor_id)
         except Doctor.DoesNotExist:
             return Response(
-                {"error": f"Doctor with ID {doctor_id} does not exist"}, 
+                {"error": f"Doctor with ID {doctor_id} does not exist"},
                 status=status.HTTP_404_NOT_FOUND
             )
-        
+
         # Create the social media profile
         social_media = SocialMedia.objects.create(
             doctor_id=doctor,
             name=name,
             link=link
         )
-        
+
         # Serialize and return the created object
         serializer = SocialMediaSerializer(social_media)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    
+
     except Exception as e:
         return Response(
-            {"error": str(e)}, 
+            {"error": str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+@api_view(['GET'])
+@permission_classes([AllowAny])  # Adjust as needed
+def get_doctor_by_user_id(request, user_id):
+    """
+    Retrieve a doctor by user ID.
+    """
+    try:
+        doctor = Doctor.objects.get(user_id=user_id)
+        serializer = DoctorSerializer(doctor)
+        return Response(serializer.data)
+    except Doctor.DoesNotExist:
+        return Response(
+            {"error": f"Doctor with user ID {user_id} does not exist"},
+            status=status.HTTP_404_NOT_FOUND
+        )
+

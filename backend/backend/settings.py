@@ -10,7 +10,6 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
-from datetime import timedelta
 from pathlib import Path
 import os
 from dotenv import load_dotenv
@@ -55,7 +54,7 @@ INSTALLED_APPS = [
     'fcm_django',
     'push_notifications',
     'rest_framework_simplejwt.token_blacklist',
-    
+
 
 ]
 
@@ -209,7 +208,7 @@ EMAIL_HOST = 'smtp.gmail.com'  # e.g., smtp.gmail.com
 EMAIL_PORT = 587  # For TLS
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'la_rezzoug@esi.dz'
-EMAIL_HOST_PASSWORD = 'pfnr ggel yelr bvbh'  
+EMAIL_HOST_PASSWORD = 'pfnr ggel yelr bvbh'
 DEFAULT_FROM_EMAIL = 'noreply@eCare.com'
 
 
@@ -232,10 +231,10 @@ TEMPLATES = [
 
 FCM_DJANGO_SETTINGS = {
     "APP_VERBOSE_NAME": "eCare-Notifications",
-    "FCM_SERVER_KEY": "",  
+    "FCM_SERVER_KEY": "",
     "ONE_DEVICE_PER_USER": False,
     "DELETE_INACTIVE_DEVICES": True,
 }
 
 
-
+GOOGLE_OAUTH2_CLIENT_ID = "453325312850-rr9fsgb9b85tq6trvmgj903okutdc48j.apps.googleusercontent.com"
