@@ -15,7 +15,7 @@ data class Doctor(
     val description: String,
     val nbr_patients: Int,
     val clinic_pos  :String ?= null,
-    val profileImageUrl: String?,
+    val photo: String?,
     val facebook: String? = null,
     val twitter: String? = null,
     val linkedin: String? = null,

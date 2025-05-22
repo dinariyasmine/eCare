@@ -84,6 +84,16 @@ fun MainAppContent(googleAuthHelper: googleAuthHelper) {
         composable(Routes.SIGN_IN) {
             LoginScreen(googleAuthHelper = googleAuthHelper, navController = navController)
         }
+        composable("doctor/{doctorId}/reviews") { backStackEntry ->
+            val doctorId = backStackEntry.arguments?.getString("doctorId")?.toIntOrNull()
+            if (doctorId != null) {
+                DoctorReviewsScreen(doctorId = doctorId, navController = navController)
+            }
+        }
+        composable("doctor/{doctorId}") { backStackEntry ->
+            val doctorId = backStackEntry.arguments?.getString("doctorId")?.toInt()
+            DoctorDetailScreen(doctorId = doctorId, navController = navController)
+        }
         composable("qr_reader") {
             QrCodeReaderScreen(navController)
         }

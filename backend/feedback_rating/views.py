@@ -114,7 +114,7 @@ from core.models import Doctor, Feedback
 @permission_classes([AllowAny])
 def get_doctor_feedback(request, doctor_id):
     try:
-        doctor = Doctor.objects.get(id=doctor_id)
+        doctor = Doctor.objects.get(user_id=doctor_id)
     except Doctor.DoesNotExist:
         return Response({"error": "Doctor not found."}, status=status.HTTP_404_NOT_FOUND)
 

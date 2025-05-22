@@ -126,7 +126,7 @@ fun DoctorCard(doctor: Doctor, navController: NavController) {
     val nbrPatients = doctor.nbr_patients ?: 0
 
     // Assuming your Doctor model has a profileImageUrl field
-    val profileImageUrl = doctor.profileImageUrl ?: ""
+    val profileImageUrl = doctor.photo ?: ""
 
     Card(
         modifier = Modifier

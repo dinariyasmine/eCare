@@ -243,7 +243,7 @@ def get_doctors(request):
                 continue
                 
             doctor_info = {
-                "id": doctor.id,
+                "id": doctor.user.id,
                 "name": doctor.user.name,
                 "email": doctor.user.email,
                 "phone": doctor.user.phone,
@@ -282,7 +282,7 @@ def get_doctor_by_id(request, doctor_id):
     """
     try:
         doctor = Doctor.objects.get(user_id=doctor_id)
-        print(f"Getting doctor {doctor.id} - Photo URL: {doctor.photo}")  # Debug log
+        #print(f"Getting doctor {doctor.id} - Photo URL: {doctor.photo}")  # Debug log
     except Doctor.DoesNotExist:
         return Response({"error": "Doctor not found"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -303,7 +303,7 @@ def get_doctor_by_id(request, doctor_id):
             social_links["linkedin"] = sm.link
 
     doctor_info = {
-        "id": doctor.id,
+        "id": doctor_id,
         "name": doctor.user.name,
         "email": doctor.user.email,
         "phone": doctor.user.phone,

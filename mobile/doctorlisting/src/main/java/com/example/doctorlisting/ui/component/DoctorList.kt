@@ -24,7 +24,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import com.example.data.model.User
 
-
+/*
 //import com.example.doctorlisting.ui.screen.DoctorCard
 //
 //import com.example.doctorlisting.ui.screen.DoctorCard
@@ -70,7 +70,7 @@ fun DoctorCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Doctor Photo
-            doctor.photo?.let { photoUrl ->
+            doctor.profileImageUrl?.let { photoUrl ->
                 AsyncImage(
                     model = photoUrl,
                     contentDescription = "Doctor ${doctor.name}'s photo",
@@ -122,3 +122,4 @@ fun DoctorCard(
     }
 }
 
+*/

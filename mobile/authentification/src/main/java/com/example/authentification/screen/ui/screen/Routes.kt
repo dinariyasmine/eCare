@@ -14,6 +14,7 @@ object Routes {
     const val DOCTOR_LIST = "doctor_list"
     const val DOCTOR_DETAIL = "doctor/{doctorId}"
     const val DOCTOR_REVIEWS = "doctor/{doctorId}/reviews"
+    const val DOCTOR_DETAILS = "doctor/{doctorId}"
     const val DOCTOR_PARAMS = "Doctorparams"
     const val PATIENT_PROFILE = "patient_profile/{patientId}"
     const val FEEDBACK = "feedback"
