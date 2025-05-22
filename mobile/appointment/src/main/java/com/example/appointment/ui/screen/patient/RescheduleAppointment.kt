@@ -47,6 +47,7 @@ import com.example.appointment.ui.screen.components.appoint.DatePicker
 import com.example.appointment.ui.screen.components.appoint.PatientFormState
 import com.example.appointment.ui.screen.components.appoint.TimeSlotPicker
 import com.example.core.theme.ECareMobileTheme
+import com.example.data.model.AppointmentRequest
 import com.example.data.viewModel.AppointmentViewModel
 import com.example.data.viewModel.AvailabilityViewModel
 import java.time.LocalDate
@@ -209,14 +210,22 @@ fun RescheduleAppointmentScreen(
                                     selectedDate.value,
                                     endTime
                                 )
+                                // Create AppointmentRequest from existing appointment
+                                val appointmentRequest = AppointmentRequest(
+                                    doctor = appointment!!.doctor_id,
+                                    patient = appointment!!.patient_id,
+                                    start_time = newStartDateTime.format(DateTimeFormatter.ISO_DATE_TIME),
+                                    end_time = newEndDateTime.format(DateTimeFormatter.ISO_DATE_TIME),
+                                    name = appointment!!.name,
+                                    gender = appointment!!.gender,
+                                    age = appointment!!.age,
+                                    problem_description = appointment!!.problem_description
+                                )
 
                                 // Update the appointment
                                 viewModel.updateAppointment(
-                                    id = appt.id,
-                                    appointment = appt.copy(
-                                        start_time = newStartDateTime,
-                                        end_time = newEndDateTime
-                                    )
+                                    id = appointment!!.id,
+                                    appointment = appointmentRequest
                                 )
 
                                 // Show success message and navigate back

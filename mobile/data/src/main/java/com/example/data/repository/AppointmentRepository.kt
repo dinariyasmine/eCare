@@ -143,12 +143,16 @@ class AppointmentRepository(
         }
     }
 
-    // Updates an appointment (handles API + local DB)
-    suspend fun updateAppointment(id: Int, appointment: Appointment) {
+    // Updates an appointment
+    suspend fun updateAppointment(id: Int, appointment: AppointmentRequest) {
         withContext(Dispatchers.IO) {
             try {
+                val request = appointment.copy(
+                    start_time = appointment.start_time.format(DateTimeFormatter.ISO_DATE_TIME),
+                    end_time = appointment.end_time.format(DateTimeFormatter.ISO_DATE_TIME)
+                )
                 Log.d("AppointmentRepository", "Updating appointment ID: $id")
-                appointmentEndpoint.updateAppointment(id, appointment)
+                appointmentEndpoint.updateAppointment(id, request)
                 Log.d("AppointmentRepository", "Appointment updated successfully in API")
             } catch (e: Exception) {
                 Log.e("AppointmentRepository", "Error updating appointment", e)

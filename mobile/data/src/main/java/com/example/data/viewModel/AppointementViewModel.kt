@@ -135,18 +135,14 @@ class AppointmentViewModel(
         }
     }
 
-    fun updateAppointment(id: Int, appointment: Appointment) {
+    fun updateAppointment(id: Int, appointment: AppointmentRequest) {
         _isLoading.value = true
         viewModelScope.launch {
             try {
                 Log.d("AppointmentViewModel", "Updating appointment ID: $id")
                 repository.updateAppointment(id, appointment)
                 Log.d("AppointmentViewModel", "Appointment updated successfully")
-                if (appointment.patient_id != null) {
-                    getAppointmentsByPatient(appointment.patient_id)
-                } else if (appointment.doctor_id != null) {
-                    getAppointmentsByDoctor(appointment.doctor_id)
-                }
+                getAppointmentsByPatient(appointment.patient)
                 _operationSuccess.value = true
             } catch (e: Exception) {
                 Log.e("AppointmentViewModel", "Error updating appointment", e)
