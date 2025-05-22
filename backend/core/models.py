@@ -44,7 +44,7 @@ class Doctor(models.Model):
     """Doctor profile linked to a user account"""
     id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='doctor_profile')
-    photo = models.URLField(blank=True, null=True)
+    photo = models.CharField(max_length=255, blank=True, null=True)
 
     specialty = models.CharField(max_length=100)
     clinic = models.ForeignKey(Clinic, on_delete=models.SET_NULL, null=True, related_name='doctors')

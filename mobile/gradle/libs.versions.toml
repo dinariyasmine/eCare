@@ -24,6 +24,7 @@ navigationComposeAndroid = "2.9.0"
 firebaseMessagingKtx = "24.1.1"
 playServicesBasement = "18.0.0"
 foundationLayoutAndroid = "1.6.6"
+cameraCore = "1.4.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -59,6 +60,7 @@ androidx-navigation-runtime-android = { group = "androidx.navigation", name = "n
 androidx-foundation-layout-android = { group = "androidx.compose.foundation", name = "foundation-layout-android", version.ref = "foundationAndroid" }
 androidx-runtime-livedata = { group = "androidx.compose.runtime", name = "runtime-livedata", version.ref = "composeBom" }
 foundation-layout-android = { group = "androidx.compose.foundation", name = "foundation-layout-android", version.ref = "foundationLayoutAndroid" }
+androidx-camera-core = { group = "androidx.camera", name = "camera-core", version.ref = "cameraCore" }
 
 
 [plugins]

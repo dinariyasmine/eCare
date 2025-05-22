@@ -82,6 +82,7 @@ dependencies {
     // Networking
     implementation("com.android.volley:volley:1.2.1")
     implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.camera.core)
 
     // Testing
     testImplementation("junit:junit:4.13.2")

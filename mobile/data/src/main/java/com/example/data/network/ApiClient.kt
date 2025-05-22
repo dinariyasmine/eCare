@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit
 
 // In mobile/data/src/main/java/com/example/data/network/ApiClient.kt
 object ApiClient {
-    private const val BASE_URL = "https://cde2-41-104-181-28.ngrok-free.app"
+    private const val BASE_URL = "https://e735-105-235-130-125.ngrok-free.app"
 
     private val gson = GsonBuilder()
         .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
