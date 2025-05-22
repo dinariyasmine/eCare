@@ -5,7 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.http import HttpResponse
-from core.models import Prescription, PrescriptionItem, Medication, Doctor, Patient
+from core.models import Appointment, Prescription, PrescriptionItem, Medication, Doctor, Patient
 from core.serializers import PrescriptionSerializer, PrescriptionItemSerializer, MedicationSerializer
 import io
 from reportlab.pdfgen import canvas
@@ -72,7 +72,7 @@ class PrescriptionViewSet(viewsets.ModelViewSet):
             ).order_by('-start_time').first()
             
             if appointment:
-                appointment.status = 'done'
+                appointment.status = 'completed'
                 appointment.save()
                 
                 # Create notification for appointment completed
@@ -107,18 +107,6 @@ class PrescriptionViewSet(viewsets.ModelViewSet):
     def add_medication(self, request, pk=None):
         """
         Add a medication to a specific prescription.
-
-        This custom action allows a doctor to append a medication item to an existing prescription.
-
-        Request Data:
-            medication_id (int): ID of the medication.
-            dosage (str): Dosage instructions (e.g., "1 capsule (250mg)").
-            duration (str): Duration of the medication course (e.g., "14 days").
-            frequency (str): Frequency of intake (e.g., "once_daily").
-            instructions (str, optional): Any additional instructions for the patient.
-
-        Returns:
-            Response: Serialized PrescriptionItem if successful, otherwise error message.
         """
         prescription = self.get_object()
         
@@ -137,7 +125,6 @@ class PrescriptionViewSet(viewsets.ModelViewSet):
         
         try:
             medication = Medication.objects.get(id=medication_id)
-            doctor = Doctor.objects.filter(user=self.request.user).first()
             
             # Create prescription item
             prescription_item = PrescriptionItem.objects.create(
@@ -146,24 +133,30 @@ class PrescriptionViewSet(viewsets.ModelViewSet):
                 dosage=dosage,
                 duration=duration,
                 frequency=frequency,
-                instructions=instructions,
-                prescribed_by=doctor,
-                prescribed_to=prescription.patient
+                instructions=instructions
             )
             
             NotificationService.create_prescription_notification(
                 prescription=prescription,
                 notification_type='prescription_updated'
             )
+            
             return Response(
                 PrescriptionItemSerializer(prescription_item).data,
                 status=status.HTTP_201_CREATED
             )
+            
         except Medication.DoesNotExist:
             return Response(
                 {'error': 'Medication not found'}, 
                 status=status.HTTP_404_NOT_FOUND
             )
+        except Exception as e:
+            return Response(
+                {'error': f'An unexpected error occurred: {str(e)}'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
     @action(detail=True, methods=['get'])
     def generate_pdf(self, request, pk=None):
         """

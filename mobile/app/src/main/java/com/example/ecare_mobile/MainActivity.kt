@@ -20,30 +20,41 @@ import com.example.data.viewModel.PrescriptionViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import com.example.data.local.database.AppDatabase
+import com.example.data.sync.SyncManager
 import com.example.prescription.navigation.PrescriptionDestinations
 import com.example.prescription.ui.screen.CreatePrescriptionScreen
 import com.example.prescription.ui.screen.PrescriptionDetailScreen
 import com.example.prescription.ui.screen.PrescriptionListScreen
 
 class MainActivity : ComponentActivity() {
+    private lateinit var syncManager: SyncManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         TokenManager.init(applicationContext)
 
+        // Initialize database and sync manager
+        AppDatabase.getDatabase(applicationContext)
+        syncManager = SyncManager(applicationContext)
+        syncManager.scheduleSyncWork()
+
         setContent {
             ECareMobileTheme {
-                PrescriptionApp()
+                PrescriptionApp(applicationContext)
             }
         }
     }
 }
 
 @Composable
-fun PrescriptionApp() {
+fun PrescriptionApp(applicationContext: android.content.Context) {
     val navController = rememberNavController()
 
     // Create repositories
-    val prescriptionRepository = remember { PrescriptionRepository(ApiClient.apiService) }
+    val prescriptionRepository = remember {
+        PrescriptionRepository.getInstance(applicationContext)
+    }
     val medicationRepository = remember { MedicationRepository(ApiClient.apiService) }
     val patientRepository = remember { PatientRepository(RetrofitInstance.apiService) }
 

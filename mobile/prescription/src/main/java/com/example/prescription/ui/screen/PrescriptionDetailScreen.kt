@@ -317,15 +317,7 @@ fun PrescriptionDetailScreen(
                                             value = item.frequency.replace("_", " ").capitalize()
                                         )
 
-                                        MedicationDetailRow(
-                                            label = "Prescribed by:",
-                                            value = item.prescribed_by_name ?: "Dr. Unknown"
-                                        )
 
-                                        MedicationDetailRow(
-                                            label = "Prescribed to:",
-                                            value = item.prescribed_to_name ?: "Unknown"
-                                        )
                                     }
                                 }
 

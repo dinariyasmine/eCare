@@ -73,21 +73,15 @@ class PrescriptionItemSerializer(serializers.ModelSerializer):
         write_only=True,
         source='medication'
     )
-    prescribed_by_name = serializers.ReadOnlyField(source='prescribed_by.user.name')
-    prescribed_to_name = serializers.ReadOnlyField(source='prescribed_to.user.name')
-    
+
     class Meta:
         model = PrescriptionItem
         fields = [
             'id', 'prescription', 'medication', 'medication_id', 
             'dosage', 'duration', 'frequency', 'instructions',
-            'prescribed_by', 'prescribed_by_name', 
-            'prescribed_to', 'prescribed_to_name'
+        
         ]
-        extra_kwargs = {
-            'prescribed_by': {'write_only': True},
-            'prescribed_to': {'write_only': True}
-        }
+       
 
 class PrescriptionSerializer(serializers.ModelSerializer):
     patient_details = PatientSerializer(source='patient', read_only=True)
@@ -127,9 +121,7 @@ class AddPrescriptionItemSerializer(serializers.Serializer):
             dosage=validated_data['dosage'],
             duration=validated_data['duration'],
             frequency=validated_data['frequency'],
-            instructions=validated_data.get('instructions', ''),
-            prescribed_by=prescription.doctor,
-            prescribed_to=prescription.patient
+            instructions=validated_data.get('instructions', '')
         )
         
         return prescription_item

@@ -30,11 +30,7 @@ data class PrescriptionItem(
     val dosage: String,
     val duration: String,
     val frequency: String,
-    val instructions: String,
-    val prescribed_by: Int,
-    val prescribed_by_name: String? = null,
-    val prescribed_to: Int,
-    val prescribed_to_name: String? = null
+    val instructions: String
 )
 
 

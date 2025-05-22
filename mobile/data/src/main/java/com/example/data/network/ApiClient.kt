@@ -47,7 +47,7 @@ object ApiClient {
         val original = chain.request()
         val requestBuilder = original.newBuilder()
             .header("Content-Type", "application/json")
-            .header("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ3ODY2MjYzLCJpYXQiOjE3NDc4NjI2NjMsImp0aSI6IjlkZGYwNjMzMGE2YjQ0YjFhMzZiMWEyZGM0MzgyZmMyIiwidXNlcl9pZCI6Njl9.34igxVyNo1Rz6zWE0X78bv4jLogv2rSbltRySvP29AY")
+            .header("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ3ODg0OTg3LCJpYXQiOjE3NDc4ODEzODcsImp0aSI6ImMzNjFkZGJhNGVhZTQwYjhhZWM5NzZlMWQzNGQ0ZmNhIiwidXNlcl9pZCI6Njl9.5zun11QgHQUjOST3nux1Iwtj8Vd0juLs3Xt0wlZOxOg")
             .method(original.method, original.body)
         chain.proceed(requestBuilder.build())
     }

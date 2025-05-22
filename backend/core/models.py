@@ -146,8 +146,6 @@ class PrescriptionItem(models.Model):
     dosage = models.CharField(max_length=100)  # e.g., "1 capsule (250mg)"
     duration = models.CharField(max_length=100)  # e.g., "14 days" or "30 days"
     frequency = models.CharField(max_length=50, choices=FREQUENCY_CHOICES)
-    prescribed_by = models.ForeignKey(Doctor, on_delete=models.CASCADE, related_name='prescribed_items')
-    prescribed_to = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='medication_items')
     instructions = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
